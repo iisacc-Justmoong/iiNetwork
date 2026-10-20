@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.24)
+project(iiNetworkEmbeddedConsumer LANGUAGES CXX)
+# Dependencies may already be imported in the parent. iiNetwork must also make
+# dependencies first discovered in its child directory available to this host.
+find_package(CURL 7.62 REQUIRED)
+find_package(OpenSSL 3 REQUIRED COMPONENTS Crypto)
+set(IINETWORK_BUILD_TESTS OFF CACHE BOOL "Embedded fixture" FORCE)
+set(IINETWORK_BUILD_EXAMPLES OFF CACHE BOOL "Embedded fixture" FORCE)
+add_subdirectory(../.. "${CMAKE_BINARY_DIR}/iiNetwork")
+add_executable(iiNetworkEmbeddedConsumer ../../examples/roundtrip.cpp)
+target_link_libraries(iiNetworkEmbeddedConsumer PRIVATE iiNetwork::iiNetwork)
+enable_testing()
+add_test(NAME iiNetwork.EmbeddedConsumer COMMAND iiNetworkEmbeddedConsumer)
+add_executable(iiNetworkEmbeddedPeers ../../examples/peers.cpp)
+target_link_libraries(iiNetworkEmbeddedPeers PRIVATE iiNetwork::iiNetwork)
+add_test(NAME iiNetwork.EmbeddedPeers COMMAND iiNetworkEmbeddedPeers)

@@ -1,0 +1,13 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(iiSDKCore 0.18 CONFIG COMPONENTS Runtime)
+find_dependency(iiJson 0.1 CONFIG)
+find_dependency(CURL 7.62)
+find_dependency(OpenSSL 3 COMPONENTS Crypto SSL)
+if(APPLE)
+    get_target_property(_iinetwork_curl_includes CURL::libcurl INTERFACE_INCLUDE_DIRECTORIES)
+    list(REMOVE_ITEM _iinetwork_curl_includes "${CMAKE_OSX_SYSROOT}/usr/include")
+    set_property(TARGET CURL::libcurl PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${_iinetwork_curl_includes}")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/iiNetworkTargets.cmake")
+check_required_components(iiNetwork)
