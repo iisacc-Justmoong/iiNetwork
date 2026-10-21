@@ -5,7 +5,7 @@ import sys
 
 root = Path(sys.argv[1]).resolve()
 errors = []
-for directory in ("include", "src"):
+for directory in ("src",):
     for path in sorted((root / directory).rglob("*")):
         if path.suffix not in (".h", ".cpp"):
             continue

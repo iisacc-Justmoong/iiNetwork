@@ -20,12 +20,12 @@ if(APPLE)
     list(REMOVE_ITEM _curl_includes "${CMAKE_OSX_SYSROOT}/usr/include")
     set_property(TARGET CURL::libcurl PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${_curl_includes}")
 endif()
-add_library(iiNetwork STATIC src/Network.cpp src/Wire.cpp src/Layers.cpp src/Session.cpp
-    src/Presentation.cpp src/Application.cpp src/Relay.cpp src/Stack.cpp src/Server.cpp
-    src/Address.cpp src/ByteStream.cpp src/Transport.cpp src/Local.cpp src/Security.cpp src/Tls.cpp src/Headers.cpp src/Peer.cpp)
+add_library(iiNetwork STATIC src/iiNetwork/Network.cpp src/iiNetwork/Wire.cpp src/iiNetwork/Layers.cpp src/iiNetwork/Session.cpp
+    src/iiNetwork/Presentation.cpp src/iiNetwork/Application.cpp src/iiNetwork/Relay.cpp src/iiNetwork/Stack.cpp src/iiNetwork/Server.cpp
+    src/iiNetwork/Address.cpp src/iiNetwork/ByteStream.cpp src/iiNetwork/Transport.cpp src/iiNetwork/Local.cpp src/iiNetwork/Security.cpp src/iiNetwork/Tls.cpp src/iiNetwork/Headers.cpp src/iiNetwork/Peer.cpp)
 add_library(iiNetwork::iiNetwork ALIAS iiNetwork)
 target_compile_features(iiNetwork PUBLIC cxx_std_23)
-target_include_directories(iiNetwork PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+target_include_directories(iiNetwork PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(iiNetwork PUBLIC iiSDKCore::Runtime iiJson::iiJson PRIVATE CURL::libcurl OpenSSL::SSL OpenSSL::Crypto)
 set_target_properties(iiNetwork PROPERTIES AUTOMOC OFF AUTORCC OFF AUTOUIC OFF
@@ -88,7 +88,27 @@ if(IINETWORK_BUILD_EXAMPLES)
     endif()
 endif()
 install(TARGETS iiNetwork EXPORT iiNetworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} PATTERN ".DS_Store" EXCLUDE)
+install(FILES
+    src/iiNetwork/Address.h
+    src/iiNetwork/Application.h
+    src/iiNetwork/ByteStream.h
+    src/iiNetwork/Error.h
+    src/iiNetwork/Headers.h
+    src/iiNetwork/Http.h
+    src/iiNetwork/Layers.h
+    src/iiNetwork/Local.h
+    src/iiNetwork/Network.h
+    src/iiNetwork/Peer.h
+    src/iiNetwork/Presentation.h
+    src/iiNetwork/Relay.h
+    src/iiNetwork/Security.h
+    src/iiNetwork/Server.h
+    src/iiNetwork/Session.h
+    src/iiNetwork/Stack.h
+    src/iiNetwork/Tls.h
+    src/iiNetwork/Transport.h
+    src/iiNetwork/Wire.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iiNetwork)
 install(EXPORT iiNetworkTargets NAMESPACE iiNetwork:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiNetwork)
 configure_package_config_file(cmake/iiNetworkConfig.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/iiNetworkConfig.cmake" INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiNetwork)

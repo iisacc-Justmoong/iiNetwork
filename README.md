@@ -153,3 +153,15 @@ See [Architecture](docs/Architecture.md), [Communication interfaces](docs/Interf
 [Verification](docs/Verification.md), `tests/contracts.cpp`, `tests/interfaces.cpp`
 and the compiled example. Platform source paths are not
 proof of execution on another OS.
+
+## Source header layout
+
+Public headers and implementations live together in `src/iiNetwork/`.
+There is no separate authored `include/` tree. Existing public `#include` names
+and exported CMake targets are unchanged; installation still places only public
+headers in the package include directory. Generated export headers belong to
+`build/`, not to the authored source tree.
+
+Validate this layout from the SDK workspace with
+`python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,
+and verify a staged installed consumer after changing source/header paths.
