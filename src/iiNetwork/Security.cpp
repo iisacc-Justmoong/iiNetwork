@@ -15,7 +15,7 @@ namespace ii::network
 namespace
 {
 auto invalid(std::string message) { return detail::fail(Layer::presentation, ErrorCode::invalid_argument, std::move(message)); }
-std::string name(X509_NAME* value)
+std::string name(const X509_NAME* value)
 {
     auto memory = std::unique_ptr<BIO, decltype(&BIO_free)>(BIO_new(BIO_s_mem()), BIO_free);
     if (!memory || X509_NAME_print_ex(memory.get(), value, 0, XN_FLAG_RFC2253) < 0) return {};
@@ -40,7 +40,11 @@ Result<void> validate(const TlsPolicy& policy)
         !valid_path(policy.ca_file) || !valid_path(policy.ca_directory) ||
         !valid_path(policy.identity.certificate_chain_file) || !valid_path(policy.identity.private_key_file) ||
         !valid_path(policy.identity.private_key_password) ||
-        policy.identity.certificate_chain_file.empty() != policy.identity.private_key_file.empty())
+        policy.identity.certificate_chain_file.empty() != policy.identity.private_key_file.empty() ||
+        policy.identity.certificate_chain_pem.empty() != policy.identity.private_key_pem.empty() ||
+        policy.identity.certificate_chain_pem.size() > 4 * 1024 * 1024 ||
+        policy.identity.private_key_pem.size() > 1024 * 1024 ||
+        (!policy.identity.certificate_chain_file.empty() && !policy.identity.certificate_chain_pem.empty()))
         return invalid("Invalid TLS version, trust path or certificate/key pair");
     return {};
 }

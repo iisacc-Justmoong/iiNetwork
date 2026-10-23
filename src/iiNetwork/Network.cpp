@@ -202,6 +202,8 @@ bool Http::start(HttpRequest request, std::function<void(HttpResponse)> completi
     p_->last_error.reset();
     if (busy() || !completion || !detail::http_request(request))
     { p_->last_error = Error{ErrorCode::invalid_argument, Layer::application, "HTTP request is busy, invalid or lacks a completion"}; return false; }
+    if (request.tls.trusted_certificate_sha256 || !request.tls.identity.certificate_chain_pem.empty())
+    { p_->last_error = Error{ErrorCode::unsupported, Layer::application, "In-memory identities and exact certificate trust require native TlsContext/TlsStream"}; return false; }
     auto capabilities = Http::capabilities();
     if (curl_http_version(request.version) < 0 ||
         ((request.version == HttpVersion::http2 || request.version == HttpVersion::http2_prior_knowledge) && !capabilities.http2) ||

@@ -54,13 +54,18 @@ struct HttpServer::Impl : std::enable_shared_from_this<HttpServer::Impl>
     ServerLimits limits;
     std::map<std::size_t, std::shared_ptr<Connection>> connections;
     std::size_t next_id = 0;
-    bool listening = false;
+    bool listening = false, draining = false;
+    runtime::TaskToken shutdown_deadline;
     std::string error;
     explicit Impl(runtime::EventLoop& event_loop) : loop(event_loop), listener(event_loop) {}
-    void close()
+    void stop_accepting()
     {
         listening = false; listener.accepted = {}; listener.close();
         tls_listener.reset(); local_listener.reset(); secure = false;
+    }
+    void close()
+    {
+        stop_accepting(); draining = false; shutdown_deadline.cancel();
         for (auto& [id, connection] : connections)
         {
             connection->deadline.cancel();
@@ -74,7 +79,8 @@ struct HttpServer::Impl : std::enable_shared_from_this<HttpServer::Impl>
         close(); error.clear();
         if (!handler || !value.connections || value.connections > 65536 || value.header_bytes < 16 || !value.response_bytes ||
             value.body_bytes > 512 * 1024 * 1024 || value.response_bytes > 512 * 1024 * 1024 || value.header_bytes > 64 * 1024 ||
-            value.request_timeout.count() <= 0 || value.request_timeout > std::chrono::hours(24 * 365))
+            value.request_timeout.count() <= 0 || value.request_timeout > std::chrono::hours(24 * 365) ||
+            value.response_timeout.count() <= 0 || value.response_timeout > std::chrono::hours(24 * 365))
         { error = "Invalid HTTP server limits or handler"; return false; }
         limits = value; handle = std::move(handler); return true;
     }
@@ -82,10 +88,12 @@ struct HttpServer::Impl : std::enable_shared_from_this<HttpServer::Impl>
     {
         auto found = connections.find(id); if (found == connections.end()) return;
         found->second->deadline.cancel(); connections.erase(found);
+        if (connections.empty() && draining)
+        { draining = false; shutdown_deadline.cancel(); handle = {}; }
     }
     void respond(const std::shared_ptr<Connection>& connection, ServerResponse response)
     {
-        if (!listening || connection->responding) return;
+        if ((!listening && !draining) || !connections.contains(connection->id) || connection->responding) return;
         connection->responding = true; connection->deadline.cancel();
         connection->socket->readable = {};
         bool invalid = response.status < 200 || response.status > 599 || response.body.size() > limits.response_bytes || response.headers.size() + response.header_fields.size() > 128;
@@ -119,6 +127,13 @@ struct HttpServer::Impl : std::enable_shared_from_this<HttpServer::Impl>
             bytes += "Content-Length: " + std::to_string(response.body.size()) + "\r\n";
         bytes += "\r\n";
         if (connection->request.method != "HEAD") bytes += response.body;
+        connection->socket->send_limit(bytes.size());
+        connection->deadline = loop.after(limits.response_timeout,
+            [weak = weak_from_this(), client = std::weak_ptr<Connection>(connection)] {
+                const auto keep = weak.lock(); const auto c = client.lock();
+                if (keep && c) { c->socket->close(); keep->remove(c->id); }
+            }).token;
+        if (!connection->deadline.pending()) { connection->socket->close(); remove(connection->id); return; }
         if (!connection->socket->write(bytes)) { connection->socket->close(); remove(connection->id); return; }
         connection->socket->close(true);
     }
@@ -126,7 +141,7 @@ struct HttpServer::Impl : std::enable_shared_from_this<HttpServer::Impl>
     { respond(connection, {status, {{"Content-Type", "text/plain; charset=utf-8"}}, std::move(message)}); }
     void read(const std::shared_ptr<Connection>& connection)
     {
-        if (!listening || connection->responding) return;
+        if ((!listening && !draining) || connection->responding) return;
         if (runtime::Clock::now() >= connection->expires) { reject(connection, 408, "Request deadline elapsed"); return; }
         connection->buffer += connection->socket->read();
         auto& bytes = connection->buffer;
@@ -200,7 +215,7 @@ struct HttpServer::Impl : std::enable_shared_from_this<HttpServer::Impl>
         ServerResponse response;
         try { response = handler(connection->request); }
         catch (...) { response = {500, {}, "Request handler failed"}; }
-        if (listening) respond(connection, std::move(response));
+        if (listening || draining) respond(connection, std::move(response));
     }
     void accept(std::unique_ptr<ByteStream> socket)
     {
@@ -209,7 +224,9 @@ struct HttpServer::Impl : std::enable_shared_from_this<HttpServer::Impl>
         connection->request.secure = secure;
         connection->expires = runtime::Clock::now() + limits.request_timeout;
         connections.emplace(connection->id, connection);
-        connection->socket->receive_limit(limits.header_bytes + limits.body_bytes);
+        // Leave room for one transport read even when HTTP limits are tiny.
+        // The parser still rejects oversized headers/bodies before dispatch.
+        connection->socket->receive_limit(std::max<std::size_t>(65536, limits.header_bytes + limits.body_bytes));
         auto weak = weak_from_this(); auto client = std::weak_ptr<Connection>(connection); auto id = connection->id;
         connection->socket->readable = [weak, client]
         { auto keep = weak.lock(); auto c = client.lock(); if (keep && c) keep->read(c); };
@@ -258,6 +275,28 @@ bool HttpServer::listen_local(LocalEndpoint endpoint, Handler handler, ServerLim
     p.listening = true; return true;
 }
 void HttpServer::close() { p_->close(); }
+Result<void> HttpServer::shutdown(std::chrono::milliseconds grace)
+{
+    if (grace.count() < 0 || grace > std::chrono::hours(24))
+        return detail::fail(Layer::application, ErrorCode::invalid_argument, "Invalid HTTP shutdown grace period");
+    auto& p = *p_;
+    if (p.draining) return {};
+    p.stop_accepting();
+    if (p.connections.empty()) { p.handle = {}; return {}; }
+    if (grace.count() == 0) { p.close(); return {}; }
+    p.draining = true;
+    p.shutdown_deadline = p.loop.after(grace, [weak = std::weak_ptr<Impl>(p_)] {
+        if (const auto keep = weak.lock()) keep->close();
+    }).token;
+    if (!p.shutdown_deadline.pending())
+    {
+        p.error = "Core HTTP shutdown dispatch admission failed"; p.close();
+        return detail::fail(Layer::application, ErrorCode::unavailable, p.error);
+    }
+    return {};
+}
+bool HttpServer::listening() const { return p_->listening; }
+bool HttpServer::draining() const { return p_->draining; }
 std::uint16_t HttpServer::port() const { return p_->tls_listener ? p_->tls_listener->port() : p_->listener.port(); }
 std::size_t HttpServer::active_connections() const { return p_->connections.size(); }
 std::string HttpServer::error() const { return p_->error; }

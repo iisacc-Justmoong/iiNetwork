@@ -5,3 +5,5 @@
 #include <iiNetwork/Local.h>
 #include <iiNetwork/Tls.h>
 #include <iiNetwork/Peer.h>
+#include <iiNetwork/WebSocket.h>
+#include <iiNetwork/Realtime.h>

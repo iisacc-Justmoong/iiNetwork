@@ -10,6 +10,7 @@ struct ServerLimits final
     std::size_t connections = 64, header_bytes = 16 * 1024, body_bytes = 2 * 1024 * 1024;
     std::size_t response_bytes = 2 * 1024 * 1024;
     std::chrono::milliseconds request_timeout{10000};
+    std::chrono::milliseconds response_timeout{10000};
 };
 // Native HTTP/1.0 and HTTP/1.1, one request per connection, Content-Length framing.
 // HTTP parsing is shared by TCP, TLS and local transports.
@@ -25,7 +26,12 @@ class HttpServer final
     bool listen(IpEndpoint, Handler, ServerLimits = {}, ListenerOptions = {});
     bool listen_tls(IpEndpoint, std::shared_ptr<TlsContext>, Handler, ServerLimits = {}, TlsStreamOptions = {});
     bool listen_local(LocalEndpoint, Handler, ServerLimits = {}, LocalServerOptions = {});
+    // Stop accepting, finish admitted requests, and force close at the deadline.
+    // Nonblocking and idempotent; the host must continue dispatching its loop.
+    Result<void> shutdown(std::chrono::milliseconds grace = std::chrono::seconds(5));
     void close();
+    [[nodiscard]] bool listening() const;
+    [[nodiscard]] bool draining() const;
     [[nodiscard]] std::uint16_t port() const;
     [[nodiscard]] std::size_t active_connections() const;
     [[nodiscard]] std::string error() const;

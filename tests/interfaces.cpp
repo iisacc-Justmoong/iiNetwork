@@ -190,6 +190,43 @@ void tls()
         pass(rejected.connect(loopback(server.listener.port()), mode == 1 ? "wrong.invalid" : "localhost"));
         until(loop, [&] { return failed; }); require(!connected && rejected.tls_state() == TlsState::failed, "invalid TLS peer accepted");
     }
+    // QR trust uses an exact, authenticated leaf pin without installing a CA,
+    // and temporary private keys never need to be written to disk.
+    auto ephemeral = server_options();
+    ephemeral.policy.identity = {};
+    ephemeral.policy.identity.certificate_chain_pem = read_file(file("server.pem"));
+    ephemeral.policy.identity.private_key_pem = read_file(file("server.key"));
+    TlsServer pinned_server(loop, take(TlsContext::server(ephemeral)));
+    for (bool matches : {true, false})
+    {
+        TlsOptions trusted; trusted.policy.trusted_certificate_sha256 = certificate.certificate_sha256;
+        if (!matches) (*trusted.policy.trusted_certificate_sha256)[0] ^= 1;
+        TlsStream pinned(loop, take(TlsContext::client(trusted))); bool secured = false, failed = false;
+        pinned.connected = [&] { secured = true; }; pinned.failed = [&](auto) { failed = true; };
+        pass(pinned.connect(loopback(pinned_server.listener.port()), "qr-device.invalid"));
+        until(loop, [&] { return secured || failed; });
+        require(secured == matches && failed != matches, "out-of-band certificate trust ignored");
+    }
+    auto mixed = ephemeral; mixed.policy.identity.certificate_chain_file = file("server.pem");
+    mixed.policy.identity.private_key_file = file("server.key");
+    require(!TlsContext::server(mixed), "mixed memory/file TLS identity accepted");
+    auto mismatched = ephemeral;
+    mismatched.policy.identity.private_key_pem = read_file(file("client.key"));
+    require(!TlsContext::server(mismatched), "mismatched memory TLS certificate/key accepted");
+    for (const std::string name : {"expired", "client"})
+    {
+        auto invalid = server_options();
+        invalid.policy.identity.certificate_chain_file = file(name + ".pem");
+        invalid.policy.identity.private_key_file = file(name == "client" ? "client.key" : "server.key");
+        TlsServer invalid_server(loop, take(TlsContext::server(invalid)));
+        TlsOptions trusted;
+        trusted.policy.trusted_certificate_sha256 = take(inspect_certificate_file(invalid.policy.identity.certificate_chain_file)).certificate_sha256;
+        TlsStream rejected(loop, take(TlsContext::client(trusted))); bool connected = false, failed = false;
+        rejected.connected = [&] { connected = true; }; rejected.failed = [&](auto) { failed = true; };
+        pass(rejected.connect(loopback(invalid_server.listener.port()), "qr-device.invalid"));
+        until(loop, [&] { return connected || failed; });
+        require(failed && !connected, "exact leaf pin bypassed expiry or certificate purpose");
+    }
     auto mutual_policy = server_options(true); TlsServer mutual(loop, take(TlsContext::server(mutual_policy)));
     TlsStream identity(loop, take(TlsContext::client(client_options(true)))); bool ready = false;
     identity.connected = [&] { ready = true; }; pass(identity.connect(loopback(mutual.listener.port()), "localhost"));
@@ -287,6 +324,16 @@ void http()
     require(exchange(client, loop, request).body == "one, two", "HTTP repeated request fields");
     require(!request.header_fields.append("Bad", "injected\r\n"), "header injection accepted");
     auto capabilities = Http::capabilities(); require(capabilities.tls && capabilities.ipv6 && !capabilities.libcurl_version.empty(), "HTTP capability inventory");
+    for (bool memory_identity : {false, true})
+    {
+        auto unsupported = request;
+        if (memory_identity) {
+            unsupported.tls.identity.certificate_chain_pem = read_file(file("client.pem"));
+            unsupported.tls.identity.private_key_pem = read_file(file("client.key"));
+        } else unsupported.tls.trusted_certificate_sha256 = std::array<unsigned char, 32>{};
+        const auto rejected = client.request(std::move(unsupported), [](auto) {});
+        require(!rejected && rejected.error().code == ErrorCode::unsupported, "HTTP silently ignored native-only TLS trust");
+    }
     std::cout << "libcurl " << capabilities.libcurl_version << "; TLS=" << capabilities.tls_backend << "; HTTP/2=" << capabilities.http2 << "; HTTP/3=" << capabilities.http3 << '\n';
     if (!capabilities.http3) { auto unavailable = request; unavailable.version = HttpVersion::http3; auto error = client.request(unavailable, [](auto) {}); require(!error && error.error().code == ErrorCode::unsupported, "unsupported HTTP version admitted"); }
     auto invalid_deadline = request; invalid_deadline.inactivity_timeout = std::chrono::milliseconds::max();

@@ -12,6 +12,8 @@ enum class TlsVersion { tls1_2, tls1_3 };
 struct TlsIdentity final
 {
     std::string certificate_chain_file, private_key_file, private_key_password;
+    // An ephemeral identity can stay in memory; do not combine PEM and files.
+    std::string certificate_chain_pem, private_key_pem;
 };
 struct TlsPolicy final
 {
@@ -19,6 +21,9 @@ struct TlsPolicy final
     std::string ca_file, ca_directory;
     TlsIdentity identity;
     std::optional<std::array<unsigned char, 32>> public_key_sha256;
+    // Out-of-band trust of this exact leaf certificate (for QR/LAN pairing).
+    // Validity, TLS security and certificate purpose are still enforced.
+    std::optional<std::array<unsigned char, 32>> trusted_certificate_sha256;
 };
 struct CertificateInfo final
 {

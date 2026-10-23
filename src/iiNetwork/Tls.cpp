@@ -1,9 +1,11 @@
 #include <iiNetwork/Tls.h>
 #include "CertificateInternal.h"
 #include "ProtocolInternal.h"
+#include "SystemTrustInternal.h"
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <openssl/pem.h>
 #include <algorithm>
 #include <deque>
 #include <set>
@@ -49,7 +51,8 @@ Result<std::shared_ptr<TlsContext>> TlsContext::create(TlsRole role, TlsOptions 
     ERR_clear_error(); auto valid = validate(options.policy); if (!valid) return std::unexpected(valid.error());
     if (options.verification_depth < 1 || options.verification_depth > 128 ||
         (role == TlsRole::client && options.require_client_certificate) ||
-        (role == TlsRole::server && options.policy.identity.certificate_chain_file.empty()) ||
+        (role == TlsRole::server && options.policy.identity.certificate_chain_file.empty() && options.policy.identity.certificate_chain_pem.empty()) ||
+        (role == TlsRole::server && options.policy.trusted_certificate_sha256) ||
         (role == TlsRole::server && options.policy.public_key_sha256 && !options.require_client_certificate))
         return failure("Invalid TLS role, identity or verification options", ErrorCode::invalid_argument);
     auto impl = std::make_shared<Impl>(); impl->role = role; impl->options = std::move(options);
@@ -67,13 +70,58 @@ Result<std::shared_ptr<TlsContext>> TlsContext::create(TlsRole role, TlsOptions 
     SSL_CTX_set_verify_depth(impl->context, impl->options.verification_depth);
     bool verify = role == TlsRole::client || impl->options.require_client_certificate;
     SSL_CTX_set_verify(impl->context, verify ? SSL_VERIFY_PEER | (role == TlsRole::server ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0) : SSL_VERIFY_NONE, nullptr);
+    if (impl->options.policy.trusted_certificate_sha256)
+    {
+        SSL_CTX_set_app_data(impl->context, impl.get());
+        SSL_CTX_set_verify(impl->context, SSL_VERIFY_PEER, +[](int valid, X509_STORE_CTX* store) -> int
+        {
+            if (valid) return 1;
+            // Only the chain/hostname trust decision is replaced by the exact
+            // authenticated leaf pin. Expiry, purpose and weak keys still fail.
+            switch (X509_STORE_CTX_get_error(store))
+            {
+            case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+            case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
+            case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
+            case X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE:
+            case X509_V_ERR_CERT_UNTRUSTED:
+            case X509_V_ERR_HOSTNAME_MISMATCH:
+            case X509_V_ERR_IP_ADDRESS_MISMATCH: break;
+            default: return 0;
+            }
+            auto* ssl = static_cast<SSL*>(X509_STORE_CTX_get_ex_data(store, SSL_get_ex_data_X509_STORE_CTX_idx()));
+            auto* config = static_cast<Impl*>(SSL_CTX_get_app_data(SSL_get_SSL_CTX(ssl)));
+            auto* leaf = X509_STORE_CTX_get0_cert(store);
+            std::array<unsigned char, 32> digest{}; unsigned count = 0;
+            return config && config->options.policy.trusted_certificate_sha256 && leaf &&
+                X509_digest(leaf, EVP_sha256(), digest.data(), &count) == 1 && count == digest.size() &&
+                CRYPTO_memcmp(digest.data(), config->options.policy.trusted_certificate_sha256->data(), digest.size()) == 0;
+        });
+    }
     auto& policy = impl->options.policy;
     if (!policy.ca_file.empty() || !policy.ca_directory.empty())
     {
         if (SSL_CTX_load_verify_locations(impl->context, policy.ca_file.empty() ? nullptr : policy.ca_file.c_str(),
                 policy.ca_directory.empty() ? nullptr : policy.ca_directory.c_str()) != 1) return failure("TLS trust store load failed");
     }
-    else if (verify && SSL_CTX_set_default_verify_paths(impl->context) != 1) return failure("Default OpenSSL trust store load failed");
+    else if (verify && !policy.trusted_certificate_sha256 && !detail::load_system_trust(impl->context)) return failure("System TLS trust store load failed");
+    if (!policy.identity.certificate_chain_pem.empty())
+    {
+        auto certs = std::unique_ptr<BIO, decltype(&BIO_free)>(BIO_new_mem_buf(policy.identity.certificate_chain_pem.data(), static_cast<int>(policy.identity.certificate_chain_pem.size())), BIO_free);
+        auto keys = std::unique_ptr<BIO, decltype(&BIO_free)>(BIO_new_mem_buf(policy.identity.private_key_pem.data(), static_cast<int>(policy.identity.private_key_pem.size())), BIO_free);
+        auto cert = std::unique_ptr<X509, decltype(&X509_free)>(certs ? PEM_read_bio_X509(certs.get(), nullptr, nullptr, nullptr) : nullptr, X509_free);
+        auto no_prompt = +[](char*, int, int, void*) -> int { return 0; };
+        auto key = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>(keys ? PEM_read_bio_PrivateKey(keys.get(), nullptr, no_prompt, nullptr) : nullptr, EVP_PKEY_free);
+        bool loaded = cert && key && SSL_CTX_use_certificate(impl->context, cert.get()) == 1 &&
+            SSL_CTX_use_PrivateKey(impl->context, key.get()) == 1 && SSL_CTX_check_private_key(impl->context) == 1;
+        if (loaded)
+            while (auto* extra = PEM_read_bio_X509(certs.get(), nullptr, nullptr, nullptr))
+                if (SSL_CTX_add_extra_chain_cert(impl->context, extra) != 1) { X509_free(extra); loaded = false; break; }
+        ERR_clear_error();
+        OPENSSL_cleanse(policy.identity.private_key_pem.data(), policy.identity.private_key_pem.size());
+        policy.identity.private_key_pem.clear();
+        if (!loaded) return failure("TLS in-memory certificate/key load or match failed");
+    }
     if (!policy.identity.certificate_chain_file.empty())
     {
         auto& password = policy.identity.private_key_password;
@@ -150,7 +198,8 @@ struct TlsStream::Impl : std::enable_shared_from_this<TlsStream::Impl>
     {
         const bool verify = context->role() == TlsRole::client || context->p_->options.require_client_certificate;
         auto certificate = std::unique_ptr<X509, decltype(&X509_free)>(SSL_get1_peer_certificate(ssl), X509_free);
-        if (verify && (!certificate || SSL_get_verify_result(ssl) != X509_V_OK)) { stop("TLS peer certificate verification failed"); return false; }
+        const bool pinned = context->p_->options.policy.trusted_certificate_sha256.has_value();
+        if (verify && (!certificate || (!pinned && SSL_get_verify_result(ssl) != X509_V_OK))) { stop("TLS peer certificate verification failed"); return false; }
         TlsConnectionInfo value; value.protocol = SSL_get_version(ssl); value.cipher = SSL_get_cipher_name(ssl);
         value.peer_verified = verify && certificate; value.session_reused = SSL_session_reused(ssl) != 0;
         const unsigned char* alpn = nullptr; unsigned length = 0; SSL_get0_alpn_selected(ssl, &alpn, &length);
@@ -165,6 +214,10 @@ struct TlsStream::Impl : std::enable_shared_from_this<TlsStream::Impl>
         if (auto pin = context->p_->options.policy.public_key_sha256; pin &&
             (!value.peer_certificate || CRYPTO_memcmp(pin->data(), value.peer_certificate->public_key_sha256.data(), 32)))
         { stop("TLS public key pin mismatch"); return false; }
+        if (auto pin = context->p_->options.policy.trusted_certificate_sha256; pin &&
+            (!value.peer_certificate || !value.peer_certificate->valid_at() ||
+             CRYPTO_memcmp(pin->data(), value.peer_certificate->certificate_sha256.data(), pin->size())))
+        { stop("TLS trusted certificate mismatch or expiry"); return false; }
         info = std::move(value); state = TlsState::secured;
         auto callback = owner->connected; if (callback) callback();
         return alive && ssl && state == TlsState::secured;

@@ -1,6 +1,6 @@
 # iiNetwork
 
-iiNetwork 0.4 is the C++23 networking module of iiSDK. Its application model is
+iiNetwork 0.5 is the C++23 networking module of iiSDK. Its application model is
 a relationship between equal peers: either side can initiate operations,
 answer calls and publish events over the same connection. Listening and dialing
 assign transport setup roles without application rank. A node can do both.
@@ -24,10 +24,26 @@ source compatible.
 | 4 Transport | `TransportLayer`, `ByteStream`, `Tcp`, `Listener`, `Udp`, `LocalSocket`, `LocalServer` | IPv4/IPv6 and local nonblocking sockets, typed endpoints, UDP codecs/checksums, bounded send admission |
 | 5 Session | `SessionLayer` | CSPRNG IDs, peer binding, suspend/resume/close/expiry, monotonic sequences |
 | 6 Presentation | `PresentationLayer`, `PayloadCipher`, `Aes256Gcm`, `TlsContext`, `TlsStream` | JSON/Base64, AES-256-GCM and verified TLS 1.2/1.3 streams |
-| 7 Application | `ApplicationLayer`, `RestClient`, `GraphQLClient`, `HttpRouter`, `HttpServer`, `GraphQLService`, `Peer`, `PeerConnection` | Mutual operations/events, HTTP exchange, resource requests, GraphQL envelopes/partial errors, incoming routing and execution adapters |
+| 7 Application | `ApplicationLayer`, `RestClient`, `GraphQLClient`, `HttpRouter`, `HttpServer`, `GraphQLService`, `Peer`, `PeerConnection`, `RealtimeServer`, `RealtimeClient` | Mutual operations/events, HTTP exchange, GraphQL envelopes, native realtime sessions and room-scoped latest-value streaming |
 
 `TcpRelay` bridges two connected sockets in both directions, enforces pending
 byte limits and reports forwarding counters/errors.
+
+## Realtime state streaming
+
+`RealtimeServer` and `RealtimeClient` provide native encrypted UDP sessions,
+room-scoped relay and server publications for the same application platform:
+player input, collaborative cursors, shared state and sensor updates use the
+same binary latest-value channels. Per-participant tickets enter through an
+authenticated TLS/IPC control plane. The data plane coalesces unsent updates,
+rejects stale/replayed packets, paces traffic using RTT/receipt feedback and
+enforces queue, payload, participant and lifetime limits without Qt.
+
+Use `#include <iiNetwork/Realtime.h>` and the existing `iiNetwork::iiNetwork`
+target. `example/realtime.cpp` is a compiled live-room example. Reliable
+commands continue to use `Peer`/TLS alongside this state stream. See
+[Realtime API, protocol and deployment](docs/Realtime.md) for admission,
+authentication, loss semantics and validation scope.
 
 ## Build and consume
 
@@ -42,6 +58,11 @@ cmake --build build -j 6
 ctest --test-dir build --output-on-failure
 cmake --install build --prefix "$PWD/build/package"
 ```
+
+`INSTALL_PREFIX="$PWD/build/package" BUILD_JOBS=3 ./install.sh` runs the same
+source checks, installs the package and builds/runs independent installed
+consumers. Omitting `INSTALL_PREFIX` selects `~/.local/SDK/iiNetwork`. New
+examples live in `example/`; the older `examples/` paths remain available.
 
 The Homebrew prefix is a macOS example; use platform-appropriate dependency
 prefixes elsewhere. Consumers use the exported target:
@@ -153,6 +174,16 @@ See [Architecture](docs/Architecture.md), [Communication interfaces](docs/Interf
 [Verification](docs/Verification.md), `tests/contracts.cpp`, `tests/interfaces.cpp`
 and the compiled example. Platform source paths are not
 proof of execution on another OS.
+
+## WebSocket protocol sessions
+
+`WebSocketSession` adds RFC 6455 HTTP/1.1 upgrade, client/server framing,
+fragmented text/binary messages, masking, UTF-8, ping/pong and close handling.
+It consumes and produces owned byte strings over a caller-owned TCP/TLS stream.
+Servers inspect and authorize `upgrade_request` before explicitly accepting it.
+No networking thread, application lifetime or authentication policy is implied.
+See [WebSocket contracts](docs/WebSocket.md) and `tests/websocket.cpp` for limits,
+backpressure, unsupported extensions and the actual loopback integration test.
 
 ## Source header layout
 

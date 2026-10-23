@@ -17,7 +17,7 @@ def run(*args):
         raise RuntimeError("OpenSSL fixture creation failed: " + result.stderr[-2000:])
 
 ready = root / "ready"
-valid = ready.exists() and ready.read_text() == "iiNetwork-TLS-v1\n"
+valid = ready.exists() and ready.read_text() == "iiNetwork-TLS-v2\n" and (root / "expired.pem").exists()
 for filename in ("ca.pem", "server.pem", "client.pem", "untrusted.pem"):
     if not valid:
         break
@@ -36,7 +36,15 @@ if not valid:
         (root / (name + ".ext")).write_text(extension)
         run("x509", "-req", "-in", name + ".csr", "-CA", "ca.pem", "-CAkey", "ca.key", "-CAcreateserial", "-days", "2", "-sha256",
             "-extfile", name + ".ext", "-out", name + ".pem")
-    ready.write_text("iiNetwork-TLS-v1\n")
+    (root / "expired-index").write_text("")
+    (root / "expired-serial").write_text("1000\n")
+    (root / "expired-ca.cnf").write_text(
+        "[ca]\ndefault_ca=local\n[local]\ndatabase=expired-index\nnew_certs_dir=.\n"
+        "certificate=ca.pem\nprivate_key=ca.key\nserial=expired-serial\ndefault_md=sha256\n"
+        "policy=subject\n[subject]\ncommonName=supplied\n")
+    run("ca", "-batch", "-config", "expired-ca.cnf", "-in", "server.csr", "-startdate", "20000101000000Z",
+        "-enddate", "20010101000000Z", "-extfile", "server.ext", "-notext", "-out", "expired.pem")
+    ready.write_text("iiNetwork-TLS-v2\n")
 for key in root.glob("*.key"):
     if os.name != "nt":
         key.chmod(0o600)

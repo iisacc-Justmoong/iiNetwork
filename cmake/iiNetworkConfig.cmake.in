@@ -1,5 +1,7 @@
 @PACKAGE_INIT@
 include(CMakeFindDependencyMacro)
+set(iiNetwork_HTTP_SERVER_LIFECYCLE TRUE)
+set(iiNetwork_REALTIME_LATEST TRUE)
 find_dependency(iiSDKCore 0.18 CONFIG COMPONENTS Runtime)
 find_dependency(iiJson 0.1 CONFIG)
 find_dependency(CURL 7.62)

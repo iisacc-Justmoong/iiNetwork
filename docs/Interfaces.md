@@ -259,8 +259,8 @@ pin support can fail during transfer rather than admission.
 `HttpServer::listen()` accepts typed IPv4/IPv6, `listen_tls()` a server context,
 and `listen_local()` a local endpoint. Each shares the bounded HTTP/1.0/1.1 parser
 and router/GraphQL handlers. Requests expose IP endpoints, secure flag, optional
-mutual-TLS certificate and local credentials. Handshake time counts toward the
-absolute request deadline. Close stops accepting and closes active connections;
+mutual-TLS certificate and local credentials. TLS handshake and admitted HTTP
+request reception have separate absolute deadlines. Close stops accepting and closes active connections;
 local entry cleanup follows ownership. One Content-Length request/response is
 handled per connection. HTTP/2/3 serving, keep-alive, upgrades, chunked requests
 and streaming responses require a separate adapter.
@@ -277,3 +277,23 @@ low-level transfer options above.
 - [libcurl easy options](https://curl.se/libcurl/c/curl_easy_setopt.html)
 - [libcurl cookie list](https://curl.se/libcurl/c/CURLOPT_COOKIELIST.html)
 - [libcurl public-key pinning](https://curl.se/libcurl/c/CURLOPT_PINNEDPUBLICKEY.html)
+
+## 메모리 TLS 식별자와 QR 신뢰
+
+`TlsIdentity::certificate_chain_pem`과 `private_key_pem`은 파일·키체인 없이 임시 서버 인증서를 구성한다. 파일 필드와 메모리 필드를 혼용하거나 인증서·키 중 하나만 제공하면 거부한다. `TlsPolicy::trusted_certificate_sha256`은 별도 인증된 QR·디렉터리로 확인한 정확한 leaf 인증서를 신뢰한다. 해당 지문의 일치와 인증서 유효기간을 애플리케이션 연결 콜백 전에 확인하며, 잘못된 인증서 용도나 약한 TLS 정책은 허용하지 않는다. 일반 연결의 CA·호스트명 검증과 SPKI pin 정책은 유지한다. 이 옵션은 서버 역할에서 사용할 수 없다.
+
+`iiNetwork.interfaces.tls`는 메모리 식별자, 파일 혼용·인증서/키 불일치 거부, CA 없는 정확한 인증서 고정과 잘못된 고정값의 연결 거부를 실제 TLS 소켓으로 검증한다. 정확한 지문을 전달해도 만료된 인증서와 서버 용도가 없는 클라이언트 인증서는 거부한다.
+
+메모리 PEM과 정확한 인증서 신뢰는 네이티브 `TlsContext`/`TlsStream` 계약이다. libcurl 기반 `Http`에 이 옵션을 전달하면 `unsupported`로 거부하여 신뢰 정책을 조용히 무시하지 않는다. HTTP의 CA·호스트명 검증과 SPKI pin은 기존 지원 범위를 따른다.
+
+## HTTP 연결 정상 종료
+
+`HttpServer::shutdown(grace)`는 TCP·TLS·로컬 리스너의 새 연결을 즉시 차단하고, 이미 허용한 요청과 응답은 유예 시간 안에 마무리한다. 호출은 블로킹하지 않으며 호스트는 `draining()`이 거짓이 될 때까지 이벤트 루프를 계속 구동한다. 진행 중인 종료의 반복 호출은 최초 기한을 연장하지 않는다. 최초 호출의 유예 시간이 0이면 즉시 닫고, 음수 또는 24시간 초과는 상태 변경 없이 거부한다. `close()`와 소멸자는 즉시 종료이다.
+
+`ServerLimits::request_timeout`은 허용된 연결의 HTTP 요청 수신 절대 기한이며, `response_timeout`은 응답을 쓰고 닫는 별도의 절대 기한이다. TLS 핸드셰이크는 `TlsStreamOptions::handshake_timeout`으로 별도 제한한다. 응답을 읽지 않는 상대도 연결 슬롯을 무기한 점유하지 못한다. 동기 애플리케이션 핸들러의 C++ 실행을 선점하지 않으므로 긴 연산은 호스트 작업 큐에 넘겨야 한다. `iiNetwork.http.shutdown.*`는 진행 중 요청 완료, 새 연결 차단, 재시작, 강제 기한, 0초 종료와 응답을 읽지 않는 상대를 실제 TCP로 검증한다.
+
+작은 HTTP 한도에서도 파서가 431·413 오류를 전송할 수 있도록 전송 수신 버퍼는 최소 64 KiB의 한 번 읽기 공간을 허용한다. 헤더·본문의 애플리케이션 한도는 파서가 별도로 적용하며, 초과 요청을 핸들러에 전달하지 않는다. 응답 기한 검사는 작은 커널 수신 버퍼와 별도 클라이언트 루프를 사용하고, 요청 전송 이후 클라이언트 읽기를 중지하여 실제 전송 정체를 재현한다.
+
+응답 전송 큐는 검증을 마친 직렬화 응답의 실제 바이트 수로 한정한다. 본문·헤더가 각각 상한에 도달해도 상태 줄과 HTTP 프레이밍 공간 때문에 유효한 응답이 전송 단계에서 거부되지 않는다.
+
+설치 설정의 `iiNetwork_HTTP_SERVER_LIFECYCLE`은 이 계약과 `ServerLimits` 레이아웃을 함께 제공하는 패키지의 기능 표시이다. iiWebServer는 동일 버전의 오래된 설치본과 새 HTTP 라이브러리가 섞이지 않도록 이 표시를 확인한다. 정적 라이브러리와 공개 헤더는 같은 빌드에서 설치하고 소비자는 함께 재빌드한다.
