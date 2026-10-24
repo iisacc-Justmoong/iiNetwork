@@ -1,5 +1,8 @@
 #include <iiNetwork/Address.h>
 #include "SocketInternal.h"
+#ifdef _WIN32
+#include <iphlpapi.h>
+#endif
 #include <charconv>
 #include <set>
 

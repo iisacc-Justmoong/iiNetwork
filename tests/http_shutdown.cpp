@@ -32,12 +32,14 @@ void graceful() {
     require(bool(server.shutdown(10s)), "idempotent shutdown");
     Tcp late(loop); bool rejected = false; late.failed = [&](auto) { rejected = true; };
     auto dial = late.connect(endpoint(port));
-    if (dial) until(loop, [&] { return rejected; });
-    require(!late.is_connected(), "accepted after shutdown");
+    // Refusal notification can take longer than the drain grace on Windows.
+    // Complete the admitted request without waiting for that unrelated dial.
     require(client.write("cd"), "complete request while draining");
     until(loop, [&] { return server.active_connections() == 0 && !client.is_connected(); });
     require(calls == 1 && reply.find("200 Response") != reply.npos && reply.ends_with("abcd"), "in-flight response lost");
     require(!server.draining(), "drain did not finish");
+    if (dial) until(loop, [&] { return rejected; });
+    require(!late.is_connected(), "accepted after shutdown");
     require(server.listen(endpoint(), handler), "restart after graceful shutdown"); server.close();
 }
 void forced_deadline() {

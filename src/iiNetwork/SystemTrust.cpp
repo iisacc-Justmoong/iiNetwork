@@ -27,7 +27,7 @@ bool load_system_trust(SSL_CTX* context){
         if(data){const auto size=CFDataGetLength(data);if(size>0&&size<=16*1024*1024&&append(store,CFDataGetBytePtr(data),long(size)))++loaded;CFRelease(data);}}
     CFRelease(anchors);return loaded!=0;
 #elif defined(_WIN32)
-    auto store=CertOpenSystemStoreW(nullptr,L"ROOT");if(!store)return false;
+    auto store=CertOpenSystemStoreW(0,L"ROOT");if(!store)return false;
     PCCERT_CONTEXT certificate=nullptr;std::size_t loaded=0;
     while((certificate=CertEnumCertificatesInStore(store,certificate)))if(certificate->cbCertEncoded<=16*1024*1024&&append(SSL_CTX_get_cert_store(context),certificate->pbCertEncoded,long(certificate->cbCertEncoded)))++loaded;
     CertCloseStore(store,0);return loaded!=0;

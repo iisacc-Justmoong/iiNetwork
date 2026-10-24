@@ -9,6 +9,10 @@
 #include <thread>
 #ifndef _WIN32
 #include <unistd.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
 #endif
 
 using namespace ii::network;
@@ -29,6 +33,16 @@ template <class Predicate> void until(ii::runtime::EventLoop& loop, Predicate do
 IpEndpoint loopback(std::uint16_t port = 0, AddressFamily family = AddressFamily::ipv4) { return {IpAddress::loopback(family), port}; }
 std::string file(std::string_view name) { return (fixtures / name).string(); }
 std::string read_file(std::string path) { std::ifstream input(path, std::ios::binary); return {std::istreambuf_iterator<char>(input), {}}; }
+bool local_entry_exists(const std::string& path)
+{
+#ifdef _WIN32
+    // AF_UNIX endpoints are reparse entries; following them as ordinary files
+    // makes std::filesystem::exists fail with ERROR_CANT_ACCESS_FILE.
+    return GetFileAttributesW(std::filesystem::path(path).c_str()) != INVALID_FILE_ATTRIBUTES;
+#else
+    return std::filesystem::exists(path);
+#endif
+}
 TlsOptions server_options(bool mutual = false)
 {
     TlsOptions options; options.policy.identity = {file("server.pem"), file("server.key"), {}};
@@ -49,6 +63,8 @@ HttpResponse exchange(Http& http, ii::runtime::EventLoop& loop, HttpRequest requ
 }
 void addresses()
 {
+    auto system_trust = take(TlsContext::client());
+    require(system_trust->role() == TlsRole::client, "default native trust context initialization");
     auto v4 = take(IpAddress::parse("127.0.0.1")), v6 = take(IpAddress::parse("::1"));
     require(v4.is_loopback() && v6.is_loopback() && ipv4(v4.string()) && ipv6(v6.string()), "IP family/loopback");
     require(take(IpEndpoint::parse("[::1]:443")).string() == "[::1]:443", "IPv6 endpoint formatting");
@@ -60,6 +76,17 @@ void addresses()
     require(!resolve_host(std::string("local\0host", 10), 0), "resolver NUL accepted");
     auto inventory = interfaces(); require(!inventory.empty(), "interface inventory empty");
     require(std::any_of(inventory.begin(), inventory.end(), [](const auto& item) { return item.loopback && item.index && !item.name.empty(); }), "interface metadata");
+    const auto loop = std::find_if(inventory.begin(), inventory.end(), [](const auto& item) { return item.loopback && item.index; });
+    auto interface_name = loop->name;
+#ifdef _WIN32
+    std::array<char, IF_MAX_STRING_SIZE + 1> native_name{};
+    require(if_indextoname(loop->index, native_name.data()) != nullptr, "native interface name lookup");
+    interface_name = native_name.data();
+#endif
+    auto named_scope = take(IpAddress::parse("fe80::1%" + interface_name));
+    auto numeric_scope = take(IpAddress::parse("fe80::1%" + std::to_string(loop->index)));
+    require(named_scope == numeric_scope && named_scope.scope_id() == loop->index, "IPv6 named scope must retain its native interface index");
+    require(!IpAddress::parse("fe80::1%ii-sdk-interface-does-not-exist"), "unknown interface scope accepted");
 }
 void tcp()
 {
@@ -122,7 +149,7 @@ void local()
     auto path = file("ipc.sock"); std::filesystem::remove(path);
     LocalServer server(loop); std::unique_ptr<LocalSocket> accepted;
     server.accepted = [&](auto stream) { accepted = std::move(stream); };
-    pass(server.listen({path})); require(std::filesystem::exists(path), "local bind entry absent");
+    pass(server.listen({path})); require(local_entry_exists(path), "local bind entry absent");
     LocalSocket client(loop); pass(client.connect({path})); until(loop, [&] { return accepted && client.is_connected(); });
     require(client.peer_path() == path, "local peer name");
 #ifndef _WIN32
@@ -131,7 +158,7 @@ void local()
 #endif
     require(client.write(std::string("a\0b", 3)), "local send"); until(loop, [&] { return accepted->available_bytes() == 3; });
     require(take(accepted->read_exactly(3)) == std::optional<std::string>(std::string("a\0b", 3)), "local binary receive");
-    client.close(); server.close(); require(!std::filesystem::exists(path), "owned local path not removed");
+    client.close(); server.close(); require(!local_entry_exists(path), "owned local path not removed");
     auto existing = file("keep.txt"); { std::ofstream output(existing); output << "user data"; }
     require(!server.listen({existing}) && read_file(existing) == "user data", "existing local path overwritten");
     pass(server.listen({path})); auto renamed = file("renamed.sock"); std::filesystem::remove(renamed);
