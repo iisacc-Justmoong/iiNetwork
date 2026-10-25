@@ -15,7 +15,7 @@ for directory in ("src",):
         if path.name in ("Layers.h", "Layers.cpp", "Address.h", "Address.cpp", "ByteStream.h", "ByteStream.cpp",
                          "Transport.h", "Transport.cpp", "Local.h", "Local.cpp", "Security.h", "Security.cpp",
                          "Tls.h", "Tls.cpp", "Session.h", "Session.cpp", "Presentation.h", "Presentation.cpp"):
-            if re.search(r'#\s*include\s*[<"]iiNetwork/(?:Application|Server|Stack|Peer|Realtime)\.h', text):
+            if re.search(r'#\s*include\s*[<"]iiNetwork/(?:Application|Server|Stack|Peer|Realtime|LoadBalancer)\.h', text):
                 errors.append(f"{path.relative_to(root)}: lower layer imports application/orchestration")
         if path.name in ("Session.h", "Session.cpp"):
             if re.search(r'#\s*include\s*[<"]iiNetwork/Presentation\.h', text):

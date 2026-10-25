@@ -1,6 +1,6 @@
 # iiNetwork
 
-iiNetwork 0.5 is the C++23 networking module of iiSDK. Its application model is
+iiNetwork 0.6 is the C++23 networking module of iiSDK. Its application model is
 a relationship between equal peers: either side can initiate operations,
 answer calls and publish events over the same connection. Listening and dialing
 assign transport setup roles without application rank. A node can do both.
@@ -29,6 +29,14 @@ source compatible.
 `TcpRelay` bridges two connected sockets in both directions, enforces pending
 byte limits and reports forwarding counters/errors.
 
+`NetworkLoadBalancer` selects real backend endpoints using weighted rendezvous
+hashing of canonical IPv4/IPv6 TCP/UDP/TLS flow metadata. A Core `LoadLease` keeps
+each established connection pinned and counted through transport cleanup; new
+connections observe health, draining and resource limits. Targets added later
+only receive flows for which they win the hash. See [L4 load balancing](docs/LoadBalancer.md)
+and the [native loopback example](example/load_balancer.cpp). Application/Classic
+request policies remain in Core; this module owns network-specific flow identity.
+
 ## Realtime state streaming
 
 `RealtimeServer` and `RealtimeClient` provide native encrypted UDP sessions,
@@ -47,7 +55,7 @@ authentication, loss semantics and validation scope.
 
 ## Build and consume
 
-Dependencies are iiSDKCore >= 0.18 (Runtime), iiJson >= 0.1, libcurl >= 7.62 and
+Dependencies are iiSDKCore >= 0.19 (Runtime), iiJson >= 0.1, libcurl >= 7.62 and
 OpenSSL >= 3 (Crypto and SSL). C++23 is required. Use the repository-local `build/`.
 The following installation is a workspace staging area, preserving installed SDKs.
 

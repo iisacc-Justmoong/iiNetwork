@@ -241,7 +241,15 @@ struct TlsStream::Impl : std::enable_shared_from_this<TlsStream::Impl>
             ERR_clear_error(); int result = SSL_do_handshake(ssl); int code = result == 1 ? SSL_ERROR_NONE : SSL_get_error(ssl, result);
             if (result == 1) { if (!secured()) return; }
             else if (code != SSL_ERROR_WANT_READ && code != SSL_ERROR_WANT_WRITE)
-            { stop(failure("TLS handshake failed").error().message); return; }
+            {
+                // The OpenSSL error queue is thread-local and may be drained
+                // by another adapter callback. Verification status belongs to
+                // this SSL session and preserves the certificate failure kind.
+                const auto verification = SSL_get_verify_result(ssl);
+                auto message = verification == X509_V_OK ? std::string("TLS handshake failed")
+                    : std::string("TLS peer certificate verification failed: ") + X509_verify_cert_error_string(verification);
+                stop(failure(std::move(message)).error().message); return;
+            }
             flush(); if (!ssl || state == TlsState::handshaking) return;
         }
         if (state != TlsState::secured && state != TlsState::closing) return;

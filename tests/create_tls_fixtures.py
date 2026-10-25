@@ -10,14 +10,20 @@ root = Path(directory).resolve()
 root.mkdir(parents=True, exist_ok=True)
 if os.name != "nt":
     root.chmod(0o700)
+request_config = root / "request.cnf"
+request_config.write_text("[req]\ndistinguished_name=subject\nprompt=no\n[subject]\nCN=iiNetwork fixture\n")
 
 def run(*args):
+    if args[0] == "req":
+        # A relocated/static OpenSSL tool can have no default openssl.cnf.
+        # Certificate requests use only this private fixture configuration.
+        args = (args[0], "-config", str(request_config), *args[1:])
     result = subprocess.run([openssl, *map(str, args)], cwd=root, capture_output=True, text=True)
     if result.returncode:
         raise RuntimeError("OpenSSL fixture creation failed: " + result.stderr[-2000:])
 
 ready = root / "ready"
-valid = ready.exists() and ready.read_text() == "iiNetwork-TLS-v2\n" and (root / "expired.pem").exists()
+valid = ready.exists() and ready.read_text() == "iiNetwork-TLS-v3\n" and (root / "expired.pem").exists()
 for filename in ("ca.pem", "server.pem", "client.pem", "untrusted.pem"):
     if not valid:
         break
@@ -44,7 +50,7 @@ if not valid:
         "policy=subject\n[subject]\ncommonName=supplied\n")
     run("ca", "-batch", "-config", "expired-ca.cnf", "-in", "server.csr", "-startdate", "20000101000000Z",
         "-enddate", "20010101000000Z", "-extfile", "server.ext", "-notext", "-out", "expired.pem")
-    ready.write_text("iiNetwork-TLS-v2\n")
+    ready.write_text("iiNetwork-TLS-v3\n")
 for key in root.glob("*.key"):
     if os.name != "nt":
         key.chmod(0o600)

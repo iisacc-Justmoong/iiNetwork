@@ -229,10 +229,13 @@ void tls()
         TlsOptions trusted; trusted.policy.trusted_certificate_sha256 = certificate.certificate_sha256;
         if (!matches) (*trusted.policy.trusted_certificate_sha256)[0] ^= 1;
         TlsStream pinned(loop, take(TlsContext::client(trusted))); bool secured = false, failed = false;
-        pinned.connected = [&] { secured = true; }; pinned.failed = [&](auto) { failed = true; };
+        std::string rejection;
+        pinned.connected = [&] { secured = true; }; pinned.failed = [&](auto message) { failed = true; rejection = message; };
         pass(pinned.connect(loopback(pinned_server.listener.port()), "qr-device.invalid"));
         until(loop, [&] { return secured || failed; });
         require(secured == matches && failed != matches, "out-of-band certificate trust ignored");
+        if (!matches) require(rejection.find("certificate") != std::string::npos,
+            "TLS certificate rejection lost its verification diagnostic");
     }
     auto mixed = ephemeral; mixed.policy.identity.certificate_chain_file = file("server.pem");
     mixed.policy.identity.private_key_file = file("server.key");
