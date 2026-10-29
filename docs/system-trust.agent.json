@@ -1,0 +1,135 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:5ada8889e15f3f23e07d0b7444ffd335011ee89438c2272e169e9f0e022eeb22",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/system-trust.md",
+    "sha256": "e021110669149921b877d7f9837d08e2fd189087cbd8ed3cb011bfeb1de90f6f",
+    "bytes": 1632,
+    "line_count": 9,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "재배치 가능한 TLS 신뢰 저장소",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 재배치 가능한 TLS 신뢰 저장소\n",
+      "level": 1,
+      "title": "재배치 가능한 TLS 신뢰 저장소"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "명시적인 CA 파일·디렉터리 또는 인증서 pin이 없는 TLS 검증은 OS의 기본 루트 인증서를 사용한다. macOS는 Security의 anchor 인증서, Windows는 ROOT 인증서 저장소, Linux는 배포판의 표준 CA 번들을 OpenSSL 검증기에 제공한다. 빌드 시 OpenSSL prefix나 Homebrew 설치 경로의 인증서 파일에 의존하지 않는다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "iPadOS는 루트 인증서 내보내기 API를 제공하지 않으므로 OpenSSL의 기본 체인 검증 콜백에서 Security의 SecTrust를 사용한다. 제공된 인증서 체인과 SSL 서버/클라이언트 용도, 호스트명/IP 및 깊이를 검증하며 실패를 허용으로 바꾸지 않는다. Core 이벤트 루프에서 숨은 동기 네트워크 조회를 하지 않도록 중간 인증서 자동 다운로드를 끈다. 명시적 CA·pin 경로는 이 기본 콜백을 설치하지 않는다. HTTP 소비자의 iPad용 CURL도 `USE_APPLE_SECTRUST=ON`으로 별도 구성한다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "명시한 `TlsPolicy`의 CA·pin·호스트 이름·만료·용도·검증 깊이 계약은 유지한다. OS anchor 가져오기는 OpenSSL의 체인 검증을 대체하는 브라우저 신뢰/CT 정책 구현은 아니다. 사용자 정의 CA는 기존 명시적 정책으로 지정할 수 있다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "`iiNetwork.system_trust`는 실제 OS anchor가 적재되는지와 기본 클라이언트 컨텍스트 생성을 검사한다. 로컬 TLS 계약 검사는 별도의 테스트 CA·인증서로 성공·거부 경로를 검사한다. 외부 서비스 로그인 성공과 같은 결과로 집계하지 않는다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "재배치 가능한 TLS 신뢰 저장소",
+      "anchor": "재배치-가능한-tls-신뢰-저장소",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 3,
+        "text": "명시적인 CA 파일·디렉터리 또는 인증서 pin이 없는 TLS 검증은 OS의 기본 루트 인증서를 사용한다. macOS는 Security의 anchor 인증서, Windows는 ROOT 인증서 저장소, Linux는 배포판의 표준 CA 번들을 OpenSSL 검증기에 제공한다. 빌드 시 OpenSSL prefix나 Homebrew 설치 경로의 인증서 파일에 의존하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000005",
+        "line": 5,
+        "text": "iPadOS는 루트 인증서 내보내기 API를 제공하지 않으므로 OpenSSL의 기본 체인 검증 콜백에서 Security의 SecTrust를 사용한다. 제공된 인증서 체인과 SSL 서버/클라이언트 용도, 호스트명/IP 및 깊이를 검증하며 실패를 허용으로 바꾸지 않는다. Core 이벤트 루프에서 숨은 동기 네트워크 조회를 하지 않도록 중간 인증서 자동 다운로드를 끈다. 명시적 CA·pin 경로는 이 기본 콜백을 설치하지 않는다. HTTP 소비자의 iPad용 CURL도 `USE_APPLE_SECTRUST=ON`으로 별도 구성한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000009",
+        "line": 9,
+        "text": "`iiNetwork.system_trust`는 실제 OS anchor가 적재되는지와 기본 클라이언트 컨텍스트 생성을 검사한다. 로컬 TLS 계약 검사는 별도의 테스트 CA·인증서로 성공·거부 경로를 검사한다. 외부 서비스 로그인 성공과 같은 결과로 집계하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:82f3e85f8dad25b5fb60528d7f550bb7e02608214bda4495619c27062653365b",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/WebSocket.md",
+    "sha256": "351b123cbe0e0aa58e621c793350e3815e99c253e3fb6e72476ccb245538f91b",
+    "bytes": 4245,
+    "line_count": 19,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "Qt 독립 WebSocket 세션",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Qt 독립 WebSocket 세션\n",
+      "level": 1,
+      "title": "Qt 독립 WebSocket 세션"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "iiNetwork 0.5.0의 `WebSocketSession`은 RFC 6455 HTTP/1.1 upgrade와 텍스트·바이너리 메시지 프로토콜을 처리한다. `WebSocket.h`는 Qt 타입을 사용하지 않으며 기존 iiNetwork의 TCP/TLS/로컬 스트림과 조합한다. TLS, 소켓, 이벤트 루프, UI 콜백을 중복 소유하지 않는다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "클라이언트는 `client(options)`에서 초기 upgrade 바이트를 준비하고 `take_output()`으로 이동시킨다. 수신 바이트는 `receive()`에 넣는다. 서버는 `server()`로 시작하여 `upgrade_request` 이벤트를 받으면 `upgrade()`의 경로·Origin·헤더·제안 subprotocol을 검사한다. 애플리케이션이 인증과 권한을 확인한 뒤 `accept(protocol)` 또는 `reject(403)`을 호출해야 한다. 수신만으로 자동 승인하거나 계정 인증을 대체하지 않는다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "`receive()`는 조각난 HTTP 헤더/프레임을 유지하며 완료된 소유 이벤트를 반환한다. 여러 TCP 패킷에 나뉜 메시지와 하나의 패킷에 합쳐진 프레임을 처리한다. RFC challenge 검증, 클라이언트의 CSPRNG 마스킹, 서버/클라이언트 방향별 마스킹 검증, 7/16/64비트 길이, continuation 재조립, UTF-8, ping 자동 pong, close 코드·이유를 지원한다. 전송 프레임은 항상 FIN이며 수신 fragmentation을 지원한다. 확장 비트, 알려지지 않은 opcode, 비정규 길이, 잘못된 control frame과 UTF-8을 거절한다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "기본 한도는 HTTP 헤더 16 KiB, 메시지 8 MiB, 수신/출력 대기 각각 16 MiB, 한 receive 호출의 프레임/이벤트 1,024개이다. 빈 continuation도 작업 한도를 사용한다. 메시지 한도는 조각 전체에 적용한다. 애플리케이션은 transport에 넘기기 전 반환된 출력의 수명을 유지해야 한다. 출력이 수용되지 않으면 `would_block`을 반환한다. 부분 수신은 성공한 빈 이벤트 배열이다. 수신 프로토콜/한도 오류는 failed 상태로 끝나며 이전 대기 출력을 폐기한다. 실패한 receive 호출에서 만들어지던 이벤트 배열은 전달하지 않는다.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "메시지 바이트 한도는 데이터/continuation 프레임에 적용한다. ping/pong/close는 RFC의 독립적인 125바이트 한도를 사용하므로 작은 데이터 메시지 예산이 올바른 control frame까지 거절하지 않는다. 수신/출력 전체 대기 바이트 한도는 control frame에도 적용한다.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 12,
+      "end_line": 12,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "모든 메서드는 한 소유 실행 영역에서 호출한다. 타이머, handshake/close 마감, 재연결, 전송 실패와 실제 TCP 종료는 소비자가 Core EventLoop와 스트림으로 관리한다. `take_output()`은 성공적인 네트워크 전달 확인이 아니다. 서버가 이미 버퍼에 받은 선행 프레임은 승인 후 `receive(\"\")`로 처리할 수 있다. close 수신 후 남은 응답 바이트는 flush한 뒤 transport를 닫는다.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "HTTP/2·HTTP/3 extended CONNECT, permessage-deflate, 자동 URL/DNS 연결, 자동 HTTP 인증, 자동 Origin 허용 정책은 제공하지 않는다. `wss`는 기존 `TlsStream` 위에서 같은 프로토콜을 사용한다. 실제 TLS 경로는 기존 TLS/peer 테스트로, 신규 WebSocket 결합은 실제 loopback TCP로 검증한다. WebSocket-over-TLS 상호 운용 시험을 완료했다고 주장하지 않는다. iiWebServer의 기존 Qt WebSocket 소비자는 별도 이행 대상이다.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "새 코드 검증에는 RFC의 알려진 accept-key 예제, 분할 수신, subprotocol, 승인 전 대기/거부, 바이너리 126/65,535/65,536바이트 경계, UTF-8 분할, ping/pong, 종료, 잘못된 마스크/길이/opcode/fragmentation, 한도, 결정적 비정상 입력 및 실제 TCP 왕복을 포함한다. 기존 전체 네트워크 테스트도 실행한다.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "현 호스트에는 OpenSSL 3의 Homebrew 경로가 없어 OpenSSL 4.0.3으로 네트워크 SDK를 검증했다. 인증서 이름을 읽는 내부 보조 함수는 const 입력을 수용하도록 수정했다. Dreamscapes 앱의 고정 OpenSSL 3.6.4 패키지는 변경하지 않았다. 4.0에서 발생하는 기존 `SSL_set1_host` deprecation 경고는 후속 API 이행 대상이며 TLS 검증을 끄지 않았다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Qt 독립 WebSocket 세션",
+      "anchor": "qt-독립-websocket-세션",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 3,
+        "text": "iiNetwork 0.5.0의 `WebSocketSession`은 RFC 6455 HTTP/1.1 upgrade와 텍스트·바이너리 메시지 프로토콜을 처리한다. `WebSocket.h`는 Qt 타입을 사용하지 않으며 기존 iiNetwork의 TCP/TLS/로컬 스트림과 조합한다. TLS, 소켓, 이벤트 루프, UI 콜백을 중복 소유하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000005",
+        "line": 5,
+        "text": "클라이언트는 `client(options)`에서 초기 upgrade 바이트를 준비하고 `take_output()`으로 이동시킨다. 수신 바이트는 `receive()`에 넣는다. 서버는 `server()`로 시작하여 `upgrade_request` 이벤트를 받으면 `upgrade()`의 경로·Origin·헤더·제안 subprotocol을 검사한다. 애플리케이션이 인증과 권한을 확인한 뒤 `accept(protocol)` 또는 `reject(403)`을 호출해야 한다. 수신만으로 자동 승인하거나 계정 인증을 대체하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000009",
+        "line": 9,
+        "text": "기본 한도는 HTTP 헤더 16 KiB, 메시지 8 MiB, 수신/출력 대기 각각 16 MiB, 한 receive 호출의 프레임/이벤트 1,024개이다. 빈 continuation도 작업 한도를 사용한다. 메시지 한도는 조각 전체에 적용한다. 애플리케이션은 transport에 넘기기 전 반환된 출력의 수명을 유지해야 한다. 출력이 수용되지 않으면 `would_block`을 반환한다. 부분 수신은 성공한 빈 이벤트 배열이다. 수신 프로토콜/한도 오류는 failed 상태로 끝나며 이전 대기 출력을 폐기한다. 실패한 receive 호출에서 만들어지던 이벤트 배열은 전달하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 11,
+        "text": "메시지 바이트 한도는 데이터/continuation 프레임에 적용한다. ping/pong/close는 RFC의 독립적인 125바이트 한도를 사용하므로 작은 데이터 메시지 예산이 올바른 control frame까지 거절하지 않는다. 수신/출력 전체 대기 바이트 한도는 control frame에도 적용한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000015",
+        "line": 15,
+        "text": "HTTP/2·HTTP/3 extended CONNECT, permessage-deflate, 자동 URL/DNS 연결, 자동 HTTP 인증, 자동 Origin 허용 정책은 제공하지 않는다. `wss`는 기존 `TlsStream` 위에서 같은 프로토콜을 사용한다. 실제 TLS 경로는 기존 TLS/peer 테스트로, 신규 WebSocket 결합은 실제 loopback TCP로 검증한다. WebSocket-over-TLS 상호 운용 시험을 완료했다고 주장하지 않는다. iiWebServer의 기존 Qt WebSocket 소비자는 별도 이행 대상이다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

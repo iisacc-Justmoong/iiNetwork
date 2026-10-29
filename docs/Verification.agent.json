@@ -1,0 +1,660 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:49dd9de5e7130bf52d7a4aab9ed4314b811c8e610429660a83c05b1cb305ed72",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/Verification.md",
+    "sha256": "ba0dd41599822b1a7f77393765ee97e0dee0c1c2172e96286553164aebf29488",
+    "bytes": 11828,
+    "line_count": 193,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "Verification record — 2026-10-20 (Asia/Seoul)",
+    "role": "evidence",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Verification record — 2026-10-20 (Asia/Seoul)\n",
+      "level": 1,
+      "title": "Verification record — 2026-10-20 (Asia/Seoul)"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "heading",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "## Scope and environment\n",
+      "level": 2,
+      "title": "Scope and environment"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 8,
+      "raw": "This record concerns iiNetwork 0.4.0 source, its workspace-staged package and\nnative consumers. Builds use the repository-local `build/`, with consumer\nbuilds nested below that directory. The existing installed SDK and applications\nwere not replaced or restarted.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 10,
+      "end_line": 16,
+      "raw": "The host is macOS 27.0.1 arm64, using AppleClang 21.0.0, CMake 4.4.3, installed\niiSDKCore Runtime 0.18.1, iiJson 0.1.1, the macOS SDK's libcurl 8.7.1 headers/library\nand Homebrew OpenSSL 3.6.4 Crypto/SSL. Runtime curl reports\n`8.7.1; (SecureTransport) LibreSSL/3.3.6`, with HTTP/2 enabled and HTTP/3 disabled.\nNative OpenSSL streams separately negotiate TLS 1.2 and TLS 1.3 in tests.\nThis is not a Windows/Linux/device execution\nrecord. Public platform code paths remain separate from execution evidence.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "heading",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "## Completed module checks\n",
+      "level": 2,
+      "title": "Completed module checks"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "table",
+      "start_line": 20,
+      "end_line": 32,
+      "raw": "| Check | Result |\n| --- | --- |\n| Release build with `-Wall -Wextra -Wpedantic` | Passed, no compiler warnings |\n| Release CTest suite | 24/24 passed |\n| Debug build with AddressSanitizer and UndefinedBehaviorSanitizer | Passed |\n| Sanitized CTest suite | 24/24 passed; no sanitizer findings |\n| Public headers compiled independently | 19/19 compiled |\n| Native dependency/layer boundary policy | Passed |\n| Staged `find_package(iiNetwork 0.4)` consumers | 16/16 passed |\n| Source-embedded consumer with parent imports | 2/2 passed |\n| Existing Congregation engine/native-backend tests | 2/2 passed with GUI disabled |\n| Package inventory | 19 public headers, static library, CMake exports, license and documentation; no Finder metadata or private keys |\n| Runtime dynamic dependency inspection | No Qt in iiNetwork contract executable or its iiSDKCore Runtime dependency |\n",
+      "columns": [
+        "Check",
+        "Result"
+      ],
+      "rows": [
+        [
+          "Release build with `-Wall -Wextra -Wpedantic`",
+          "Passed, no compiler warnings"
+        ],
+        [
+          "Release CTest suite",
+          "24/24 passed"
+        ],
+        [
+          "Debug build with AddressSanitizer and UndefinedBehaviorSanitizer",
+          "Passed"
+        ],
+        [
+          "Sanitized CTest suite",
+          "24/24 passed; no sanitizer findings"
+        ],
+        [
+          "Public headers compiled independently",
+          "19/19 compiled"
+        ],
+        [
+          "Native dependency/layer boundary policy",
+          "Passed"
+        ],
+        [
+          "Staged `find_package(iiNetwork 0.4)` consumers",
+          "16/16 passed"
+        ],
+        [
+          "Source-embedded consumer with parent imports",
+          "2/2 passed"
+        ],
+        [
+          "Existing Congregation engine/native-backend tests",
+          "2/2 passed with GUI disabled"
+        ],
+        [
+          "Package inventory",
+          "19 public headers, static library, CMake exports, license and documentation; no Finder metadata or private keys"
+        ],
+        [
+          "Runtime dynamic dependency inspection",
+          "No Qt in iiNetwork contract executable or its iiSDKCore Runtime dependency"
+        ]
+      ]
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 33,
+      "end_line": 33,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 34,
+      "end_line": 35,
+      "raw": "The twenty-four module tests comprise twenty behavioral groups, one private TLS\nfixture setup, one architecture-boundary check and two compiled examples. They exercise:\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 36,
+      "end_line": 36,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "list",
+      "start_line": 37,
+      "end_line": 80,
+      "raw": "- Physical backpressure/closure/counters and Manchester transition validation.\n- Ethernet padding/FCS including an independent `binascii.crc32` golden value;\n  corrupted/truncated frames; IPv4 checksum/length/padding/TTL; longest-prefix\n  and metric routing; UDP pseudoheader checksum and corruption detection.\n- Session UUID/state transitions, capacity, expiry, peer setup and replay refusal.\n- UTF-8 JSON/Base64 exchange, duplicate JSON keys and canonical Base64 padding;\n  AES-256-GCM random nonces, AAD/ciphertext authentication failures and a known\n  AES-256 zero-key/zero-IV empty-plaintext authentication vector.\n- REST percent encoding, traversal/header injection refusal, JSON/raw binary\n  request/response paths; GraphQL request fields, partial errors, explicit null,\n  malformed envelopes and retained HTTP errors; static/parameter routing.\n- Actual loopback UDP (including embedded NUL and empty datagrams), TCP send\n  admission, REST/GraphQL over native HTTP, HEAD, body/header limits, cancellation\n  and destruction from inside a libcurl stream consumer.\n- Authenticated Value exchange through the entire Ethernet/IPv4/UDP/session/\n  presentation pipeline on `MemoryMedium`, bidirectional exchange, MTU/peer\n  checks, replay refusal and forged sequence refusal without state mutation.\n- Actual bidirectional TCP relay, forwarding counters, lifecycle and overflow.\n- Native HTTP server plus REST/GraphQL service roundtrips; duplicate/conflicting\n  length framing, missing Host, invalid lengths, body limits, deadlines and\n  unsupported transfer coding; GraphQL method/media/envelope validation.\n- Numeric IPv4/IPv6 endpoints, classification/CIDR, localhost DNS and interface\n  metadata; actual IPv4/IPv6 TCP local bind, options, framed/partial reads,\n  half-close replies, counters and idle deadlines.\n- IPv4/IPv6 connected UDP peer filtering, binary/empty datagrams, explicit peer\n  destination policy, disconnect/port preservation, post-disconnect send and\n  multicast membership/hop/loopback controls. Darwin disassociation resets the\n  local address to wildcard; the actual endpoint is reported.\n- Local AF_UNIX binary streams, peer user/group, POSIX mode, path length refusal,\n  existing-file preservation, identity-checked cleanup and callback destruction.\n- TLS 1.3 TCP with ALPN, certificate inspection and SPKI pin; untrusted CA,\n  hostname and pin refusal; mutual authentication and missing-client-certificate\n  refusal; handshake deadline, graceful close_notify and invalid option refusal.\n- TLS 1.2 over local sockets, plaintext echo and destruction during the secure\n  callback. Temporary CA/server/client keys are generated inside private build\n  fixture directories; no private keys are installed in the package.\n- HTTP duplicate Set-Cookie, opt-in cookie reuse/import/clear/disabled isolation,\n  Basic/Digest/Bearer authentication, binary streamed PUT/POST, gzip decoding,\n  repeated request fields, endpoint/version/timing/transfer metadata, capability\n  refusal, bounded deadlines and automatic-redirect refusal on pinned requests.\n- Native HTTPS CA validation, forced TLS 1.2 policy, HTTP over local sockets and\n  an explicit local HTTP proxy. Chunked responses retain trailers after normal\n  and empty bodies, with one header callback per block. Destruction inside a\n  header callback suppresses completion.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Physical backpressure/closure/counters and Manchester transition validation.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Ethernet padding/FCS including an independent `binascii.crc32` golden value;",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Session UUID/state transitions, capacity, expiry, peer setup and replay refusal.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "UTF-8 JSON/Base64 exchange, duplicate JSON keys and canonical Base64 padding;",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "REST percent encoding, traversal/header injection refusal, JSON/raw binary",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Actual loopback UDP (including embedded NUL and empty datagrams), TCP send",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Authenticated Value exchange through the entire Ethernet/IPv4/UDP/session/",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Actual bidirectional TCP relay, forwarding counters, lifecycle and overflow.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Native HTTP server plus REST/GraphQL service roundtrips; duplicate/conflicting",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Numeric IPv4/IPv6 endpoints, classification/CIDR, localhost DNS and interface",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "IPv4/IPv6 connected UDP peer filtering, binary/empty datagrams, explicit peer",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Local AF_UNIX binary streams, peer user/group, POSIX mode, path length refusal,",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "TLS 1.3 TCP with ALPN, certificate inspection and SPKI pin; untrusted CA,",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "TLS 1.2 over local sockets, plaintext echo and destruction during the secure",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "HTTP duplicate Set-Cookie, opt-in cookie reuse/import/clear/disabled isolation,",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Native HTTPS CA validation, forced TLS 1.2 policy, HTTP over local sockets and",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 81,
+      "end_line": 82,
+      "raw": "\n\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "list",
+      "start_line": 83,
+      "end_line": 98,
+      "raw": "- Equal peers over one TCP connection: simultaneous calls with the same ID in\n  opposite directions, mutual state changes, bidirectional events and nested\n  reverse calls before a deferred reply. Both nodes listen and dial concurrently;\n  stopping listeners retains established links.\n- Independent operation publication/authorization, unknown/removed operations,\n  duplicate/invalid names, generic handler exceptions, negotiated frame bounds\n  and separate outgoing/incoming call caps. Accepting a link grants no privilege.\n- Request timeout/cooperative cancellation, absolute deadlines under delayed\n  polling, late/double reply refusal, pending-call close, fresh reconnect sessions,\n  node destruction and destruction during an explicit close callback. External\n  closed links do not retain destroyed-node operation captures.\n- Malformed JSON, pre-hello traffic, invalid versions, oversized prefixes,\n  repeated hello, unsolicited replies, silent negotiation deadlines and fragmented\n  frames; read EOF terminates a peer even on a half-close-enabled transport.\n  IPv6, local sockets and mutual TLS all support requests in both\n  directions with the same PeerConnection interface.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Equal peers over one TCP connection: simultaneous calls with the same ID in",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Independent operation publication/authorization, unknown/removed operations,",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Request timeout/cooperative cancellation, absolute deadlines under delayed",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Malformed JSON, pre-hello traffic, invalid versions, oversized prefixes,",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 99,
+      "end_line": 99,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 100,
+      "end_line": 103,
+      "raw": "The first peer TDD checkpoint compiled the tests and failed to link with missing\nPeer definitions; `0.4-tdd-red.log` retains that result. The compiled peer example\nchanges both counters over one connection (`alpha=11, beta=7`). [Peers.md](Peers.md)\nspecifies the private versioned protocol, trust evidence and cancellation bounds.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 104,
+      "end_line": 104,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 105,
+      "end_line": 110,
+      "raw": "The fixture setup requires a local OpenSSL command and Python 3.9+. No public\nendpoint or paid service is needed. libcurl HTTP/2 capability reporting is\nverified; there is no HTTP/2 server or HTTP/3 network execution in this record.\nSOCKS5 controls are exposed through libcurl but the executable proxy fixture\nuses HTTP. Linux abstract sockets and Windows AF_UNIX/identity paths have source\nimplementations only. No Windows/Linux runtime claim follows from these tests.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 111,
+      "end_line": 111,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "heading",
+      "start_line": 112,
+      "end_line": 112,
+      "raw": "## Reproduction\n",
+      "level": 2,
+      "title": "Reproduction"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 113,
+      "end_line": 113,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "paragraph",
+      "start_line": 114,
+      "end_line": 114,
+      "raw": "Standalone Release and staging:\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 115,
+      "end_line": 115,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "fenced_code",
+      "start_line": 116,
+      "end_line": 123,
+      "raw": "```sh\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\" \\\n  -DCMAKE_CXX_FLAGS='-Wall -Wextra -Wpedantic' -DCMAKE_EXE_LINKER_FLAGS=''\ncmake --build build -j 6\nctest --test-dir build --output-on-failure\ncmake --install build --prefix \"$PWD/build/package\"\n```\n",
+      "language": "sh",
+      "code": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\" \\\n  -DCMAKE_CXX_FLAGS='-Wall -Wextra -Wpedantic' -DCMAKE_EXE_LINKER_FLAGS=''\ncmake --build build -j 6\nctest --test-dir build --output-on-failure\ncmake --install build --prefix \"$PWD/build/package\"\n",
+      "closed": true
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 124,
+      "end_line": 124,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 125,
+      "end_line": 128,
+      "raw": "Validation unsets `CPATH` and `LIBRARY_PATH` only for each command (`env -u\nCPATH -u LIBRARY_PATH`) so ambient GUI SDK search paths cannot affect the native\ncheck. Dependencies are resolved through CMake targets; the global environment\nis unchanged.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 129,
+      "end_line": 129,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 130,
+      "end_line": 136,
+      "raw": "For the sanitized checkpoint, configure the same `build/` with\n`CMAKE_BUILD_TYPE=Debug`,\n`CMAKE_CXX_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic'`\nand `CMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined'`, then build/test.\nThe run set `ASAN_OPTIONS=detect_stack_use_after_return=1:halt_on_error=1` and\n`UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`.\nThe final workspace build was restored to the Release configuration above.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 137,
+      "end_line": 137,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 138,
+      "end_line": 138,
+      "raw": "Installed-package consumers:\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 139,
+      "end_line": 139,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "fenced_code",
+      "start_line": 140,
+      "end_line": 145,
+      "raw": "```sh\ncmake -S tests/consumer -B build/consumer/build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/package;$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\"\ncmake --build build/consumer/build -j 4\nctest --test-dir build/consumer/build --output-on-failure\n```\n",
+      "language": "sh",
+      "code": "cmake -S tests/consumer -B build/consumer/build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/package;$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\"\ncmake --build build/consumer/build -j 4\nctest --test-dir build/consumer/build --output-on-failure\n",
+      "closed": true
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 146,
+      "end_line": 146,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "paragraph",
+      "start_line": 147,
+      "end_line": 154,
+      "raw": "The consumer runs the authenticated packet example, REST/GraphQL API calls and\nall seven communication-interface groups, five peer groups and the compiled\npeer example against installed headers, linking\nonly through the exported target. A separate private TLS fixture serves those\ntests. The `tests/embedded` fixture separately checks source embedding with\ncurl/OpenSSL already imported by a parent project and Core/iiJson first found\ninside iiNetwork. Configure it in `build/embedded/build` with the dependency\nprefixes above; build and run its two-example CTest suite.\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 155,
+      "end_line": 155,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "paragraph",
+      "start_line": 156,
+      "end_line": 166,
+      "raw": "Current logs use the `build/evidence/0.4-` prefix: `asan-build.log`,\n`asan-ubsan.log`, `release-build.log`, `release.log`, `installed-consumer.log`,\n`embedded-consumer.log`, `downstream-native-build.log`, `downstream-tests.log`,\n`native-engine-targets.txt` and `linkage.txt`. Build caches and configure/install\nlogs retain settings and package evidence. `0.4-source-sha256.json` inventories\nfinal source/document/test inputs; `0.4-package-inventory.json` records staged\nfiles. The previous 0.2 checkpoint is retained under `build/evidence/0.2.0/`.\nOn macOS CMake installation invokes `ranlib`, changing the static archive's\nindex-header timestamp. Staging verification therefore compares every archived\nmember's bytes as well as source/header/document hashes; complete archive hashes\ncan differ despite identical object code.\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 167,
+      "end_line": 167,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "heading",
+      "start_line": 168,
+      "end_line": 168,
+      "raw": "## Existing host integration and limits\n",
+      "level": 2,
+      "title": "Existing host integration and limits"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 169,
+      "end_line": 169,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "paragraph",
+      "start_line": 170,
+      "end_line": 180,
+      "raw": "Congregation is the existing source consumer. Its configured build directory is\n`/Volumes/Storage/Workspace/Product/Congregation/build`. The integration checks\nbuild `tests_nativebackends` and `tests_applicationengine`, then run only those\ntwo CTest entries. Other dirty product/SDK source changes are preserved.\nThe current host GUI configuration cannot resolve the installed LVRS macOS\nplatform package (`~/.local/SDK/LVRS/platforms/macos/lib/cmake/LVRS/LVRSConfig.cmake`).\nNative validation therefore uses its supported `CONGREGATION_BUILD_GUI=OFF`\nconfiguration in the same product-local build directory. The original GUI=ON\ncache value is restored afterward; the restore configure result is recorded in\n`0.4-downstream-results.json`. A missing GUI package does not establish a native\nengine regression. Existing application bundles and installed SDKs are preserved.\n"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 181,
+      "end_line": 181,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 182,
+      "end_line": 186,
+      "raw": "The host build targets macOS 12, while installed Core, iiJson, FileProvider and\nHomebrew OpenSSL dependencies were built for macOS 27. Its linker reports that\ndeployment-target mismatch. Execution on the current host does not establish\nmacOS 12 compatibility; the mismatch requires a separate dependency/package\ndelivery check before distributing an app for that minimum OS.\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 187,
+      "end_line": 187,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 188,
+      "end_line": 193,
+      "raw": "The packet driver tested here is an in-memory frame medium, not a physical NIC.\nThe native path uses real OS loopback sockets. No NIC signal timing, raw-device\ndriver, raw IPv6 packet implementation, peer discovery/NAT traversal, external GraphQL\nschema engine, subscriptions, public endpoint deployment or installed-app\nreplacement is implied by these results. See Architecture.md for exact API\nand protocol bounds.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Verification record — 2026-10-20 (Asia/Seoul)",
+      "anchor": "verification-record--2026-10-20-asiaseoul",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000003",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Scope and environment",
+      "anchor": "scope-and-environment",
+      "start_line": 3
+    },
+    {
+      "block_id": "b000009",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Completed module checks",
+      "anchor": "completed-module-checks",
+      "start_line": 18
+    },
+    {
+      "block_id": "b000023",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Reproduction",
+      "anchor": "reproduction",
+      "start_line": 112
+    },
+    {
+      "block_id": "b000041",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Existing host integration and limits",
+      "anchor": "existing-host-integration-and-limits",
+      "start_line": 168
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000017",
+        "line": 93,
+        "text": "closed links do not retain destroyed-node operation captures.",
+        "basis": "lexical_match",
+        "context": "list"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000027",
+        "language": "sh",
+        "code": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\" \\\n  -DCMAKE_CXX_FLAGS='-Wall -Wextra -Wpedantic' -DCMAKE_EXE_LINKER_FLAGS=''\ncmake --build build -j 6\nctest --test-dir build --output-on-failure\ncmake --install build --prefix \"$PWD/build/package\"\n"
+      },
+      {
+        "block_id": "b000035",
+        "language": "sh",
+        "code": "cmake -S tests/consumer -B build/consumer/build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$PWD/build/package;$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\"\ncmake --build build/consumer/build -j 4\nctest --test-dir build/consumer/build --output-on-failure\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000019",
+        "label": "Peers.md",
+        "target": "Peers.md",
+        "kind": "relative",
+        "line": 102
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000011",
+        "columns": [
+          "Check",
+          "Result"
+        ],
+        "rows": [
+          [
+            "Release build with `-Wall -Wextra -Wpedantic`",
+            "Passed, no compiler warnings"
+          ],
+          [
+            "Release CTest suite",
+            "24/24 passed"
+          ],
+          [
+            "Debug build with AddressSanitizer and UndefinedBehaviorSanitizer",
+            "Passed"
+          ],
+          [
+            "Sanitized CTest suite",
+            "24/24 passed; no sanitizer findings"
+          ],
+          [
+            "Public headers compiled independently",
+            "19/19 compiled"
+          ],
+          [
+            "Native dependency/layer boundary policy",
+            "Passed"
+          ],
+          [
+            "Staged `find_package(iiNetwork 0.4)` consumers",
+            "16/16 passed"
+          ],
+          [
+            "Source-embedded consumer with parent imports",
+            "2/2 passed"
+          ],
+          [
+            "Existing Congregation engine/native-backend tests",
+            "2/2 passed with GUI disabled"
+          ],
+          [
+            "Package inventory",
+            "19 public headers, static library, CMake exports, license and documentation; no Finder metadata or private keys"
+          ],
+          [
+            "Runtime dynamic dependency inspection",
+            "No Qt in iiNetwork contract executable or its iiSDKCore Runtime dependency"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

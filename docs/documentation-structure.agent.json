@@ -1,0 +1,193 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:bd821631f85115b48161928437acb4108986df074d12a6f8fbe522575019b656",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/documentation-structure.md",
+    "sha256": "6cd09fa4d377237499790dbf42abc7d9686f78f81b0c4541fbfd434eea01eeba",
+    "bytes": 1656,
+    "line_count": 21,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "iiNetwork 문서 구조",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiNetwork 문서 구조\n",
+      "level": 1,
+      "title": "iiNetwork 문서 구조"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "html",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "<!-- workspace-docs:blueprint -->\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "html",
+      "start_line": 5,
+      "end_line": 6,
+      "raw": "<!-- workspace-docs:blueprint:start -->\n이 프로젝트는 사람과 에이전트가 같은 계약을 서로 다른 형식으로 읽도록 문서를 구성한다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "list",
+      "start_line": 8,
+      "end_line": 14,
+      "raw": "- 루트 `README.md`: 사람용 영문 개요이다.\n- 루트 `AGENT.md`: 프로젝트별 에이전트 지침과 문서 탐색 진입점이다.\n- `docs/README.md`: 인간용 문서 색인이다.\n- `agent-index.json`: 문서 ID, 원문 경로, JSON 투영 경로와 원문 해시의 색인이다.\n- 일반 문서 `name.md`와 `name.agent.json`은 같은 내용을 서로 다른 형식으로 제공한다.\n- 루트 진입 문서의 JSON은 `entrypoints/`에, 문서 디렉터리 밖의 문서·지침·증거의 JSON은 `mirrors/`에 둔다.\n- `agent-document.schema.json`은 iiJson의 이식 가능한 Schema 정의로 된 형식 묶음이다.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "루트 `README.md`: 사람용 영문 개요이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "루트 `AGENT.md`: 프로젝트별 에이전트 지침과 문서 탐색 진입점이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`docs/README.md`: 인간용 문서 색인이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`agent-index.json`: 문서 ID, 원문 경로, JSON 투영 경로와 원문 해시의 색인이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "일반 문서 `name.md`와 `name.agent.json`은 같은 내용을 서로 다른 형식으로 제공한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "루트 진입 문서의 JSON은 `entrypoints/`에, 문서 디렉터리 밖의 문서·지침·증거의 JSON은 `mirrors/`에 둔다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`agent-document.schema.json`은 iiJson의 이식 가능한 Schema 정의로 된 형식 묶음이다.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "JSON은 절, 줄 범위, 원문 블록, 명령·링크·표·규칙 후보를 구조화한다. 원문 블록을 결합하면 Markdown 바이트를 복원할 수 있어야 한다. JSON의 SHA-256과 현재 Markdown이 일치해야 한다.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "규칙 후보와 언어 판정은 원문 기반 검색 보조 정보이다. 과거 검증 기록·예제·미완료 설명을 현재의 실행 지시 또는 완료 증거로 승격하지 않는다. 코드 블록은 변환 중 실행하지 않는다.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 20,
+      "end_line": 21,
+      "raw": "원본 Markdown을 수정한 뒤 agent JSON과 색인을 함께 재생성하고 검증한다. 외부 원본과 라이선스는 보존한다. 기존 경로가 필요한 이동 문서는 안내 파일로 연결하며 실제 내용은 하위 문서에 둔다.\n<!-- workspace-docs:blueprint:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiNetwork 문서 구조",
+      "anchor": "iinetwork-문서-구조",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000009",
+        "line": 16,
+        "text": "JSON은 절, 줄 범위, 원문 블록, 명령·링크·표·규칙 후보를 구조화한다. 원문 블록을 결합하면 Markdown 바이트를 복원할 수 있어야 한다. JSON의 SHA-256과 현재 Markdown이 일치해야 한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 18,
+        "text": "규칙 후보와 언어 판정은 원문 기반 검색 보조 정보이다. 과거 검증 기록·예제·미완료 설명을 현재의 실행 지시 또는 완료 증거로 승격하지 않는다. 코드 블록은 변환 중 실행하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

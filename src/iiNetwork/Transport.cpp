@@ -2,6 +2,7 @@
 #include "SocketInternal.h"
 #include <deque>
 #include <map>
+#include <new>
 #include <utility>
 #ifdef _WIN32
 #include <iphlpapi.h>
@@ -232,14 +233,22 @@ Result<void> Tcp::configure(TcpOptions options)
 { auto valid = tcp_options(p_->state->fd, options, p_->state->local); if (valid) p_->state->options = std::move(options); return valid; }
 Result<void> Tcp::no_delay(bool value) { auto options = p_->state->options; options.no_delay = value; return configure(std::move(options)); }
 Result<void> Tcp::keep_alive(bool value) { auto options = p_->state->options; options.keep_alive = value; return configure(std::move(options)); }
-bool Tcp::write(std::string_view bytes) { return write(std::make_shared<const std::string>(bytes)); }
+bool Tcp::write(std::string_view bytes)
+{
+    try { return write(std::make_shared<const std::string>(bytes)); }
+    catch (const std::bad_alloc&) { return false; }
+}
 bool Tcp::write(std::shared_ptr<const std::string> bytes)
 {
     auto& s = *p_->state;
     if (!bytes || s.state != SocketState::connected || !s.write_open || s.shutdown_pending || s.queued > s.options.stream.pending_bytes ||
         bytes->size() > s.options.stream.pending_bytes - s.queued || s.outgoing.size() >= 1024) return false;
     if (bytes->empty()) return true;
-    s.queued += bytes->size(); s.outgoing.push_back({std::move(bytes), 0}); return true;
+    const auto size = bytes->size();
+    try { s.outgoing.push_back({std::move(bytes), 0}); }
+    catch (const std::bad_alloc&) { return false; }
+    s.queued += size;
+    return true;
 }
 std::string Tcp::read() { return std::exchange(p_->state->incoming, {}); }
 std::string Tcp::read_some(std::size_t maximum)

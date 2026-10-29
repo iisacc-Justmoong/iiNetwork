@@ -1,0 +1,79 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:745fb4cb7dfae1372d37edb8fc26c352ed1a4617b4baa99b454500d55bdee74b",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "example/README.md",
+    "sha256": "92576df9e4deee1ca06509d17a38fff697867e116793303dddef79c1ba31e178",
+    "bytes": 285,
+    "line_count": 3,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "iiNetwork native examples",
+    "role": "overview",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiNetwork native examples\n",
+      "level": 1,
+      "title": "iiNetwork native examples"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "The runnable contracts and examples are maintained in [`examples/`](../examples/). Build them in the repository `build/` directory. Use the installed native SDK kit documented in `docs/`; the Congregation integration uses C++23 and contains no Qt runtime.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiNetwork native examples",
+      "anchor": "iinetwork-native-examples",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000003",
+        "label": "`examples/`",
+        "target": "../examples/",
+        "kind": "relative",
+        "line": 3
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

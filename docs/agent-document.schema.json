@@ -1,0 +1,940 @@
+{
+  "document": {
+    "format": "iiJson.Schema",
+    "formatVersion": 1,
+    "schema": {
+      "additional": "reject",
+      "fields": [
+        {
+          "name": "blocks",
+          "presence": "required",
+          "schema": {
+            "element": {
+              "additional": "reject",
+              "fields": [
+                {
+                  "name": "closed",
+                  "presence": "optional",
+                  "schema": {
+                    "kind": "boolean"
+                  }
+                },
+                {
+                  "name": "code",
+                  "presence": "optional",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "columns",
+                  "presence": "optional",
+                  "schema": {
+                    "element": {
+                      "kind": "string",
+                      "minimumLength": 0
+                    },
+                    "kind": "array",
+                    "minimumItems": 0
+                  }
+                },
+                {
+                  "name": "end_line",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "unsignedInteger",
+                    "maximum": 18446744073709551615,
+                    "minimum": 1
+                  }
+                },
+                {
+                  "name": "id",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "items",
+                  "presence": "optional",
+                  "schema": {
+                    "element": {
+                      "additional": "reject",
+                      "fields": [
+                        {
+                          "name": "checked",
+                          "presence": "required",
+                          "schema": {
+                            "kind": "boolean",
+                            "nullable": true
+                          }
+                        },
+                        {
+                          "name": "marker",
+                          "presence": "required",
+                          "schema": {
+                            "kind": "string",
+                            "minimumLength": 0
+                          }
+                        },
+                        {
+                          "name": "text",
+                          "presence": "required",
+                          "schema": {
+                            "kind": "string",
+                            "minimumLength": 0
+                          }
+                        }
+                      ],
+                      "kind": "object"
+                    },
+                    "kind": "array",
+                    "minimumItems": 0
+                  }
+                },
+                {
+                  "name": "kind",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "enumeration",
+                    "values": [
+                      "blank",
+                      "front_matter",
+                      "fenced_code",
+                      "heading",
+                      "table",
+                      "list",
+                      "quote",
+                      "indented_code",
+                      "thematic_break",
+                      "html",
+                      "paragraph"
+                    ]
+                  }
+                },
+                {
+                  "name": "language",
+                  "presence": "optional",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "level",
+                  "presence": "optional",
+                  "schema": {
+                    "kind": "integer",
+                    "maximum": 6,
+                    "minimum": 1
+                  }
+                },
+                {
+                  "name": "raw",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 1
+                  }
+                },
+                {
+                  "name": "rows",
+                  "presence": "optional",
+                  "schema": {
+                    "element": {
+                      "element": {
+                        "kind": "string",
+                        "minimumLength": 0
+                      },
+                      "kind": "array",
+                      "minimumItems": 0
+                    },
+                    "kind": "array",
+                    "minimumItems": 0
+                  }
+                },
+                {
+                  "name": "start_line",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "unsignedInteger",
+                    "maximum": 18446744073709551615,
+                    "minimum": 1
+                  }
+                },
+                {
+                  "name": "title",
+                  "presence": "optional",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                }
+              ],
+              "kind": "object"
+            },
+            "kind": "array",
+            "minimumItems": 0
+          }
+        },
+        {
+          "name": "document",
+          "presence": "required",
+          "schema": {
+            "additional": "reject",
+            "fields": [
+              {
+                "name": "authority",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "markdown_source"
+                  ]
+                }
+              },
+              {
+                "name": "role",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 0
+                }
+              },
+              {
+                "name": "title",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 0
+                }
+              }
+            ],
+            "kind": "object"
+          }
+        },
+        {
+          "name": "document_id",
+          "presence": "required",
+          "schema": {
+            "kind": "string",
+            "minimumLength": 1
+          }
+        },
+        {
+          "name": "format",
+          "presence": "required",
+          "schema": {
+            "kind": "enumeration",
+            "values": [
+              "iisacc.agent-document"
+            ]
+          }
+        },
+        {
+          "name": "indexes",
+          "presence": "required",
+          "schema": {
+            "additional": "reject",
+            "fields": [
+              {
+                "name": "commands",
+                "presence": "required",
+                "schema": {
+                  "element": {
+                    "additional": "reject",
+                    "fields": [
+                      {
+                        "name": "block_id",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      },
+                      {
+                        "name": "code",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      },
+                      {
+                        "name": "language",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      }
+                    ],
+                    "kind": "object"
+                  },
+                  "kind": "array",
+                  "minimumItems": 0
+                }
+              },
+              {
+                "name": "directive_candidates",
+                "presence": "required",
+                "schema": {
+                  "element": {
+                    "additional": "reject",
+                    "fields": [
+                      {
+                        "name": "basis",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "enumeration",
+                          "values": [
+                            "lexical_match"
+                          ]
+                        }
+                      },
+                      {
+                        "name": "block_id",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      },
+                      {
+                        "name": "context",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      },
+                      {
+                        "name": "line",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "unsignedInteger",
+                          "maximum": 18446744073709551615,
+                          "minimum": 1
+                        }
+                      },
+                      {
+                        "name": "text",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      }
+                    ],
+                    "kind": "object"
+                  },
+                  "kind": "array",
+                  "minimumItems": 0
+                }
+              },
+              {
+                "name": "links",
+                "presence": "required",
+                "schema": {
+                  "element": {
+                    "additional": "reject",
+                    "fields": [
+                      {
+                        "name": "block_id",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      },
+                      {
+                        "name": "kind",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "enumeration",
+                          "values": [
+                            "relative",
+                            "external",
+                            "anchor"
+                          ]
+                        }
+                      },
+                      {
+                        "name": "label",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      },
+                      {
+                        "name": "line",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "unsignedInteger",
+                          "maximum": 18446744073709551615,
+                          "minimum": 1
+                        }
+                      },
+                      {
+                        "name": "target",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      }
+                    ],
+                    "kind": "object"
+                  },
+                  "kind": "array",
+                  "minimumItems": 0
+                }
+              },
+              {
+                "name": "tables",
+                "presence": "required",
+                "schema": {
+                  "element": {
+                    "additional": "reject",
+                    "fields": [
+                      {
+                        "name": "block_id",
+                        "presence": "required",
+                        "schema": {
+                          "kind": "string",
+                          "minimumLength": 0
+                        }
+                      },
+                      {
+                        "name": "columns",
+                        "presence": "required",
+                        "schema": {
+                          "element": {
+                            "kind": "string",
+                            "minimumLength": 0
+                          },
+                          "kind": "array",
+                          "minimumItems": 0
+                        }
+                      },
+                      {
+                        "name": "rows",
+                        "presence": "required",
+                        "schema": {
+                          "element": {
+                            "element": {
+                              "kind": "string",
+                              "minimumLength": 0
+                            },
+                            "kind": "array",
+                            "minimumItems": 0
+                          },
+                          "kind": "array",
+                          "minimumItems": 0
+                        }
+                      }
+                    ],
+                    "kind": "object"
+                  },
+                  "kind": "array",
+                  "minimumItems": 0
+                }
+              }
+            ],
+            "kind": "object"
+          }
+        },
+        {
+          "name": "outline",
+          "presence": "required",
+          "schema": {
+            "element": {
+              "additional": "reject",
+              "fields": [
+                {
+                  "name": "anchor",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "block_id",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "level",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "integer",
+                    "maximum": 6,
+                    "minimum": 1
+                  }
+                },
+                {
+                  "name": "parent_id",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0,
+                    "nullable": true
+                  }
+                },
+                {
+                  "name": "start_line",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "unsignedInteger",
+                    "maximum": 18446744073709551615,
+                    "minimum": 1
+                  }
+                },
+                {
+                  "name": "title",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                }
+              ],
+              "kind": "object"
+            },
+            "kind": "array",
+            "minimumItems": 0
+          }
+        },
+        {
+          "name": "project",
+          "presence": "required",
+          "schema": {
+            "additional": "reject",
+            "fields": [
+              {
+                "name": "id",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 1
+                }
+              },
+              {
+                "name": "kind",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 1
+                }
+              },
+              {
+                "name": "name",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 0
+                }
+              },
+              {
+                "name": "root",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 0
+                }
+              }
+            ],
+            "kind": "object"
+          }
+        },
+        {
+          "name": "provenance",
+          "presence": "required",
+          "schema": {
+            "additional": "reject",
+            "fields": [
+              {
+                "name": "derived",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    true
+                  ]
+                }
+              },
+              {
+                "name": "generator",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "workspace-docs"
+                  ]
+                }
+              },
+              {
+                "name": "profile",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "lossless-blocks-v1"
+                  ]
+                }
+              },
+              {
+                "name": "version",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 0
+                }
+              }
+            ],
+            "kind": "object"
+          }
+        },
+        {
+          "name": "schema_version",
+          "presence": "required",
+          "schema": {
+            "kind": "enumeration",
+            "values": [
+              1
+            ]
+          }
+        },
+        {
+          "name": "source",
+          "presence": "required",
+          "schema": {
+            "additional": "reject",
+            "fields": [
+              {
+                "name": "bytes",
+                "presence": "required",
+                "schema": {
+                  "kind": "unsignedInteger",
+                  "maximum": 18446744073709551615,
+                  "minimum": 0
+                }
+              },
+              {
+                "name": "encoding",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "utf-8"
+                  ]
+                }
+              },
+              {
+                "name": "language",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "en",
+                    "ko",
+                    "und",
+                    "mixed"
+                  ]
+                }
+              },
+              {
+                "name": "line_count",
+                "presence": "required",
+                "schema": {
+                  "kind": "unsignedInteger",
+                  "maximum": 18446744073709551615,
+                  "minimum": 0
+                }
+              },
+              {
+                "name": "path",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 1
+                }
+              },
+              {
+                "name": "sha256",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "maximumLength": 64,
+                  "minimumLength": 64
+                }
+              }
+            ],
+            "kind": "object"
+          }
+        }
+      ],
+      "kind": "object"
+    }
+  },
+  "format": "iisacc.documentation.schema-bundle",
+  "index": {
+    "format": "iiJson.Schema",
+    "formatVersion": 1,
+    "schema": {
+      "additional": "reject",
+      "fields": [
+        {
+          "name": "agent_schema",
+          "presence": "required",
+          "schema": {
+            "kind": "string",
+            "minimumLength": 0
+          }
+        },
+        {
+          "name": "documentation_root",
+          "presence": "required",
+          "schema": {
+            "kind": "string",
+            "minimumLength": 0
+          }
+        },
+        {
+          "name": "documents",
+          "presence": "required",
+          "schema": {
+            "element": {
+              "additional": "reject",
+              "fields": [
+                {
+                  "name": "agent_json",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "document_id",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "role",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "source",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "minimumLength": 0
+                  }
+                },
+                {
+                  "name": "source_sha256",
+                  "presence": "required",
+                  "schema": {
+                    "kind": "string",
+                    "maximumLength": 64,
+                    "minimumLength": 64
+                  }
+                }
+              ],
+              "kind": "object"
+            },
+            "kind": "array",
+            "minimumItems": 0
+          }
+        },
+        {
+          "name": "format",
+          "presence": "required",
+          "schema": {
+            "kind": "enumeration",
+            "values": [
+              "iisacc.agent-document-index"
+            ]
+          }
+        },
+        {
+          "name": "layout",
+          "presence": "required",
+          "schema": {
+            "additional": "reject",
+            "fields": [
+              {
+                "name": "agent_entry",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "AGENT.md"
+                  ]
+                }
+              },
+              {
+                "name": "agent_format",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "structured_json"
+                  ]
+                }
+              },
+              {
+                "name": "human_entry",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "README.md"
+                  ]
+                }
+              },
+              {
+                "name": "human_format",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "markdown"
+                  ]
+                }
+              },
+              {
+                "name": "source_authority",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "markdown"
+                  ]
+                }
+              }
+            ],
+            "kind": "object"
+          }
+        },
+        {
+          "name": "project",
+          "presence": "required",
+          "schema": {
+            "additional": "reject",
+            "fields": [
+              {
+                "name": "id",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 1
+                }
+              },
+              {
+                "name": "kind",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 1
+                }
+              },
+              {
+                "name": "name",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 0
+                }
+              },
+              {
+                "name": "root",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 0
+                }
+              }
+            ],
+            "kind": "object"
+          }
+        },
+        {
+          "name": "provenance",
+          "presence": "required",
+          "schema": {
+            "additional": "reject",
+            "fields": [
+              {
+                "name": "derived",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    true
+                  ]
+                }
+              },
+              {
+                "name": "generator",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "workspace-docs"
+                  ]
+                }
+              },
+              {
+                "name": "profile",
+                "presence": "required",
+                "schema": {
+                  "kind": "enumeration",
+                  "values": [
+                    "lossless-blocks-v1"
+                  ]
+                }
+              },
+              {
+                "name": "version",
+                "presence": "required",
+                "schema": {
+                  "kind": "string",
+                  "minimumLength": 0
+                }
+              }
+            ],
+            "kind": "object"
+          }
+        },
+        {
+          "name": "schema_version",
+          "presence": "required",
+          "schema": {
+            "kind": "enumeration",
+            "values": [
+              1
+            ]
+          }
+        }
+      ],
+      "kind": "object"
+    }
+  },
+  "schema_version": 1
+}

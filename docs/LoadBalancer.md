@@ -1,9 +1,27 @@
 # Network(L4) 로드 밸런서
 
-iiNetwork 0.6.0의 `<iiNetwork/LoadBalancer.h>`는 IP 주소·포트·전송 종류에서 연결 키를
-만들고 실제 백엔드 주소를 선택한다. 공통 대상 표·용량·건강·취소·드레이닝은 하위
-iiSDKCore 0.19의 LoadBalancer/LoadLease를 조합한다. Core는 이 모듈을 참조하지 않으며
-하위 Address/Transport/TLS도 이 오케스트레이션 계층을 역참조하지 않는다.
+별도 소비자 프로젝트 `example/LoadBalancer`의 `<iiNetwork/LoadBalancer.h>`는 IP 주소·
+포트·전송 종류에서 연결 키를 만들고 실제 백엔드 주소를 선택한다. 이 어댑터는 독립적으로
+설치한 iiNetwork 0.6과 iiSDKCore 0.19의 LoadBalancer/LoadLease를 앱에서 조합한다.
+기본 iiNetwork 라이브러리는 이 어댑터를 컴파일하거나 내보내지 않는다. 다만 iiNetwork의
+다른 기능에는 아직 Core와 iiJson 의존성이 남아 있으므로 전체 모듈의 독립성을 뜻하지 않는다.
+하위 Address/Transport/TLS는 이 오케스트레이션 계층을 역참조하지 않는다.
+
+## 구성과 이전
+
+두 SDK를 먼저 개별 빌드한 뒤 애플리케이션 또는 통합 빌드에서 이 디렉터리를 별도로
+구성하고 설치한다. 설치 소비자는 다음처럼 명시적으로 패키지를 찾고 연결한다.
+
+```cmake
+find_package(iiNetworkLoadBalancer 0.6 CONFIG REQUIRED)
+target_link_libraries(my_application PRIVATE iiNetwork::LoadBalancer)
+```
+
+`<iiNetwork/LoadBalancer.h>`를 직접 포함해야 한다. 이전 iiNetwork 기본 타깃과
+`<iiNetwork/Network.h>`만 사용하던 코드는 새 패키지·타깃을 추가하여 다시 빌드한다.
+기본 패키지의 `iiNetwork_LOAD_BALANCER`는 이제 `FALSE`이며 조합 패키지는 자체적으로
+iiNetwork와 Core를 찾는다. 어댑터 자체는 애플리케이션 측 구성물이며 SDK 본체 사이에
+새 빌드 연결을 만들지 않는다.
 
 AWS의 [Network Load Balancer 연결 단위 라우팅](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html)을
 요구사항 참고로 삼았다. AWS의 비공개 해시와 wire/API 호환을 보장하지 않는다. DNS·VIP·
@@ -49,7 +67,7 @@ if (selected) {
 }
 ```
 
-실행 가능한 loopback 예제는 `example/load_balancer.cpp`이다. 이 선택 객체가 소켓을
+실행 가능한 loopback 예제는 `example/LoadBalancer/App/main.cpp`이다. 이 선택 객체가 소켓을
 숨겨서 생성하거나 자동 프록시하는 것은 아니며 기존 Tcp/Udp/Tls 어댑터가 실제 연결을
 소유한다. 소켓 조작과 콜백은 해당 EventLoop 소유 스레드에서 수행한다. 순수 선택·대상
 등록은 인스턴스 잠금으로 보호된다. 대상 등록/주소 공개와 선택/주소 복사는 함께 처리한다.
@@ -73,11 +91,20 @@ close까지 살아 있어야 한다. 후속 `lease.post`는 선택한 실행기�
 
 ## 검사
 
-`tests/load_balancer.cpp`는 IPv4/IPv6·TCP sequence·UDP 키, 동일 용량의 수평 분산,
+`example/LoadBalancer/tests/load_balancer.cpp`는 IPv4/IPv6·TCP sequence·UDP 키, 동일 용량의 수평 분산,
 1:3 용량 가중치, 새 대상에 한정한 키 이동, 기존 연결 고정, 건강·드레이닝·접수 한도와
 종료 요청을 검사한다. 실제 네이티브 loopback TCP 스트림과 UDP 데이터그램을 선택한
 백엔드로 전송한다. 설치 소비자도 같은 검사를 설치된 공개 헤더/라이브러리로 수행한다.
 검증한 플랫폼과 결과는 `docs/Verification.md` 및 각 build/ 검증 기록으로 구분한다.
+
+### 2026-10-28 분리 검증
+
+macOS arm64에서 기본 라이브러리와 공개 헤더를 빌드하고 관련 계약 검사 14/14를
+통과했다. 새 기본 설치본에는 로드 밸런서 헤더와 심벌이 없음을 확인한 뒤, 별도
+어댑터를 빌드해 루프백 계약 1/1 및 설치된 어댑터 소비자 계약 1/1을 통과했다.
+예제 프로그램은 빌드만 했다. 이 네트워크 검증은 기존 iiJson 설치본을 사용했으며,
+새로 분리된 iiJson 값 타입에 대한 네트워크 소비자 이전은 아직 완료되지 않았다.
+Windows·Linux 기기에서 이 변경을 실행하거나 전역 설치본을 교체하지 않았다.
 
 ### 2026-10-25 검증 기록
 

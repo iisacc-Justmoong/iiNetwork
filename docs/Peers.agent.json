@@ -1,0 +1,354 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:58cd253737c3ffa964484217015e341aa64e2ec10223fd0e6c30449f2849ea6f",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/Peers.md",
+    "sha256": "afb7e12d8923a0e6bb7262a25c5bf806fcc30d6674d826548453a6b9219ff1b9",
+    "bytes": 7334,
+    "line_count": 115,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "Equal peers and mutual operations",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Equal peers and mutual operations\n",
+      "level": 1,
+      "title": "Equal peers and mutual operations"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 8,
+      "raw": "The primary application model is a relationship between equal peers. Listening\nand dialing select how a transport is established; they assign no application\nauthority. Either end of one connection can initiate requests, answer requests,\npublish events and authorize incoming operations concurrently. Each node can\nlisten and dial at the same time. TCP, TLS and local socket roles stay within\ntransport setup. HTTP/REST/GraphQL remain adapters with their own protocol rules.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 10,
+      "end_line": 15,
+      "raw": "`Peer` is the node: it owns operation registration, authorization, listeners and\nconnections. `PeerConnection` is the identical connection object at both ends.\n`expose()` explicitly publishes a named operation. A request invokes only a\nregistered operation and must pass that receiving node's authorizer. Listening\nnever grants the listener extra rights over the dialing node. No OS command,\nobject method or process state is published implicitly.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 17,
+      "end_line": 22,
+      "raw": "Connections first exchange versioned hello frames, identity claims, fresh local\nsession IDs and frame bounds. Both send hello independently. A ready connection\nhas sent and received hello; request/event traffic before that fails. Both sides\nmay use request ID 1 simultaneously: response correlation is scoped to the\nrequest's direction. Stream framing preserves messages across partial/coalesced\nreads. Connection-specific IDs and reply handles never migrate to a new link.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 23,
+      "end_line": 23,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 24,
+      "end_line": 29,
+      "raw": "Peer names are claims, not cryptographic identity. `PeerInfo` retains actual\nTLS verification/certificate and local socket credential evidence independently.\nAn application can require mutual TLS and bind a certificate to a logical name\nin its authorizer. Plain TCP supplies no identity authentication or encryption.\nProtocol symmetry does not force applications to grant identical permissions.\nBoth peers make their own decisions using the same mechanism.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 30,
+      "end_line": 30,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "heading",
+      "start_line": 31,
+      "end_line": 31,
+      "raw": "## Operations and lifetime\n",
+      "level": 2,
+      "title": "Operations and lifetime"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 32,
+      "end_line": 32,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 33,
+      "end_line": 39,
+      "raw": "All APIs, deferred replies and callbacks belong to the supplied Core EventLoop's\nowner thread. No worker or nested blocking wait is created. `PeerCall` owns its\narguments and retains the connection; a handler may issue a reverse request on\nthat connection before replying. Copyable `PeerReply` can be retained for later\ncompletion on the loop. It rejects double replies and replies after cancellation,\ntimeout or disconnect. Handler exceptions become a generic remote error without\nexposing exception text. Other application callbacks should not throw.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 41,
+      "end_line": 49,
+      "raw": "`request()` admits a bounded operation and returns its direction-local ID. A\nrejected call has no completion. An admitted call completes once with value,\nremote error, timeout or close, unless explicitly cancelled or its node is\ndestroyed. `cancel()` suppresses the local completion and attempts cooperative\nremote cancellation. Its boolean reports local removal; queued cancellation is\nbest effort under backpressure. `PeerReply::cancelled()` also becomes true when the receiver\ndeadline or connection expires. Cancellation does not roll back side effects or\nstop application work automatically. Callers use cancellation-aware Core tasks\nfor expensive work. Automatic replay/reconnect is not performed for operations.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 50,
+      "end_line": 50,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 51,
+      "end_line": 54,
+      "raw": "`notify()` admits an event without response correlation. Its return value does\nnot acknowledge remote processing. Notifications invoke the receiving link's\n`received` callback; applications validate topics/data there. The operation\nauthorizer applies to calls, not to notification observers.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 55,
+      "end_line": 55,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 56,
+      "end_line": 69,
+      "raw": "`connected` on a link runs first, then the node's common `connected(link)` hook.\nBoth are emitted only after negotiation and apply equally to accepted and dialed\nlinks. Transport or framing failures are reported on link/node failure hooks.\n`close()` stops a connection and settles pending calls. `Peer::close()` stops\nall listeners/links while retaining operation registration for a later reopen.\nDestruction closes links and suppresses pending callbacks. Reply handles become\ncancelled; external connection handles may remain, but are closed. The loop must\noutlive nodes and all objects that continue using it.\nRemote close/cancellation observation happens when the other endpoint pumps its\nloop. Node destruction releases operation/authorizer captures even when callers\nretain closed connection handles. Call deadlines are absolute: delayed polling\ncannot make an expired reply successful.\nA peer relationship requires both directions. Read EOF ends the relationship\neven if the underlying TCP/local socket was configured to allow half-close.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 70,
+      "end_line": 70,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 71,
+      "end_line": 75,
+      "raw": "TCP, TLS and local listeners can coexist within one node. Re-listening replaces\nonly that transport's listener. `stop_listening()` leaves established links\nalive. `connect_tls()` and `listen_tls()` retain TLS handshake roles internally;\nmutual TLS is selected in their contexts. `attach()` takes ownership of a\nconnected/connecting callback-free ByteStream, including a handshaking TlsStream.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 76,
+      "end_line": 76,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "heading",
+      "start_line": 77,
+      "end_line": 77,
+      "raw": "## Bounds and private wire format\n",
+      "level": 2,
+      "title": "Bounds and private wire format"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 78,
+      "end_line": 78,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "paragraph",
+      "start_line": 79,
+      "end_line": 86,
+      "raw": "`PeerLimits` defaults to 1 MiB frames, 2 MiB queued output, 64 links, 64 outgoing\nand 64 incoming calls per link, 128 registered operations, a 10 second negotiation\ndeadline and a 60 second maximum call timeout. A request defaults to 10 seconds.\nFrames range from 512 bytes to 16 MiB; pending bytes range from one full frame\nplus prefix to 64 MiB. Link/call/operation counts cap at 4096, and handshake/call\ndeadlines cap at one hour. Invalid options fail admission. The receiver clamps\nthe supplied call budget to its own maximum. Receive storage and parsing slices\nare bounded. Backpressure is a reported admission failure.\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 87,
+      "end_line": 87,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 88,
+      "end_line": 91,
+      "raw": "The private `iin-peer/1` protocol uses an unsigned 32-bit network-order length\nfollowed by bounded UTF-8 JSON. This format is not HTTP, REST, GraphQL or a public\nRPC standard. Hello advertises version 1, logical identity, fresh session UUID\nand maximum frame bytes. Messages have these exact shapes:\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 92,
+      "end_line": 92,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "fenced_code",
+      "start_line": 93,
+      "end_line": 100,
+      "raw": "```json\n{\"type\":\"hello\",\"version\":1,\"identity\":\"alpha\",\"session\":\"01234567-89ab-4cde-8fab-0123456789ab\",\"maximum_frame\":1048576}\n{\"type\":\"call\",\"id\":\"1\",\"operation\":\"counter.add\",\"arguments\":2,\"timeout\":10000}\n{\"type\":\"result\",\"id\":\"1\",\"value\":3}\n{\"type\":\"error\",\"id\":\"1\",\"code\":\"permission_denied\",\"layer\":7,\"message\":\"Operation denied\"}\n{\"type\":\"event\",\"topic\":\"counter.changed\",\"value\":3}\n{\"type\":\"cancel\",\"id\":\"1\"}\n```\n",
+      "language": "json",
+      "code": "{\"type\":\"hello\",\"version\":1,\"identity\":\"alpha\",\"session\":\"01234567-89ab-4cde-8fab-0123456789ab\",\"maximum_frame\":1048576}\n{\"type\":\"call\",\"id\":\"1\",\"operation\":\"counter.add\",\"arguments\":2,\"timeout\":10000}\n{\"type\":\"result\",\"id\":\"1\",\"value\":3}\n{\"type\":\"error\",\"id\":\"1\",\"code\":\"permission_denied\",\"layer\":7,\"message\":\"Operation denied\"}\n{\"type\":\"event\",\"topic\":\"counter.changed\",\"value\":3}\n{\"type\":\"cancel\",\"id\":\"1\"}\n",
+      "closed": true
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 101,
+      "end_line": 101,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 102,
+      "end_line": 109,
+      "raw": "IDs are decimal strings to preserve 64-bit values without JSON number rounding.\nCall IDs increase independently in each direction and never wrap. A duplicate\nor decreasing incoming call ID, repeated hello, unknown version/type, unsolicited\nfuture result, malformed schema/JSON or oversized frame fails the link. Late\nresults for settled/cancelled calls are ignored. Names are bounded ASCII operation\ntokens; JSON data remains UTF-8 Value data. Frame size is negotiated to the smaller\npeer bound for outgoing application messages. TLS/local credential evidence is\ncollected from the real transport, never supplied by the hello payload.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 110,
+      "end_line": 110,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 111,
+      "end_line": 115,
+      "raw": "Peer discovery, NAT traversal, relay discovery, distributed consensus, persistent\nremote object replication and automatic permission sharing are not implemented.\nThey are separate application/network mechanisms; none is inferred from equal\npeer status. The existing packet `NetworkStack` and session/encryption APIs remain\navailable independently of this stream-based peer protocol.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Equal peers and mutual operations",
+      "anchor": "equal-peers-and-mutual-operations",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000011",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Operations and lifetime",
+      "anchor": "operations-and-lifetime",
+      "start_line": 31
+    },
+    {
+      "block_id": "b000023",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Bounds and private wire format",
+      "anchor": "bounds-and-private-wire-format",
+      "start_line": 77
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 13,
+        "text": "registered operation and must pass that receiving node's authorizer. Listening",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000005",
+        "line": 14,
+        "text": "never grants the listener extra rights over the dialing node. No OS command,",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000007",
+        "line": 22,
+        "text": "reads. Connection-specific IDs and reply handles never migrate to a new link.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000013",
+        "line": 39,
+        "text": "exposing exception text. Other application callbacks should not throw.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000019",
+        "line": 62,
+        "text": "cancelled; external connection handles may remain, but are closed. The loop must",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 103,
+        "text": "Call IDs increase independently in each direction and never wrap. A duplicate",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 109,
+        "text": "collected from the real transport, never supplied by the hello payload.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

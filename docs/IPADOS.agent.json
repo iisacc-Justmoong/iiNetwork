@@ -1,0 +1,107 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:d413e8396e20f20ab2585f44679ef70e3075b465d79c672db25cfa771da27d07",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/IPADOS.md",
+    "sha256": "8dc5bb4b8d14a0a0029a3c41bab2bf30dd00fe093989d64c2a4cfedda92652bf",
+    "bytes": 1075,
+    "line_count": 7,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "iPadOS 라이브러리 소비",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iPadOS 라이브러리 소비\n",
+      "level": 1,
+      "title": "iPadOS 라이브러리 소비"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "iPhoneOS SDK·arm64 대상으로 iiSDKCore, iiJson, OpenSSL과 정적 CURL을 모두 같은 플랫폼으로 준비한다. 기존 최상위 호스트 `build/`를 보존할 때에는 상위 키트 드라이버에서 `add_subdirectory`로 소비하고 `build/ipados/build`에 중간 파일을 둔다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "Apple 플랫폼에서는 SDK의 `usr/include`를 CURL의 추가 헤더 경로에 넣지 않는다. C++ 표준 헤더보다 C 헤더가 먼저 선택되는 문제를 피하기 위한 계약이다. CURL의 Config 패키지가 `CURL::libcurl`을 별칭으로 제공하는 경우 실제 대상에 이 정규화를 적용하며, 키트의 자체 헤더 경로는 보존한다. `iiNetwork.AppleCurlIncludes`는 일반·별칭 두 대상의 구성을 검사한다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "기기 실행과 전송 기능별 검증은 별도이다. Congregation의 연결 iPad 실행은 네이티브 라이브러리 링크·서비스 초기화를 확인하며, 전체 네트워크 프로토콜이나 외부 서버 운영을 모두 검증한 것으로 간주하지 않는다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iPadOS 라이브러리 소비",
+      "anchor": "ipados-라이브러리-소비",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000007",
+        "line": 7,
+        "text": "기기 실행과 전송 기능별 검증은 별도이다. Congregation의 연결 iPad 실행은 네이티브 라이브러리 링크·서비스 초기화를 확인하며, 전체 네트워크 프로토콜이나 외부 서버 운영을 모두 검증한 것으로 간주하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

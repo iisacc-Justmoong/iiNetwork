@@ -36,6 +36,13 @@ is polling integration, rather than a high-throughput completion-port backend.
 | `shutdown_write()` | TCP/local drain then FIN; later writes fail. TLS returns unsupported. |
 | `state()` / `error()` | Connection lifecycle and latest failure. |
 
+For `Tcp`, failure to allocate the copied string or a queue entry returns
+`false` without admitting the write or changing `pending_bytes()`. Existing
+queued bytes remain available to drain. This does not acknowledge delivery;
+callers must retain or regenerate a rejected payload and decide when to retry.
+`iiNetwork.transport.allocation_shared` and `.allocation_view` exercise
+ordinary C++ allocation failure on the calling thread with loopback sockets.
+
 Callbacks are `connected`, `readable`, `bytes_written`, `drained`, `read_closed`,
 `failed(message)` and `disconnected`. They may close/destroy their own object;
 destruction suppresses later callbacks. Written bytes have reached the native

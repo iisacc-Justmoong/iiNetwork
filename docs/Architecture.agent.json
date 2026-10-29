@@ -1,0 +1,783 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:e818fe2ffd93f997e3f7cb14308c7a432fdd0b8206fb3ee166797ffb0f76decc",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/Architecture.md",
+    "sha256": "51cfbbb8d6319d11231bca8f9377f4d72eb6d1d3d6943c472d73e06bddd659e2",
+    "bytes": 15497,
+    "line_count": 259,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "iiNetwork architecture and contracts",
+    "role": "reference",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiNetwork architecture and contracts\n",
+      "level": 1,
+      "title": "iiNetwork architecture and contracts"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "heading",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "## Dependency direction\n",
+      "level": 2,
+      "title": "Dependency direction"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 17,
+      "raw": "`Error.h` defines shared layer/error vocabulary. `Address.h` owns IP values;\n`ByteStream.h` owns the replaceable stream contract. `Transport.h` and `Local.h`\nprovide OS streams/datagrams. `Security.h` owns TLS policy/certificate values;\n`Tls.h` wraps `ByteStream` independently of HTTP. `Http.h` depends on policy and\nheader values, not native TLS implementation. `Network.h` is their umbrella.\n`Layers.h` implements layers 1-4 using transport primitives. `Session.h`\ndepends only on shared contracts and standard types. `Presentation.h` depends\non iiJson and its cipher interface, independently of session/application state.\n`Application.h` depends on HTTP and iiJson. `Server.h` adds incoming application\nadapters. `Relay.h` depends on transport. `Stack.h` is the composition boundary.\n`Peer.h` is an application-level symmetric operation interface over ByteStream,\nwith transport/TLS/session/Value dependencies. Lower layers never import Peer.\nThe boundary test rejects Qt and lower-layer imports of application/server/stack.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "heading",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "## Native and packet paths\n",
+      "level": 2,
+      "title": "Native and packet paths"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 20,
+      "end_line": 20,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 21,
+      "end_line": 27,
+      "raw": "The application relationship is between equal peers. `Peer` may listen and dial\nsimultaneously. `PeerConnection` gives both ends the same request/reply/event API\nafter mutual version/session negotiation. Each side exposes and authorizes its\nown operations; connection origin provides no application privilege. Correlation,\ndeferred replies, cancellation and deadlines apply in both directions, including\nnested reverse calls. HTTP/REST/GraphQL retain their own adapter semantics.\nThe private peer stream protocol and exact lifetime bounds are in [Peers](Peers.md).\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 28,
+      "end_line": 28,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 29,
+      "end_line": 37,
+      "raw": "The native path uses `Tcp`, `Listener`, `Udp`, `LocalSocket`, OpenSSL-backed\n`TlsStream` and libcurl-backed `Http`. The OS\nowns physical/link/IP implementation. Callbacks execute through the supplied\nCore EventLoop in bounded 5 ms timer slices. Cancellation removes registration.\nPOSIX readiness uses `poll`; Windows uses Winsock. No socket worker or nested\nloop is created. The EventLoop must outlive its network objects; HTTP transports\nmust outlive clients that borrow them. These APIs have owner-thread affinity.\nNumeric parsing never does DNS. `resolve_host()` and `reverse_lookup()` are\nexplicitly blocking utilities. Applications choose Core worker scheduling.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 38,
+      "end_line": 38,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 39,
+      "end_line": 39,
+      "raw": "The packet path uses `NetworkStack` and an injected `PhysicalMedium`:\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 40,
+      "end_line": 40,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "fenced_code",
+      "start_line": 41,
+      "end_line": 51,
+      "raw": "```text\nowned application Value\n  -> bounded JSON or Base64(JSON)\n  -> encoding byte + payload\n  -> AEAD envelope, with session/endpoint context as associated data\n  -> iiNetwork session header\n  -> UDP datagram + IPv4 pseudoheader checksum\n  -> IPv4 packet + header checksum\n  -> Ethernet II frame + padding + CRC-32 FCS\n  -> PhysicalMedium::transmit\n```\n",
+      "language": "text",
+      "code": "owned application Value\n  -> bounded JSON or Base64(JSON)\n  -> encoding byte + payload\n  -> AEAD envelope, with session/endpoint context as associated data\n  -> iiNetwork session header\n  -> UDP datagram + IPv4 pseudoheader checksum\n  -> IPv4 packet + header checksum\n  -> Ethernet II frame + padding + CRC-32 FCS\n  -> PhysicalMedium::transmit\n",
+      "closed": true
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 52,
+      "end_line": 52,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 53,
+      "end_line": 56,
+      "raw": "The receiver reverses the transformations and commits receive sequence state\nonly after authentication and JSON decoding. Errors identify a layer and reason.\nAn empty successful receive is an empty `optional`; malformed input and driver\nfailure are errors. Unknown sessions and absent routes/drivers are rejected.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 57,
+      "end_line": 57,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 58,
+      "end_line": 62,
+      "raw": "One stack owns one local endpoint and one attached medium. Routes select that\nmedium by name. For multiple interfaces, applications may own one stack per\nmedium, use `NetworkLayer::forward()` to select/re-encode a datagram and supply\nthe next-hop MAC on the selected output. Gateway metadata belongs to the caller's\nneighbor resolution. No operation modifies the OS routing table.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 63,
+      "end_line": 63,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "heading",
+      "start_line": 64,
+      "end_line": 64,
+      "raw": "## Layers 1-4\n",
+      "level": 2,
+      "title": "Layers 1-4"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 65,
+      "end_line": 65,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 66,
+      "end_line": 72,
+      "raw": "Physical drivers deliver complete Ethernet frames including FCS, excluding\npreamble/SFD. Drivers for NIC APIs that strip FCS must normalize this boundary.\n`PhysicalLayer` enforces size limits, reports backpressure and records admitted\nframe/byte counts. `MemoryMedium` is paired, bounded and mutex-protected.\nManchester helpers use MSB-first IEEE convention: 0 = high/low, 1 = low/high;\neach symbol is one byte of value 0 or 1. These helpers transform data in memory.\nHardware drivers own radio/electrical signals and timing.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 73,
+      "end_line": 73,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "paragraph",
+      "start_line": 74,
+      "end_line": 78,
+      "raw": "Ethernet II has 6-byte destination/source addresses, a 16-bit EtherType, up to\n1500 payload bytes, zero padding to 60 bytes before FCS and four CRC-32 bytes in\nlittle-endian transmission order. Decode validates length/FCS. EtherTypes below\n0x0600 (802.3 LLC) are rejected. Padding remains in decoded link payload; IPv4\nremoves only zero padding to Ethernet's 46-byte minimum payload.\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 79,
+      "end_line": 79,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 80,
+      "end_line": 85,
+      "raw": "IPv4 validates version, IHL, total length, checksum, flags and TTL. Aligned\noptions up to 40 bytes can be encoded/preserved; forwarding them requires an\noption-aware policy and returns unsupported. Fragmented datagrams are rejected.\nBasic forwarding selects longest prefix, smallest metric, then earliest inserted\nroute; it decrements TTL and recomputes checksum. TTL <= 1 cannot be forwarded.\nThe table holds at most 4096 routes. It is an application routing table.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 86,
+      "end_line": 86,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 87,
+      "end_line": 93,
+      "raw": "`TransportLayer` supplies socket factories and UDP codecs. UDP validates exact\nlength, ports and IPv4 pseudoheader checksum. IPv4's zero/absent checksum is\naccepted; generated datagrams include a checksum. `Udp::bind()` supports unicast\nand ephemeral ports alongside multicast. `Tcp::send_limit()` bounds pending\nadmitted bytes; `pending_bytes()` reports queue size, not acknowledgement.\n`close(true)` attempts to flush for up to one second. The legacy hard buffer\nceiling is 513 MiB; applications should set smaller explicit limits.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 94,
+      "end_line": 94,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 95,
+      "end_line": 102,
+      "raw": "Native TCP/UDP supports IPv4 and IPv6 independently of the IPv4 packet codec.\nTCP/local streams share `ByteStream`: partial/exact/delimiter reads, peek,\ncounters, queue bounds and callbacks. Half-close is opt-in with\n`allow_half_close`; `shutdown_write()` drains admitted output before FIN.\nSocket options and endpoint metadata are explicit. UDP uses OS peer association\nfor filtering and rejects different destinations until disconnected. Disconnect\npreserves the bound port, rebinding if the kernel clears it. Darwin uses\n`disconnectx()` to disassociate its peer.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 103,
+      "end_line": 103,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 104,
+      "end_line": 108,
+      "raw": "Local streams use AF_UNIX. Servers refuse existing filesystem entries, set\nPOSIX permissions and remove only their own recorded socket-file identity at\nclose. Replacement files survive. Abstract names require Linux. Peer credentials\nare optional OS identity evidence; applications authorize their own operations.\nSee Interfaces.md for path, ownership and OS bounds.\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 109,
+      "end_line": 109,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "paragraph",
+      "start_line": 110,
+      "end_line": 117,
+      "raw": "TLS owns an underlying stream and uses OpenSSL memory BIOs with independent\nplaintext/ciphertext bounds and a handshake deadline. Native descriptors and\nOpenSSL types remain private. Immutable `TlsContext` owns trust, identity,\nversions, ALPN and verification. Clients verify chain and DNS name/IP SAN;\nSPKI pins add a check. Servers may require a verified client certificate.\nAccepted streams are handshaking; only `connected` means secure. Graceful close\ndrains and sends close_notify with a one-second deadline; unannounced EOF fails\nas truncation. Weak dispatch and retained state support callback-local destruction.\n"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 118,
+      "end_line": 118,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "heading",
+      "start_line": 119,
+      "end_line": 119,
+      "raw": "## Session, presentation and security\n",
+      "level": 2,
+      "title": "Session, presentation and security"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 120,
+      "end_line": 120,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "paragraph",
+      "start_line": 121,
+      "end_line": 127,
+      "raw": "A session has a CSPRNG UUID, explicit peer identity, active/suspended/closed/\nexpired state, independent sequences and an idle deadline. `open()` creates a\nlocal record; `adopt()` installs an explicitly established remote record. Neither\nauthenticates a peer. Suspended sessions stop exchange; only unexpired suspended\nsessions can resume. Closed/expired sessions remain terminal. `find()` returns\nthe last recorded snapshot; `expire()` and operations enforce current deadlines.\nTerminal records retain capacity until `erase()`. Default capacity is 1024.\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 128,
+      "end_line": 128,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "paragraph",
+      "start_line": 129,
+      "end_line": 133,
+      "raw": "Sequences never wrap. Receive sequences must increase, allowing UDP gaps;\nduplicates and late reordered messages are rejected. Failed sends may consume a\nreserved number, so retries use a new number. This is ordered, lossy datagram\nsession policy; reliable streams use TCP. Low-level `SessionLayer::accept()`\nrequires prior authentication. `NetworkStack::receive()` enforces that ordering.\n"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 134,
+      "end_line": 134,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "paragraph",
+      "start_line": 135,
+      "end_line": 138,
+      "raw": "Private session v1 is `IINS` + byte 1 + 16 UUID bytes + unsigned 64-bit big-endian\nsequence + payload: 29 header bytes, with a default 1 MiB payload bound. A fresh\nID is required for a new establishment. Erasing/reusing an ID resets replay\nstate; records are in memory and do not form a durable reconnect protocol.\n"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 139,
+      "end_line": 139,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 140,
+      "end_line": 147,
+      "raw": "`PresentationLayer` uses bounded iiJson and canonical Base64. Duplicate JSON\nkeys, malformed UTF-8, excessive depth/items/bytes and invalid Base64 padding\nare rejected. The cipher is replaceable through `PayloadCipher`.\n`Aes256Gcm` uses OpenSSL EVP, a 256-bit key, fresh random 96-bit nonce and 128-bit\ntag. Envelope: byte 1 + nonce + tag + ciphertext (29 bytes overhead). Limits are\n64 MiB payload and 64 KiB associated data. Authentication failure cleanses the\nprovisional plaintext. The cipher cleanses its owned key copy; callers own any\noriginal key buffers. Keys are neither logged nor stored by the module.\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 148,
+      "end_line": 148,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 149,
+      "end_line": 154,
+      "raw": "The stack authenticates session header, source/destination IPs, ports and UDP\nprotocol number. Encoding is encrypted. MAC/TTL/checksum fields remain mutable\nfor routing. Applications supply authenticated key establishment; IDs are not\nkey exchange and the custom wire format is not TLS. Standard Ethernet MTU gives\na 1413-byte encoded application budget with the bundled cipher. Other ciphers\nstill pass through final UDP/IP/Ethernet MTU validation.\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 155,
+      "end_line": 155,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "heading",
+      "start_line": 156,
+      "end_line": 156,
+      "raw": "## HTTP, REST and GraphQL\n",
+      "level": 2,
+      "title": "HTTP, REST and GraphQL"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 157,
+      "end_line": 157,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "paragraph",
+      "start_line": 158,
+      "end_line": 169,
+      "raw": "`HttpTransport::start()` returning false means no admission and no callback.\nEach transport has one in-flight request; use separate instances for concurrency.\nCancel suppresses completion. Native HTTP defers cleanup if cancelled/destroyed\ninside a stream consumer. Completion can start another request. Explicit inputs\nbound deadlines/body bytes and provide stream/progress callbacks. Response\nheaders are capped at 128 fields and 64 KiB aggregate bytes. Credentials in URLs,\nfragments, controls, non-HTTP schemes and CRLF injection are rejected. libcurl's\ncertificate/hostname verification remains enabled. Redirects default off; opt-in\nredirects permit HTTPS only and default to five hops (configurable up to 32).\nAll deadlines cap at one year. Versions are checked against linked libcurl\nfeatures; negotiation/fallback follows curl, and response metadata reports the\nactual version.\n"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 170,
+      "end_line": 170,
+      "raw": "\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "paragraph",
+      "start_line": 171,
+      "end_line": 181,
+      "raw": "`HeaderFields` retains repeated fields separately from trailers, including\nempty-body trailers. Legacy maps retain the last field value. Basic/Digest/\nBearer authentication, opt-in per-instance cookies, explicit HTTP/SOCKS5 proxies,\nCA/identity/pin policy, compression, Unix sockets and streamed uploads are request\noptions. Explicit proxies override environment bypass; local HTTP disables\nproxies. Only opted-in requests use the cookie store. Upload streams have no\nrewind contract; buffered bodies support backend replay. Progress, endpoints,\nnative errors, counts and cumulative timing milestones are response evidence.\n`request()` provides structured admission errors; `start()` preserves bool\ncompatibility. Cancel defers cleanup inside upload/header/body callbacks and\nsuppresses completion. Interfaces.md specifies callback and lifetime rules.\n"
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 182,
+      "end_line": 182,
+      "raw": "\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "paragraph",
+      "start_line": 183,
+      "end_line": 189,
+      "raw": "REST independently encodes relative path/query components and retains repeated\nquery names. Dot traversal and alternate authorities are rejected. An optional\nJSON body uses iiJson. Responses retain raw HTTP evidence and parsed JSON.\nEmpty successful responses are accepted. JSON decoding is the default;\n`parse_json_response = false` preserves arbitrary binary/text response bodies.\nRequest `json` and raw `body` are mutually exclusive; raw media types are caller\nheaders. Streaming exchanges use `Http`.\n"
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 190,
+      "end_line": 190,
+      "raw": "\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "paragraph",
+      "start_line": 191,
+      "end_line": 196,
+      "raw": "GraphQL clients send POST JSON with query, operation name, variables/extensions.\nThey advertise `application/graphql-response+json` plus an `application/json`\nfallback. Explicit null differs from absent data. Error message/path/location/\nextension shapes are validated. Partial data survives execution errors. HTTP\nand malformed-envelope failures are separate from GraphQL errors; `ok()` requires\nsuccessful HTTP, valid data and no errors. No schema/parser/resolvers are inferred.\n"
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 197,
+      "end_line": 197,
+      "raw": "\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "paragraph",
+      "start_line": 198,
+      "end_line": 202,
+      "raw": "`HttpRouter` matches methods and origin-form paths. `{name}` captures one segment.\nStatic segments outrank parameterized matches; equal specificity follows\nregistration order. Duplicate shapes/names are rejected. Parameters decode once;\nencoded slash/NUL/backslash and traversal are rejected. Query text is ignored for\nmatching. Misses produce 404/405 with Allow; handler exceptions produce 500.\n"
+    },
+    {
+      "id": "b000060",
+      "kind": "blank",
+      "start_line": 203,
+      "end_line": 203,
+      "raw": "\n"
+    },
+    {
+      "id": "b000061",
+      "kind": "paragraph",
+      "start_line": 204,
+      "end_line": 213,
+      "raw": "`HttpServer` receives one Content-Length-framed request per connection and closes\nafter responding. Limits default to 64 connections, 16 KiB headers, 2 MiB request/\nresponse bodies and a 10 second absolute request deadline. Excess connections are\nclosed. Duplicate framing/Host headers, invalid lengths, conflicting framing,\nmissing HTTP/1.1 Host, header folding, oversize and pipelining are rejected.\nResponses are validated before serialization. Transfer coding, Expect, upgrades,\nkeep-alive and streaming responses require another adapter. `listen_tls()` and\n`listen_local()` use the same parser over `ByteStream`; requests report secure\ntransport, endpoints, client certificate and optional local credentials.\nHandshake time counts toward the absolute request deadline.\n"
+    },
+    {
+      "id": "b000062",
+      "kind": "blank",
+      "start_line": 214,
+      "end_line": 214,
+      "raw": "\n"
+    },
+    {
+      "id": "b000063",
+      "kind": "paragraph",
+      "start_line": 215,
+      "end_line": 220,
+      "raw": "`GraphQLService` mounts on a router handler and owns POST JSON envelope validation\nand response serialization. Its application executor receives a `GraphQLRequest`\nand returns `GraphQLExecutionResult`. The application owns schemas, query\nvalidation, authorization/resolvers and complexity policy. Incoming headers are\navailable in `operation.options.headers`. Optional fields accept absence/null.\nSubscriptions and multipart incremental delivery are outside this adapter.\n"
+    },
+    {
+      "id": "b000064",
+      "kind": "blank",
+      "start_line": 221,
+      "end_line": 221,
+      "raw": "\n"
+    },
+    {
+      "id": "b000065",
+      "kind": "fenced_code",
+      "start_line": 222,
+      "end_line": 240,
+      "raw": "```cpp\nii::runtime::EventLoop loop;\nii::network::HttpRouter router;\nii::network::GraphQLService graph([](const ii::network::GraphQLRequest& operation) {\n    // Authorize using operation.options.headers; validate and execute the query.\n    ii::network::GraphQLExecutionResult result;\n    result.data = ii::core::Value(ii::core::Value::Object{\n        {\"service\", ii::core::Value(\"iiNetwork\")}});\n    return result;\n});\nauto registration = router.add(\"POST\", \"/graphql\", [graph](const auto& req, const auto&) {\n    return graph(req);\n});\nii::network::HttpServer server(loop);\nbool listening = registration && server.listen(\"127.0.0.1\", 8080,\n    [&](const auto& request) { return router.dispatch(request); });\n// Propagate listen failure; pump loop only while all borrowed objects are alive.\nif (listening) loop.run();\n```\n",
+      "language": "cpp",
+      "code": "ii::runtime::EventLoop loop;\nii::network::HttpRouter router;\nii::network::GraphQLService graph([](const ii::network::GraphQLRequest& operation) {\n    // Authorize using operation.options.headers; validate and execute the query.\n    ii::network::GraphQLExecutionResult result;\n    result.data = ii::core::Value(ii::core::Value::Object{\n        {\"service\", ii::core::Value(\"iiNetwork\")}});\n    return result;\n});\nauto registration = router.add(\"POST\", \"/graphql\", [graph](const auto& req, const auto&) {\n    return graph(req);\n});\nii::network::HttpServer server(loop);\nbool listening = registration && server.listen(\"127.0.0.1\", 8080,\n    [&](const auto& request) { return router.dispatch(request); });\n// Propagate listen failure; pump loop only while all borrowed objects are alive.\nif (listening) loop.run();\n",
+      "closed": true
+    },
+    {
+      "id": "b000066",
+      "kind": "blank",
+      "start_line": 241,
+      "end_line": 241,
+      "raw": "\n"
+    },
+    {
+      "id": "b000067",
+      "kind": "heading",
+      "start_line": 242,
+      "end_line": 242,
+      "raw": "## Relay\n",
+      "level": 2,
+      "title": "Relay"
+    },
+    {
+      "id": "b000068",
+      "kind": "blank",
+      "start_line": 243,
+      "end_line": 243,
+      "raw": "\n"
+    },
+    {
+      "id": "b000069",
+      "kind": "paragraph",
+      "start_line": 244,
+      "end_line": 250,
+      "raw": "`TcpRelay` owns two already connected sockets with no installed callbacks.\n`start()` registers both directions, sets buffer limits and forwards buffered\ninput. Counters record admitted forwarding bytes. Pending-byte overflow fails\nclosed and retains an error. Peer disconnect stops both directions and attempts\nto flush admitted output. `stop()`/destruction remove callbacks and close sockets.\nInstances are not restartable. This is a byte-stream relay, not an OS IP router\nor an HTTP CONNECT parser.\n"
+    },
+    {
+      "id": "b000070",
+      "kind": "blank",
+      "start_line": 251,
+      "end_line": 251,
+      "raw": "\n"
+    },
+    {
+      "id": "b000071",
+      "kind": "heading",
+      "start_line": 252,
+      "end_line": 252,
+      "raw": "## References\n",
+      "level": 2,
+      "title": "References"
+    },
+    {
+      "id": "b000072",
+      "kind": "blank",
+      "start_line": 253,
+      "end_line": 253,
+      "raw": "\n"
+    },
+    {
+      "id": "b000073",
+      "kind": "list",
+      "start_line": 254,
+      "end_line": 259,
+      "raw": "- [ITU-T X.200 OSI model](https://www.itu.int/rec/T-REC-X.200/en)\n- [RFC 791 IPv4](https://www.rfc-editor.org/rfc/rfc791)\n- [RFC 768 UDP](https://www.rfc-editor.org/rfc/rfc768)\n- [RFC 9112 HTTP/1.1 framing](https://www.rfc-editor.org/rfc/rfc9112.html)\n- [GraphQL over HTTP draft](https://http-spec.graphql.org/draft/)\n- [OpenSSL EVP authenticated encryption](https://docs.openssl.org/3.5/man3/EVP_EncryptInit/)\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "[ITU-T X.200 OSI model](https://www.itu.int/rec/T-REC-X.200/en)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[RFC 791 IPv4](https://www.rfc-editor.org/rfc/rfc791)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[RFC 768 UDP](https://www.rfc-editor.org/rfc/rfc768)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[RFC 9112 HTTP/1.1 framing](https://www.rfc-editor.org/rfc/rfc9112.html)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[GraphQL over HTTP draft](https://http-spec.graphql.org/draft/)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[OpenSSL EVP authenticated encryption](https://docs.openssl.org/3.5/man3/EVP_EncryptInit/)",
+          "checked": null
+        }
+      ]
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiNetwork architecture and contracts",
+      "anchor": "iinetwork-architecture-and-contracts",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000003",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Dependency direction",
+      "anchor": "dependency-direction",
+      "start_line": 3
+    },
+    {
+      "block_id": "b000007",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Native and packet paths",
+      "anchor": "native-and-packet-paths",
+      "start_line": 19
+    },
+    {
+      "block_id": "b000021",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Layers 1-4",
+      "anchor": "layers-1-4",
+      "start_line": 64
+    },
+    {
+      "block_id": "b000037",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Session, presentation and security",
+      "anchor": "session-presentation-and-security",
+      "start_line": 119
+    },
+    {
+      "block_id": "b000049",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "HTTP, REST and GraphQL",
+      "anchor": "http-rest-and-graphql",
+      "start_line": 156
+    },
+    {
+      "block_id": "b000067",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Relay",
+      "anchor": "relay",
+      "start_line": 242
+    },
+    {
+      "block_id": "b000071",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "References",
+      "anchor": "references",
+      "start_line": 252
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 16,
+        "text": "with transport/TLS/session/Value dependencies. Lower layers never import Peer.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 34,
+        "text": "loop is created. The EventLoop must outlive its network objects; HTTP transports",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 35,
+        "text": "must outlive clients that borrow them. These APIs have owner-thread affinity.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 36,
+        "text": "Numeric parsing never does DNS. `resolve_host()` and `reverse_lookup()` are",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000023",
+        "line": 67,
+        "text": "preamble/SFD. Drivers for NIC APIs that strip FCS must normalize this boundary.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000029",
+        "line": 93,
+        "text": "ceiling is 513 MiB; applications should set smaller explicit limits.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000041",
+        "line": 129,
+        "text": "Sequences never wrap. Receive sequences must increase, allowing UDP gaps;",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000043",
+        "line": 137,
+        "text": "ID is required for a new establishment. Erasing/reusing an ID resets replay",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000043",
+        "line": 138,
+        "text": "state; records are in memory and do not form a durable reconnect protocol.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000009",
+        "label": "Peers",
+        "target": "Peers.md",
+        "kind": "relative",
+        "line": 27
+      },
+      {
+        "block_id": "b000073",
+        "label": "ITU-T X.200 OSI model",
+        "target": "https://www.itu.int/rec/T-REC-X.200/en",
+        "kind": "external",
+        "line": 254
+      },
+      {
+        "block_id": "b000073",
+        "label": "RFC 791 IPv4",
+        "target": "https://www.rfc-editor.org/rfc/rfc791",
+        "kind": "external",
+        "line": 255
+      },
+      {
+        "block_id": "b000073",
+        "label": "RFC 768 UDP",
+        "target": "https://www.rfc-editor.org/rfc/rfc768",
+        "kind": "external",
+        "line": 256
+      },
+      {
+        "block_id": "b000073",
+        "label": "RFC 9112 HTTP/1.1 framing",
+        "target": "https://www.rfc-editor.org/rfc/rfc9112.html",
+        "kind": "external",
+        "line": 257
+      },
+      {
+        "block_id": "b000073",
+        "label": "GraphQL over HTTP draft",
+        "target": "https://http-spec.graphql.org/draft/",
+        "kind": "external",
+        "line": 258
+      },
+      {
+        "block_id": "b000073",
+        "label": "OpenSSL EVP authenticated encryption",
+        "target": "https://docs.openssl.org/3.5/man3/EVP_EncryptInit/",
+        "kind": "external",
+        "line": 259
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

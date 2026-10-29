@@ -1,0 +1,1083 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:4dd3884bb0f501483fa6a0980c72c1d7eda5f3fc850d7e730ee523653f7f37eb",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "README.md",
+    "sha256": "ed57c0154199b77d77db4361bd6a618404bb6f1d58d8f2f16351aedfc211d924",
+    "bytes": 13452,
+    "line_count": 218,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "iiNetwork",
+    "role": "overview",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiNetwork\n",
+      "level": 1,
+      "title": "iiNetwork"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 6,
+      "raw": "iiNetwork 0.6 is the C++23 networking module of iiSDK. Its application model is\na relationship between equal peers: either side can initiate operations,\nanswer calls and publish events over the same connection. Listening and dialing\nassign transport setup roles without application rank. A node can do both.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 8,
+      "end_line": 12,
+      "raw": "It provides seven OSI\nresponsibility objects, IPv4/IPv6 TCP/UDP, local sockets, TLS client/server streams,\nHTTP/HTTPS clients and servers, REST and GraphQL adapters, session state, packet\nrouting, bidirectional TCP relay, presentation codecs and authenticated encryption. It imports no Qt\npackage or Qt public types.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 13,
+      "end_line": 13,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 14,
+      "end_line": 17,
+      "raw": "`ii::network::NetworkStack` composes the seven objects, keeping application\npolicy and replaceable drivers outside lower layers. Existing code that includes\n`iiNetwork/Network.h` and uses `Tcp`, `Listener`, `Udp`, `Http` or `Wire.h` remains\nsource compatible.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "table",
+      "start_line": 19,
+      "end_line": 27,
+      "raw": "| Layer | Object | Implemented responsibility |\n| --- | --- | --- |\n| 1 Physical | `PhysicalLayer`, `PhysicalMedium` | Bounded frame I/O, driver attachment, interface inventory, counters, Manchester line codec |\n| 2 Data link | `DataLinkLayer` | Ethernet II addressing, padding, MTU and CRC-32 FCS |\n| 3 Network | `NetworkLayer`, `RoutingTable` | IPv4 header/checksum, longest-prefix routes, metrics and TTL-aware forwarding |\n| 4 Transport | `TransportLayer`, `ByteStream`, `Tcp`, `Listener`, `Udp`, `LocalSocket`, `LocalServer` | IPv4/IPv6 and local nonblocking sockets, typed endpoints, UDP codecs/checksums, bounded send admission |\n| 5 Session | `SessionLayer` | CSPRNG IDs, peer binding, suspend/resume/close/expiry, monotonic sequences |\n| 6 Presentation | `PresentationLayer`, `PayloadCipher`, `Aes256Gcm`, `TlsContext`, `TlsStream` | JSON/Base64, AES-256-GCM and verified TLS 1.2/1.3 streams |\n| 7 Application | `ApplicationLayer`, `RestClient`, `GraphQLClient`, `HttpRouter`, `HttpServer`, `GraphQLService`, `Peer`, `PeerConnection`, `RealtimeServer`, `RealtimeClient` | Mutual operations/events, HTTP exchange, GraphQL envelopes, native realtime sessions and room-scoped latest-value streaming |\n",
+      "columns": [
+        "Layer",
+        "Object",
+        "Implemented responsibility"
+      ],
+      "rows": [
+        [
+          "1 Physical",
+          "`PhysicalLayer`, `PhysicalMedium`",
+          "Bounded frame I/O, driver attachment, interface inventory, counters, Manchester line codec"
+        ],
+        [
+          "2 Data link",
+          "`DataLinkLayer`",
+          "Ethernet II addressing, padding, MTU and CRC-32 FCS"
+        ],
+        [
+          "3 Network",
+          "`NetworkLayer`, `RoutingTable`",
+          "IPv4 header/checksum, longest-prefix routes, metrics and TTL-aware forwarding"
+        ],
+        [
+          "4 Transport",
+          "`TransportLayer`, `ByteStream`, `Tcp`, `Listener`, `Udp`, `LocalSocket`, `LocalServer`",
+          "IPv4/IPv6 and local nonblocking sockets, typed endpoints, UDP codecs/checksums, bounded send admission"
+        ],
+        [
+          "5 Session",
+          "`SessionLayer`",
+          "CSPRNG IDs, peer binding, suspend/resume/close/expiry, monotonic sequences"
+        ],
+        [
+          "6 Presentation",
+          "`PresentationLayer`, `PayloadCipher`, `Aes256Gcm`, `TlsContext`, `TlsStream`",
+          "JSON/Base64, AES-256-GCM and verified TLS 1.2/1.3 streams"
+        ],
+        [
+          "7 Application",
+          "`ApplicationLayer`, `RestClient`, `GraphQLClient`, `HttpRouter`, `HttpServer`, `GraphQLService`, `Peer`, `PeerConnection`, `RealtimeServer`, `RealtimeClient`",
+          "Mutual operations/events, HTTP exchange, GraphQL envelopes, native realtime sessions and room-scoped latest-value streaming"
+        ]
+      ]
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 28,
+      "end_line": 28,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 29,
+      "end_line": 30,
+      "raw": "`TcpRelay` bridges two connected sockets in both directions, enforces pending\nbyte limits and reports forwarding counters/errors.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 31,
+      "end_line": 31,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 32,
+      "end_line": 41,
+      "raw": "The independently built [load-balancer composition](example/LoadBalancer/) selects real backend endpoints using weighted rendezvous\nhashing of canonical IPv4/IPv6 TCP/UDP/TLS flow metadata. A Core `LoadLease` keeps\neach established connection pinned and counted through transport cleanup; new\nconnections observe health, draining and resource limits. Targets added later\nonly receive flows for which they win the hash. See [L4 load balancing](docs/LoadBalancer.md)\nand the [native loopback example](example/LoadBalancer/App/main.cpp). Applications\nexplicitly compose the network and runtime SDKs; the adapter is not part of the\nbase iiNetwork package. Existing load-balancer clients must rebuild against\n`iiNetwork::LoadBalancer` from `iiNetworkLoadBalancer` and include its header\nexplicitly.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 42,
+      "end_line": 42,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "heading",
+      "start_line": 43,
+      "end_line": 43,
+      "raw": "## Realtime state streaming\n",
+      "level": 2,
+      "title": "Realtime state streaming"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 44,
+      "end_line": 44,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 45,
+      "end_line": 51,
+      "raw": "`RealtimeServer` and `RealtimeClient` provide native encrypted UDP sessions,\nroom-scoped relay and server publications for the same application platform:\nplayer input, collaborative cursors, shared state and sensor updates use the\nsame binary latest-value channels. Per-participant tickets enter through an\nauthenticated TLS/IPC control plane. The data plane coalesces unsent updates,\nrejects stale/replayed packets, paces traffic using RTT/receipt feedback and\nenforces queue, payload, participant and lifetime limits without Qt.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 52,
+      "end_line": 52,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 53,
+      "end_line": 57,
+      "raw": "Use `#include <iiNetwork/Realtime.h>` and the existing `iiNetwork::iiNetwork`\ntarget. `example/realtime.cpp` is a compiled live-room example. Reliable\ncommands continue to use `Peer`/TLS alongside this state stream. See\n[Realtime API, protocol and deployment](docs/Realtime.md) for admission,\nauthentication, loss semantics and validation scope.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 58,
+      "end_line": 58,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "heading",
+      "start_line": 59,
+      "end_line": 59,
+      "raw": "## Build and consume\n",
+      "level": 2,
+      "title": "Build and consume"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 60,
+      "end_line": 60,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 61,
+      "end_line": 63,
+      "raw": "Dependencies are iiSDKCore >= 0.19 (Runtime), iiJson >= 0.1, libcurl >= 7.62 and\nOpenSSL >= 3 (Crypto and SSL). C++23 is required. Use the repository-local `build/`.\nThe following installation is a workspace staging area, preserving installed SDKs.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 64,
+      "end_line": 64,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "fenced_code",
+      "start_line": 65,
+      "end_line": 71,
+      "raw": "```sh\ncmake -S . -B build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\"\ncmake --build build -j 6\nctest --test-dir build --output-on-failure\ncmake --install build --prefix \"$PWD/build/package\"\n```\n",
+      "language": "sh",
+      "code": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\"\ncmake --build build -j 6\nctest --test-dir build --output-on-failure\ncmake --install build --prefix \"$PWD/build/package\"\n",
+      "closed": true
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 72,
+      "end_line": 72,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 73,
+      "end_line": 76,
+      "raw": "`INSTALL_PREFIX=\"$PWD/build/package\" BUILD_JOBS=3 ./install.sh` runs the same\nsource checks, installs the package and builds/runs independent installed\nconsumers. Omitting `INSTALL_PREFIX` selects `~/.local/SDK/iiNetwork`. New\nexamples live in `example/`; the older `examples/` paths remain available.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 77,
+      "end_line": 77,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 78,
+      "end_line": 79,
+      "raw": "The Homebrew prefix is a macOS example; use platform-appropriate dependency\nprefixes elsewhere. Consumers use the exported target:\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 80,
+      "end_line": 80,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "fenced_code",
+      "start_line": 81,
+      "end_line": 84,
+      "raw": "```cmake\nfind_package(iiNetwork 0.4 CONFIG REQUIRED)\ntarget_link_libraries(my_application PRIVATE iiNetwork::iiNetwork)\n```\n",
+      "language": "cmake",
+      "code": "find_package(iiNetwork 0.4 CONFIG REQUIRED)\ntarget_link_libraries(my_application PRIVATE iiNetwork::iiNetwork)\n",
+      "closed": true
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 85,
+      "end_line": 85,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 86,
+      "end_line": 88,
+      "raw": "Static library dependencies are exported. `add_subdirectory()` integration is\nalso supported. `IINETWORK_BUILD_TESTS` and `IINETWORK_BUILD_EXAMPLES` default on\nfor standalone builds and off for embedded builds.\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 89,
+      "end_line": 89,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "paragraph",
+      "start_line": 90,
+      "end_line": 93,
+      "raw": "`examples/roundtrip.cpp` is a compiled example of an authenticated Value passing\nthrough presentation, session, UDP, IPv4, Ethernet and a paired memory medium.\n`NetworkStack::send()` requires a route, established peer session, next-hop MAC\nand cipher. `receive()` authenticates/decodes before committing its sequence.\n"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 94,
+      "end_line": 94,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "heading",
+      "start_line": 95,
+      "end_line": 95,
+      "raw": "## Equal peers and mutual operations\n",
+      "level": 2,
+      "title": "Equal peers and mutual operations"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 96,
+      "end_line": 96,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "paragraph",
+      "start_line": 97,
+      "end_line": 101,
+      "raw": "`Peer` owns exposed operations, authorization, listeners and connections.\n`PeerConnection` is identical at both ends. `request()` initiates a remote\noperation, `PeerReply` answers now or later, and `notify()` publishes an event.\nBoth directions support concurrent calls, including calls made back to the\nrequester while handling its operation. Request IDs are correlated by direction.\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 102,
+      "end_line": 102,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "paragraph",
+      "start_line": 103,
+      "end_line": 107,
+      "raw": "A node may listen on TCP, TLS and local sockets while dialing other nodes.\nBoth endpoints exchange versioned hello/session metadata before application\ntraffic. Only explicitly exposed operations run, with independent receiving-side\nauthorization; accepting a connection never grants extra remote-control rights.\nIdentity claims and real TLS/local credential evidence remain distinct.\n"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 108,
+      "end_line": 108,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "paragraph",
+      "start_line": 109,
+      "end_line": 112,
+      "raw": "See [Equal peers](docs/Peers.md) for framing, identity, deadlines, cancellation,\nbackpressure and lifecycle contracts. `examples/peers.cpp` is a compiled example\nwhere the dialing and accepting nodes each change the other's counter over\none connection.\n"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 113,
+      "end_line": 113,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "heading",
+      "start_line": 114,
+      "end_line": 114,
+      "raw": "## Native communication interfaces\n",
+      "level": 2,
+      "title": "Native communication interfaces"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 115,
+      "end_line": 115,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "table",
+      "start_line": 116,
+      "end_line": 124,
+      "raw": "| Area | Public entry points | Controls and observations |\n| --- | --- | --- |\n| IP | `IpAddress`, `IpEndpoint`, `IpSubnet`, `interfaces()` | IPv4/IPv6, scope IDs, CIDR, names/indexes/prefixes, explicit blocking forward/reverse resolution |\n| TCP | `Tcp`, `Listener`, `TcpOptions`, `ListenerOptions` | Bind/connect, IPv6-only policy, backlog, no-delay, keepalive, OS buffers, deadlines, half-close and endpoints |\n| Datagram | `Udp`, `UdpOptions`, `Datagram` | Connected peer filtering, binary/empty datagrams, multicast membership/interface/hops/loopback, IPv4 broadcast and statistics |\n| Local IPC | `LocalSocket`, `LocalServer`, `LocalEndpoint` | AF_UNIX streams, bounded paths, POSIX permissions/peer credentials, owned socket-file cleanup, Linux abstract namespace |\n| Secure streams | `TlsContext`, `TlsStream`, `TlsListener` | TLS 1.2/1.3, CA trust, hostname/SNI, ALPN, SPKI pins, certificate/key identity, mutual authentication and negotiated metadata |\n| HTTP | `Http`, `HttpRequest`, `HttpResponse`, `HeaderFields` | Methods/versions, Basic/Digest/Bearer auth, cookies, HTTP/SOCKS5 proxies, TLS policy, Unix sockets, compression, streamed transfers, progress, headers/trailers and timings |\n| Incoming HTTP | `HttpServer::listen`, `listen_tls`, `listen_local` | Shared HTTP parser/router over TCP, TLS or local streams; endpoint, secure-peer and local-credential metadata |\n",
+      "columns": [
+        "Area",
+        "Public entry points",
+        "Controls and observations"
+      ],
+      "rows": [
+        [
+          "IP",
+          "`IpAddress`, `IpEndpoint`, `IpSubnet`, `interfaces()`",
+          "IPv4/IPv6, scope IDs, CIDR, names/indexes/prefixes, explicit blocking forward/reverse resolution"
+        ],
+        [
+          "TCP",
+          "`Tcp`, `Listener`, `TcpOptions`, `ListenerOptions`",
+          "Bind/connect, IPv6-only policy, backlog, no-delay, keepalive, OS buffers, deadlines, half-close and endpoints"
+        ],
+        [
+          "Datagram",
+          "`Udp`, `UdpOptions`, `Datagram`",
+          "Connected peer filtering, binary/empty datagrams, multicast membership/interface/hops/loopback, IPv4 broadcast and statistics"
+        ],
+        [
+          "Local IPC",
+          "`LocalSocket`, `LocalServer`, `LocalEndpoint`",
+          "AF_UNIX streams, bounded paths, POSIX permissions/peer credentials, owned socket-file cleanup, Linux abstract namespace"
+        ],
+        [
+          "Secure streams",
+          "`TlsContext`, `TlsStream`, `TlsListener`",
+          "TLS 1.2/1.3, CA trust, hostname/SNI, ALPN, SPKI pins, certificate/key identity, mutual authentication and negotiated metadata"
+        ],
+        [
+          "HTTP",
+          "`Http`, `HttpRequest`, `HttpResponse`, `HeaderFields`",
+          "Methods/versions, Basic/Digest/Bearer auth, cookies, HTTP/SOCKS5 proxies, TLS policy, Unix sockets, compression, streamed transfers, progress, headers/trailers and timings"
+        ],
+        [
+          "Incoming HTTP",
+          "`HttpServer::listen`, `listen_tls`, `listen_local`",
+          "Shared HTTP parser/router over TCP, TLS or local streams; endpoint, secure-peer and local-credential metadata"
+        ]
+      ]
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 125,
+      "end_line": 125,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "paragraph",
+      "start_line": 126,
+      "end_line": 129,
+      "raw": "`Tcp`, `LocalSocket` and `TlsStream` implement `ByteStream`: bounded writes,\npartial/exact/delimiter reads, peek, queue sizes, callbacks and I/O counters.\nSee [Communication interfaces](docs/Interfaces.md) for examples, ownership,\nevent ordering, capability reporting and platform bounds.\n"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 130,
+      "end_line": 130,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "heading",
+      "start_line": 131,
+      "end_line": 131,
+      "raw": "## REST, GraphQL and incoming requests\n",
+      "level": 2,
+      "title": "REST, GraphQL and incoming requests"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 132,
+      "end_line": 132,
+      "raw": "\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "paragraph",
+      "start_line": 133,
+      "end_line": 135,
+      "raw": "Inject `NativeHttpTransport` (on a Core EventLoop) into `RestClient` or\n`GraphQLClient`. A custom `HttpTransport` replaces HTTP independently. Each\ntransport admits one in-flight request; network APIs have owner-thread affinity.\n"
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 136,
+      "end_line": 136,
+      "raw": "\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "paragraph",
+      "start_line": 137,
+      "end_line": 142,
+      "raw": "REST has method, relative path, ordered query pairs, optional JSON/raw body and request\nlimits. Path/query components are percent encoded; traversal, alternate\nauthorities and header injection are rejected. Responses retain HTTP status,\nheaders, raw body and parsed JSON. Empty successful responses, including 204,\nare accepted. JSON response parsing is the default; set `parse_json_response`\nto false for binary/text media. Raw request media types are explicit headers.\n"
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 143,
+      "end_line": 143,
+      "raw": "\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "paragraph",
+      "start_line": 144,
+      "end_line": 147,
+      "raw": "GraphQL keeps query, operation name, variables and extensions distinct. POST\nrequests advertise `application/graphql-response+json` plus an `application/json`\nfallback. Responses preserve partial data, explicit JSON null and structured\nexecution errors separately from HTTP/envelope failures.\n"
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 148,
+      "end_line": 148,
+      "raw": "\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "paragraph",
+      "start_line": 149,
+      "end_line": 153,
+      "raw": "`HttpServer` receives bounded requests over TCP, TLS or local sockets. Its handler can call\n`HttpRouter::dispatch()`. `GraphQLService` mounts on that router, validates the\nPOST JSON envelope and serializes a supplied executor result. The application\nowns schema/query validation, authorization, resolvers and complexity policy.\nIncoming headers are in `GraphQLRequest::options.headers`.\n"
+    },
+    {
+      "id": "b000060",
+      "kind": "blank",
+      "start_line": 154,
+      "end_line": 154,
+      "raw": "\n"
+    },
+    {
+      "id": "b000061",
+      "kind": "heading",
+      "start_line": 155,
+      "end_line": 155,
+      "raw": "## Operational boundaries\n",
+      "level": 2,
+      "title": "Operational boundaries"
+    },
+    {
+      "id": "b000062",
+      "kind": "blank",
+      "start_line": 156,
+      "end_line": 156,
+      "raw": "\n"
+    },
+    {
+      "id": "b000063",
+      "kind": "list",
+      "start_line": 157,
+      "end_line": 181,
+      "raw": "- Native TCP/UDP delegate NIC/link/IP implementation to the OS. The raw packet\n  pipeline is separate. The included physical driver is `MemoryMedium`; real\n  NIC/raw drivers implement `PhysicalMedium` and own signal timing. Manchester\n  helpers transform in-memory symbols and do not drive hardware.\n- The packet path supports Ethernet II, unfragmented IPv4 and UDP. Standard\n  Ethernet MTU allows 1413 encoded application bytes with the bundled AEAD\n  envelope. Next-hop MAC resolution is explicit. IPv6, ARP, VLAN, fragmentation/\n  reassembly and NIC drivers are not supplied. Native TCP/UDP accepts typed\n  IPv4/IPv6 endpoints; raw packet IPv6 is a separate, unimplemented capability.\n- The HTTP server accepts origin-form HTTP/1.0/1.1 with Content-Length and one\n  request per connection. It rejects transfer coding, ambiguous framing,\n  pipelining and Expect. Upgrades, HTTP/2/3 serving, keep-alive and streaming\n  responses require another adapter. HTTPS serving uses `listen_tls()`.\n- HTTP/HTTPS clients retain libcurl certificate/hostname checks. Redirects\n  default off; opt-in redirects target HTTPS only, with five hops by default\n  and a configurable maximum of 32. HTTP/2/3 and TLS backend features depend\n  on linked libcurl and are reported by `Http::capabilities()`.\n- Secure stream APIs use OpenSSL TLS 1.2/1.3 and verify trust plus peer names.\n  Obsolete SSL and TLS 1.0/1.1 protocols are unavailable. OpenSSL's default trust\n  paths are separate from OS trust facilities used by some libcurl backends;\n  pass an explicit CA file/directory when required.\n- AEAD protects application payloads. Authenticated peer/key establishment is an\n  application responsibility; the custom session format is not TLS. GraphQL\n  subscriptions, incremental multipart delivery and a schema execution engine\n  are outside these protocol adapters.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Native TCP/UDP delegate NIC/link/IP implementation to the OS. The raw packet",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "The packet path supports Ethernet II, unfragmented IPv4 and UDP. Standard",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "The HTTP server accepts origin-form HTTP/1.0/1.1 with Content-Length and one",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "HTTP/HTTPS clients retain libcurl certificate/hostname checks. Redirects",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Secure stream APIs use OpenSSL TLS 1.2/1.3 and verify trust plus peer names.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "AEAD protects application payloads. Authenticated peer/key establishment is an",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000064",
+      "kind": "blank",
+      "start_line": 182,
+      "end_line": 182,
+      "raw": "\n"
+    },
+    {
+      "id": "b000065",
+      "kind": "paragraph",
+      "start_line": 183,
+      "end_line": 187,
+      "raw": "See [Architecture](docs/Architecture.md), [Communication interfaces](docs/Interfaces.md),\n[Equal peers](docs/Peers.md),\n[Verification](docs/Verification.md), `tests/contracts.cpp`, `tests/interfaces.cpp`\nand the compiled example. Platform source paths are not\nproof of execution on another OS.\n"
+    },
+    {
+      "id": "b000066",
+      "kind": "blank",
+      "start_line": 188,
+      "end_line": 188,
+      "raw": "\n"
+    },
+    {
+      "id": "b000067",
+      "kind": "heading",
+      "start_line": 189,
+      "end_line": 189,
+      "raw": "## WebSocket protocol sessions\n",
+      "level": 2,
+      "title": "WebSocket protocol sessions"
+    },
+    {
+      "id": "b000068",
+      "kind": "blank",
+      "start_line": 190,
+      "end_line": 190,
+      "raw": "\n"
+    },
+    {
+      "id": "b000069",
+      "kind": "paragraph",
+      "start_line": 191,
+      "end_line": 197,
+      "raw": "`WebSocketSession` adds RFC 6455 HTTP/1.1 upgrade, client/server framing,\nfragmented text/binary messages, masking, UTF-8, ping/pong and close handling.\nIt consumes and produces owned byte strings over a caller-owned TCP/TLS stream.\nServers inspect and authorize `upgrade_request` before explicitly accepting it.\nNo networking thread, application lifetime or authentication policy is implied.\nSee [WebSocket contracts](docs/WebSocket.md) and `tests/websocket.cpp` for limits,\nbackpressure, unsupported extensions and the actual loopback integration test.\n"
+    },
+    {
+      "id": "b000070",
+      "kind": "blank",
+      "start_line": 198,
+      "end_line": 198,
+      "raw": "\n"
+    },
+    {
+      "id": "b000071",
+      "kind": "heading",
+      "start_line": 199,
+      "end_line": 199,
+      "raw": "## Source header layout\n",
+      "level": 2,
+      "title": "Source header layout"
+    },
+    {
+      "id": "b000072",
+      "kind": "blank",
+      "start_line": 200,
+      "end_line": 200,
+      "raw": "\n"
+    },
+    {
+      "id": "b000073",
+      "kind": "paragraph",
+      "start_line": 201,
+      "end_line": 205,
+      "raw": "Public headers and implementations live together in `src/iiNetwork/`.\nThere is no separate authored `include/` tree. Existing public `#include` names\nand exported CMake targets are unchanged; installation still places only public\nheaders in the package include directory. Generated export headers belong to\n`build/`, not to the authored source tree.\n"
+    },
+    {
+      "id": "b000074",
+      "kind": "blank",
+      "start_line": 206,
+      "end_line": 206,
+      "raw": "\n"
+    },
+    {
+      "id": "b000075",
+      "kind": "paragraph",
+      "start_line": 207,
+      "end_line": 209,
+      "raw": "Validate this layout from the SDK workspace with\n`python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,\nand verify a staged installed consumer after changing source/header paths.\n"
+    },
+    {
+      "id": "b000076",
+      "kind": "blank",
+      "start_line": 210,
+      "end_line": 210,
+      "raw": "\n"
+    },
+    {
+      "id": "b000077",
+      "kind": "html",
+      "start_line": 211,
+      "end_line": 211,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000078",
+      "kind": "heading",
+      "start_line": 212,
+      "end_line": 212,
+      "raw": "## Documentation entry points\n",
+      "level": 2,
+      "title": "Documentation entry points"
+    },
+    {
+      "id": "b000079",
+      "kind": "blank",
+      "start_line": 213,
+      "end_line": 213,
+      "raw": "\n"
+    },
+    {
+      "id": "b000080",
+      "kind": "list",
+      "start_line": 214,
+      "end_line": 217,
+      "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "Human overview: this English `README.md`.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Agent instructions: [AGENT.md](AGENT.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Human documentation: [documentation index](docs/README.md).",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "Structured agent documentation: [agent index](docs/agent-index.json).",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000081",
+      "kind": "html",
+      "start_line": 218,
+      "end_line": 218,
+      "raw": "<!-- workspace-docs:readme:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiNetwork",
+      "anchor": "iinetwork",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000015",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Realtime state streaming",
+      "anchor": "realtime-state-streaming",
+      "start_line": 43
+    },
+    {
+      "block_id": "b000021",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Build and consume",
+      "anchor": "build-and-consume",
+      "start_line": 59
+    },
+    {
+      "block_id": "b000037",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Equal peers and mutual operations",
+      "anchor": "equal-peers-and-mutual-operations",
+      "start_line": 95
+    },
+    {
+      "block_id": "b000045",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Native communication interfaces",
+      "anchor": "native-communication-interfaces",
+      "start_line": 114
+    },
+    {
+      "block_id": "b000051",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "REST, GraphQL and incoming requests",
+      "anchor": "rest-graphql-and-incoming-requests",
+      "start_line": 131
+    },
+    {
+      "block_id": "b000061",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Operational boundaries",
+      "anchor": "operational-boundaries",
+      "start_line": 155
+    },
+    {
+      "block_id": "b000067",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "WebSocket protocol sessions",
+      "anchor": "websocket-protocol-sessions",
+      "start_line": 189
+    },
+    {
+      "block_id": "b000071",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Source header layout",
+      "anchor": "source-header-layout",
+      "start_line": 199
+    },
+    {
+      "block_id": "b000078",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Documentation entry points",
+      "anchor": "documentation-entry-points",
+      "start_line": 212
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000013",
+        "line": 39,
+        "text": "base iiNetwork package. Existing load-balancer clients must rebuild against",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000023",
+        "line": 62,
+        "text": "OpenSSL >= 3 (Crypto and SSL). C++23 is required. Use the repository-local `build/`.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000041",
+        "line": 106,
+        "text": "authorization; accepting a connection never grants extra remote-control rights.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000063",
+        "line": 160,
+        "text": "helpers transform in-memory symbols and do not drive hardware.",
+        "basis": "lexical_match",
+        "context": "list"
+      },
+      {
+        "block_id": "b000063",
+        "line": 177,
+        "text": "pass an explicit CA file/directory when required.",
+        "basis": "lexical_match",
+        "context": "list"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000025",
+        "language": "sh",
+        "code": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \\\n  -DCMAKE_PREFIX_PATH=\"$HOME/.local/SDK/iiSDKCore;$HOME/.local/SDK/iiJson;/opt/homebrew/opt/openssl@3\"\ncmake --build build -j 6\nctest --test-dir build --output-on-failure\ncmake --install build --prefix \"$PWD/build/package\"\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000013",
+        "label": "load-balancer composition",
+        "target": "example/LoadBalancer/",
+        "kind": "relative",
+        "line": 32
+      },
+      {
+        "block_id": "b000013",
+        "label": "L4 load balancing",
+        "target": "docs/LoadBalancer.md",
+        "kind": "relative",
+        "line": 36
+      },
+      {
+        "block_id": "b000013",
+        "label": "native loopback example",
+        "target": "example/LoadBalancer/App/main.cpp",
+        "kind": "relative",
+        "line": 37
+      },
+      {
+        "block_id": "b000019",
+        "label": "Realtime API, protocol and deployment",
+        "target": "docs/Realtime.md",
+        "kind": "relative",
+        "line": 56
+      },
+      {
+        "block_id": "b000043",
+        "label": "Equal peers",
+        "target": "docs/Peers.md",
+        "kind": "relative",
+        "line": 109
+      },
+      {
+        "block_id": "b000049",
+        "label": "Communication interfaces",
+        "target": "docs/Interfaces.md",
+        "kind": "relative",
+        "line": 128
+      },
+      {
+        "block_id": "b000065",
+        "label": "Architecture",
+        "target": "docs/Architecture.md",
+        "kind": "relative",
+        "line": 183
+      },
+      {
+        "block_id": "b000065",
+        "label": "Communication interfaces",
+        "target": "docs/Interfaces.md",
+        "kind": "relative",
+        "line": 183
+      },
+      {
+        "block_id": "b000065",
+        "label": "Equal peers",
+        "target": "docs/Peers.md",
+        "kind": "relative",
+        "line": 184
+      },
+      {
+        "block_id": "b000065",
+        "label": "Verification",
+        "target": "docs/Verification.md",
+        "kind": "relative",
+        "line": 185
+      },
+      {
+        "block_id": "b000069",
+        "label": "WebSocket contracts",
+        "target": "docs/WebSocket.md",
+        "kind": "relative",
+        "line": 196
+      },
+      {
+        "block_id": "b000080",
+        "label": "AGENT.md",
+        "target": "AGENT.md",
+        "kind": "relative",
+        "line": 215
+      },
+      {
+        "block_id": "b000080",
+        "label": "documentation index",
+        "target": "docs/README.md",
+        "kind": "relative",
+        "line": 216
+      },
+      {
+        "block_id": "b000080",
+        "label": "agent index",
+        "target": "docs/agent-index.json",
+        "kind": "relative",
+        "line": 217
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000009",
+        "columns": [
+          "Layer",
+          "Object",
+          "Implemented responsibility"
+        ],
+        "rows": [
+          [
+            "1 Physical",
+            "`PhysicalLayer`, `PhysicalMedium`",
+            "Bounded frame I/O, driver attachment, interface inventory, counters, Manchester line codec"
+          ],
+          [
+            "2 Data link",
+            "`DataLinkLayer`",
+            "Ethernet II addressing, padding, MTU and CRC-32 FCS"
+          ],
+          [
+            "3 Network",
+            "`NetworkLayer`, `RoutingTable`",
+            "IPv4 header/checksum, longest-prefix routes, metrics and TTL-aware forwarding"
+          ],
+          [
+            "4 Transport",
+            "`TransportLayer`, `ByteStream`, `Tcp`, `Listener`, `Udp`, `LocalSocket`, `LocalServer`",
+            "IPv4/IPv6 and local nonblocking sockets, typed endpoints, UDP codecs/checksums, bounded send admission"
+          ],
+          [
+            "5 Session",
+            "`SessionLayer`",
+            "CSPRNG IDs, peer binding, suspend/resume/close/expiry, monotonic sequences"
+          ],
+          [
+            "6 Presentation",
+            "`PresentationLayer`, `PayloadCipher`, `Aes256Gcm`, `TlsContext`, `TlsStream`",
+            "JSON/Base64, AES-256-GCM and verified TLS 1.2/1.3 streams"
+          ],
+          [
+            "7 Application",
+            "`ApplicationLayer`, `RestClient`, `GraphQLClient`, `HttpRouter`, `HttpServer`, `GraphQLService`, `Peer`, `PeerConnection`, `RealtimeServer`, `RealtimeClient`",
+            "Mutual operations/events, HTTP exchange, GraphQL envelopes, native realtime sessions and room-scoped latest-value streaming"
+          ]
+        ]
+      },
+      {
+        "block_id": "b000047",
+        "columns": [
+          "Area",
+          "Public entry points",
+          "Controls and observations"
+        ],
+        "rows": [
+          [
+            "IP",
+            "`IpAddress`, `IpEndpoint`, `IpSubnet`, `interfaces()`",
+            "IPv4/IPv6, scope IDs, CIDR, names/indexes/prefixes, explicit blocking forward/reverse resolution"
+          ],
+          [
+            "TCP",
+            "`Tcp`, `Listener`, `TcpOptions`, `ListenerOptions`",
+            "Bind/connect, IPv6-only policy, backlog, no-delay, keepalive, OS buffers, deadlines, half-close and endpoints"
+          ],
+          [
+            "Datagram",
+            "`Udp`, `UdpOptions`, `Datagram`",
+            "Connected peer filtering, binary/empty datagrams, multicast membership/interface/hops/loopback, IPv4 broadcast and statistics"
+          ],
+          [
+            "Local IPC",
+            "`LocalSocket`, `LocalServer`, `LocalEndpoint`",
+            "AF_UNIX streams, bounded paths, POSIX permissions/peer credentials, owned socket-file cleanup, Linux abstract namespace"
+          ],
+          [
+            "Secure streams",
+            "`TlsContext`, `TlsStream`, `TlsListener`",
+            "TLS 1.2/1.3, CA trust, hostname/SNI, ALPN, SPKI pins, certificate/key identity, mutual authentication and negotiated metadata"
+          ],
+          [
+            "HTTP",
+            "`Http`, `HttpRequest`, `HttpResponse`, `HeaderFields`",
+            "Methods/versions, Basic/Digest/Bearer auth, cookies, HTTP/SOCKS5 proxies, TLS policy, Unix sockets, compression, streamed transfers, progress, headers/trailers and timings"
+          ],
+          [
+            "Incoming HTTP",
+            "`HttpServer::listen`, `listen_tls`, `listen_local`",
+            "Shared HTTP parser/router over TCP, TLS or local streams; endpoint, secure-peer and local-credential metadata"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

@@ -1,0 +1,1216 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:75a459fc7a5164038d88dbaf909ea327bd337811bfc6a40a5f1a95a3dd2d68b0",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/Realtime.md",
+    "sha256": "3eaf967480f5f471c5d5316297a08095f72901fdb4ba24d1eeeb1cdd1fd4fb95",
+    "bytes": 17280,
+    "line_count": 160,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "실시간 세션과 최신 값 스트리밍",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 실시간 세션과 최신 값 스트리밍\n",
+      "level": 1,
+      "title": "실시간 세션과 최신 값 스트리밍"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "`RealtimeServer`와 `RealtimeClient`는 iiSDK 애플리케이션의 실시간 상태·입력·센서·협업 데이터를 전송하는 네이티브 UDP 계층이다. 게임의 플레이어 위치·방향·입력과 일반 앱의 커서·공유 상태·계측값을 같은 API로 다룬다. 게임 엔진, 물리 시뮬레이션, 계정 서비스와 데이터 스키마는 이 계층에 포함하지 않는다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "서버는 참가자별 입장권을 발급하고, 접속한 참가자의 방과 인증된 발신자를 관리한다. 애플리케이션은 받은 입력을 검증하여 서버 상태를 계산하거나, 명시적으로 같은 방의 다른 참가자에게 중계한다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "fenced_code",
+      "start_line": 7,
+      "end_line": 13,
+      "raw": "```text\n인증된 Peer/TLS 또는 신뢰한 IPC: 로그인·권한 판단 → issue(room) → 개별 입장권 전달\n\n실시간 참가자 A ── 암호화 UDP ── RealtimeServer ── 암호화 UDP ── 실시간 참가자 B\n                                      │\n                         입력 검증·공통 iiSDK 비즈니스 로직\n```\n",
+      "language": "text",
+      "code": "인증된 Peer/TLS 또는 신뢰한 IPC: 로그인·권한 판단 → issue(room) → 개별 입장권 전달\n\n실시간 참가자 A ── 암호화 UDP ── RealtimeServer ── 암호화 UDP ── 실시간 참가자 B\n                                      │\n                         입력 검증·공통 iiSDK 비즈니스 로직\n",
+      "closed": true
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "헤더는 `<iiNetwork/Realtime.h>`, 링크 타깃은 기존 `iiNetwork::iiNetwork`이다. `<iiNetwork/Network.h>`에서도 제공한다. C++23과 iiSDKCore 이벤트 루프, 기존 iiNetwork UDP·AES-256-GCM·세션 ID를 사용하며 Qt 의존성을 추가하지 않는다.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "heading",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "## API와 호스트 루프\n",
+      "level": 2,
+      "title": "API와 호스트 루프"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "fenced_code",
+      "start_line": 19,
+      "end_line": 49,
+      "raw": "```cpp\n#include <iiNetwork/Realtime.h>\n\nint main() {\n    ii::runtime::EventLoop loop;\n    ii::network::RealtimeServer hub(loop);\n    if (!hub.listen()) return 1; // 기본값: 루프백, 임시 UDP 포트\n    // 실제 서비스에서는 인증·방 참가 권한을 확인한 다음 발급한다.\n    auto admitted = hub.issue(\"session-42\");\n    if (!admitted) return 1;\n    hub.received = [&](const ii::network::RealtimeFrame& input) {\n        // 입력 검증·상태 계산 뒤 서버 소유 상태를 배포하는 최소 예제이다.\n        if (!hub.broadcast(input.room, input.channel, input.bytes)) loop.request_stop();\n    };\n    ii::network::RealtimeClient participant(loop);\n    bool received = false;\n    participant.connected = [&] {\n        if (!participant.publish(0, \"current-state\")) loop.request_stop();\n    };\n    participant.received = [&](ii::network::RealtimeFrame frame) {\n        received = frame.bytes == \"current-state\";\n        loop.request_stop();\n    };\n    if (!participant.connect({ii::network::IpAddress::loopback(), hub.port()}, *admitted)) return 1;\n    auto deadline = loop.after(std::chrono::seconds(3), [&] { loop.request_stop(); });\n    if (!deadline) return 1;\n    loop.run(); // GUI 호스트는 기존 루프에서 loop.poll()을 구동한다.\n    deadline.token.cancel();\n    return received ? 0 : 1;\n}\n```\n",
+      "language": "cpp",
+      "code": "#include <iiNetwork/Realtime.h>\n\nint main() {\n    ii::runtime::EventLoop loop;\n    ii::network::RealtimeServer hub(loop);\n    if (!hub.listen()) return 1; // 기본값: 루프백, 임시 UDP 포트\n    // 실제 서비스에서는 인증·방 참가 권한을 확인한 다음 발급한다.\n    auto admitted = hub.issue(\"session-42\");\n    if (!admitted) return 1;\n    hub.received = [&](const ii::network::RealtimeFrame& input) {\n        // 입력 검증·상태 계산 뒤 서버 소유 상태를 배포하는 최소 예제이다.\n        if (!hub.broadcast(input.room, input.channel, input.bytes)) loop.request_stop();\n    };\n    ii::network::RealtimeClient participant(loop);\n    bool received = false;\n    participant.connected = [&] {\n        if (!participant.publish(0, \"current-state\")) loop.request_stop();\n    };\n    participant.received = [&](ii::network::RealtimeFrame frame) {\n        received = frame.bytes == \"current-state\";\n        loop.request_stop();\n    };\n    if (!participant.connect({ii::network::IpAddress::loopback(), hub.port()}, *admitted)) return 1;\n    auto deadline = loop.after(std::chrono::seconds(3), [&] { loop.request_stop(); });\n    if (!deadline) return 1;\n    loop.run(); // GUI 호스트는 기존 루프에서 loop.poll()을 구동한다.\n    deadline.token.cancel();\n    return received ? 0 : 1;\n}\n",
+      "closed": true
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 50,
+      "end_line": 50,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 51,
+      "end_line": 51,
+      "raw": "위 조각은 호출 순서 설명용이다. 완성된 실행 예제는 `example/realtime.cpp`이며, 오류를 처리하면서 두 참가자가 실제 UDP로 상태를 교환한다. 이 예제의 입장권은 같은 프로세스에서 직접 전달한다. 별도 프로세스 검사는 비공개 익명 파이프를 사용하며, 원격 서비스는 인증된 TLS 제어 채널에서 개별 참가자에게 전달한다.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 52,
+      "end_line": 52,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 53,
+      "end_line": 53,
+      "raw": "모든 객체의 메서드와 콜백은 소유 이벤트 루프 스레드에서 사용한다. 생성한 루프를 계속 구동해야 입장 재시도, 패킷 수신, 전송 속도 조절과 만료가 진행된다. 별도 네트워크 스레드나 Qt 이벤트 루프를 내부에서 만들지 않는다.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 54,
+      "end_line": 54,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 55,
+      "end_line": 55,
+      "raw": "긴 시뮬레이션·이미지 처리·모델 연산은 iiSDKCore의 제한된 작업자에 넘기고 결과를 소유 루프로 전달하여 `publish`·`broadcast`한다. 네트워크 콜백에서 장시간 연산으로 루프를 정지시키지 않는다.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 56,
+      "end_line": 56,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 57,
+      "end_line": 57,
+      "raw": "서버의 `send(peer, channel, bytes)`와 `broadcast(room, channel, bytes, except)`는 서버 애플리케이션이 생성한 상태를 전달한다. 이때 수신 프레임의 `peer`는 0이다. `relay(frame)`는 현재 방 참가자로부터 받은 최신 입력만 같은 방의 다른 참가자에게 전달하며, 인증된 발신자 ID와 입력 시퀀스를 유지하고 자기 자신은 제외한다. 자동 중계를 기본 정책으로 강제하지 않는다. `broadcast`와 `relay`는 큐에 수용한 수신자 수를 반환하므로 혼잡·협상 한도로 일부 참가자가 제외된 결과를 확인할 수 있다.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 58,
+      "end_line": 58,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "paragraph",
+      "start_line": 59,
+      "end_line": 59,
+      "raw": "`peers()`는 서버가 인증된 입장을 허용한 참가자와 방·실제 UDP 엔드포인트·RTT를 반환한다. 클라이언트의 `ready`는 서버 확인까지 검증한 상태이다. `pending_tickets()`는 미사용 입장권 수이다. 발급과 활성 세션의 합계가 정원을 사용한다. `revoke(peer)`는 사용 전 입장권이나 활성 참가자를 제거한다.\n"
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 60,
+      "end_line": 60,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "heading",
+      "start_line": 61,
+      "end_line": 61,
+      "raw": "## 최신 값 채널의 전달 계약\n",
+      "level": 2,
+      "title": "최신 값 채널의 전달 계약"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 62,
+      "end_line": 62,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "paragraph",
+      "start_line": 63,
+      "end_line": 63,
+      "raw": "이 데이터 평면은 값의 최신성을 우선한다. 동일 발신자·채널의 아직 전송하지 않은 값은 최신 값 하나로 병합한다. 네트워크에서 더 오래된 값이나 중복 패킷이 늦게 도착해도 상태를 되돌리지 않는다. 다른 채널은 이전 채널의 패킷 유실을 기다리지 않는다.\n"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 64,
+      "end_line": 64,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "list",
+      "start_line": 65,
+      "end_line": 69,
+      "raw": "- `publish`의 반환값은 그 채널의 값 시퀀스이다. 큐에서 여러 값이 병합되면 수신 시퀀스에 공백이 있을 수 있다.\n- 바이너리와 빈 본문을 지원하며 JSON·엔티티 모델·게임 전용 구조체를 요구하지 않는다.\n- 데이터 패킷을 재전송하지 않는다. 일부 갱신을 잃어도 다음 값으로 진행하는 상태·입력 흐름에 사용한다.\n- 값 시퀀스는 게임 시뮬레이션 tick이나 전역 시계가 아니다. 보간·예측·되감기·입력 중복 전송·시뮬레이션 권한은 애플리케이션 정책이다.\n- 손실 없이 처리할 명령·트랜잭션·중요 이벤트는 기존 `Peer`/`PeerConnection`과 TLS 요청·응답을 함께 사용한다. UDP 데이터 평면이 그 제어 채널의 전송 보장까지 바꾸지 않는다.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "`publish`의 반환값은 그 채널의 값 시퀀스이다. 큐에서 여러 값이 병합되면 수신 시퀀스에 공백이 있을 수 있다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "바이너리와 빈 본문을 지원하며 JSON·엔티티 모델·게임 전용 구조체를 요구하지 않는다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "데이터 패킷을 재전송하지 않는다. 일부 갱신을 잃어도 다음 값으로 진행하는 상태·입력 흐름에 사용한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "값 시퀀스는 게임 시뮬레이션 tick이나 전역 시계가 아니다. 보간·예측·되감기·입력 중복 전송·시뮬레이션 권한은 애플리케이션 정책이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "손실 없이 처리할 명령·트랜잭션·중요 이벤트는 기존 `Peer`/`PeerConnection`과 TLS 요청·응답을 함께 사용한다. UDP 데이터 평면이 그 제어 채널의 전송 보장까지 바꾸지 않는다.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 70,
+      "end_line": 70,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 71,
+      "end_line": 71,
+      "raw": "송신 큐는 스트림별 최신 값의 FIFO 순서를 유지하여 계속 갱신되는 한 스트림이 다른 스트림을 밀어내지 않도록 한다. 서버는 참가자 순서를 순환하면서 tick당 데이터 패킷 예산을 분배한다. 큐의 프레임·본문 바이트 한도를 넘는 새 스트림은 `would_block`으로 거부한다. 이미 존재하는 스트림의 최신 값 교체도 바이트 한도를 지킨다.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 72,
+      "end_line": 72,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "heading",
+      "start_line": 73,
+      "end_line": 73,
+      "raw": "## 기본값과 조절\n",
+      "level": 2,
+      "title": "기본값과 조절"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 74,
+      "end_line": 74,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "table",
+      "start_line": 75,
+      "end_line": 87,
+      "raw": "| 항목 | 기본값 | 계약 |\n| --- | --- | --- |\n| 참가자 정원 | 64 | 미사용 입장권과 활성 세션 합계, 최대 1024 |\n| 채널 | 16 | 0부터 시작, 서버·클라이언트의 작은 한도로 협상, 최대 256 |\n| 프레임 본문 | 1024바이트 | 양쪽의 작은 한도로 협상, 최대 1100바이트 |\n| UDP 데이터그램 | 최대 1200바이트 | 자체 분할·재조립을 하지 않음 |\n| 참가자별 송신 큐 | 128프레임·128 KiB 본문 | 최신 값 병합, 명시적 역압력 |\n| 참가자별 데이터 전송 상한 | 128 KiB/s·2048패킷/s | RTT·피드백에 따라 실제 데이터 전송률을 더 낮출 수 있음 |\n| 데이터 tick | 5 ms | tick당 최대 64개 데이터 패킷, 참가자별 한 회에 최대 4개 |\n| 입장 재시도·제한 | 100 ms·3초 | 최초 암호화 입장 패킷을 재사용 |\n| 하트비트·유휴 만료 | 250 ms·5초 | 인증된 새 패킷만 활동 기한을 갱신 |\n| 미사용 입장권 | 30초 | 발급 시 0초 초과·최대 5분으로 지정 |\n| 송신 대기 프레임 수명 | 250 ms | 오래 대기한 미전송 상태 폐기; 원격 시계의 데이터 나이를 판정하지 않음 |\n",
+      "columns": [
+        "항목",
+        "기본값",
+        "계약"
+      ],
+      "rows": [
+        [
+          "참가자 정원",
+          "64",
+          "미사용 입장권과 활성 세션 합계, 최대 1024"
+        ],
+        [
+          "채널",
+          "16",
+          "0부터 시작, 서버·클라이언트의 작은 한도로 협상, 최대 256"
+        ],
+        [
+          "프레임 본문",
+          "1024바이트",
+          "양쪽의 작은 한도로 협상, 최대 1100바이트"
+        ],
+        [
+          "UDP 데이터그램",
+          "최대 1200바이트",
+          "자체 분할·재조립을 하지 않음"
+        ],
+        [
+          "참가자별 송신 큐",
+          "128프레임·128 KiB 본문",
+          "최신 값 병합, 명시적 역압력"
+        ],
+        [
+          "참가자별 데이터 전송 상한",
+          "128 KiB/s·2048패킷/s",
+          "RTT·피드백에 따라 실제 데이터 전송률을 더 낮출 수 있음"
+        ],
+        [
+          "데이터 tick",
+          "5 ms",
+          "tick당 최대 64개 데이터 패킷, 참가자별 한 회에 최대 4개"
+        ],
+        [
+          "입장 재시도·제한",
+          "100 ms·3초",
+          "최초 암호화 입장 패킷을 재사용"
+        ],
+        [
+          "하트비트·유휴 만료",
+          "250 ms·5초",
+          "인증된 새 패킷만 활동 기한을 갱신"
+        ],
+        [
+          "미사용 입장권",
+          "30초",
+          "발급 시 0초 초과·최대 5분으로 지정"
+        ],
+        [
+          "송신 대기 프레임 수명",
+          "250 ms",
+          "오래 대기한 미전송 상태 폐기; 원격 시계의 데이터 나이를 판정하지 않음"
+        ]
+      ]
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 88,
+      "end_line": 88,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "paragraph",
+      "start_line": 89,
+      "end_line": 89,
+      "raw": "`RealtimeLimits`로 조절한다. 운영체제의 기존 UDP 수신 폴링은 5 ms이며, 더 짧은 데이터 tick을 지정해도 실제 수신 지연이나 하드 실시간 기한을 보장하지 않는다. 한도는 초기화 때 검증하고 활성 연결의 `connect`/`listen` 재호출은 기존 연결을 교체하지 않는다.\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 90,
+      "end_line": 90,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "paragraph",
+      "start_line": 91,
+      "end_line": 91,
+      "raw": "전송량은 토큰 버킷과 RTT 기반의 보수적인 AIMD 창으로 제한한다. 인증된 하트비트에 상대 수신 패킷의 64비트 확인 창을 넣는다. 짧은 역전을 고려한 뒤 관측한 공백에는 창을 줄이고, 확인이 진전되면 서서히 늘린다. 수신 확인이 진전되지 않으면 데이터 전송을 낮추며, 송수신 양쪽의 별도 제어 예산으로 하트비트와 종료를 진행한다. 제어 트래픽은 데이터 전송 상한에 더해지는 작은 예산이다. 혼잡 때문에 늦은 상태를 계속 쌓아 두지 않는다. 이는 이 프로토콜의 제한된 페이싱 구현이며 QUIC·TCP의 전체 혼잡 제어를 제공하거나 모든 인터넷 경로에서의 공정성을 검증하였다는 의미는 아니다.\n"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 92,
+      "end_line": 92,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "paragraph",
+      "start_line": 93,
+      "end_line": 93,
+      "raw": "`statistics()`는 실제 송수신 패킷·바이트, 프레임, 병합, 만료, 거부, 역압력과 혼잡 대응을 관측한다. `sequence_gaps`는 상위 패킷 번호를 먼저 보았을 때의 공백이며, 영구 유실 수나 정확한 손실률이 아니다. 클라이언트는 최근 측정 RTT와 현재 송신률을, 서버는 활성 참가자의 최대 RTT와 송신률 합계를 반환한다.\n"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 94,
+      "end_line": 94,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "heading",
+      "start_line": 95,
+      "end_line": 95,
+      "raw": "## 입장권·암호화·수명\n",
+      "level": 2,
+      "title": "입장권·암호화·수명"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 96,
+      "end_line": 96,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "paragraph",
+      "start_line": 97,
+      "end_line": 97,
+      "raw": "입장권은 참가자마다 다른 CSPRNG 세션 ID와 256비트 키를 갖는다. UDP로 키를 교환하지 않는다. 키가 담긴 입장권은 TLS·신뢰한 IPC에서만 전달하고 URL·로그·공개 로비에 넣지 않는다. 입장권 소유는 해당 참가자의 접속 증거이며, 계정 인증·방 참가 권한 판단은 발급하는 애플리케이션이 담당한다.\n"
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 98,
+      "end_line": 98,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 99,
+      "end_line": 99,
+      "raw": "입장 요청은 클라이언트 nonce와 채널·본문 한도를 인증한다. 서버의 확인은 nonce, 참가자 ID, 방과 협상 한도를 다시 인증한다. 최초 요청·확인이 유실되면 같은 엔드포인트와 nonce의 재시도로 복구하며 참가자 생성 콜백은 중복 실행하지 않는다. 확인된 엔드포인트는 세션 동안 고정한다. 주소·포트가 바뀌거나 세션이 끝나면 새 입장권으로 접속한다. 사용한 입장권은 세션 제거 후 다시 접속할 수 없다.\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 100,
+      "end_line": 100,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "paragraph",
+      "start_line": 101,
+      "end_line": 101,
+      "raw": "기존 `Aes256Gcm`이 각 홉을 암호화·인증한다. 서버는 입력을 복호화하고 수신 참가자별 키로 다시 암호화하므로 애플리케이션 검증과 중계 정책을 적용할 수 있다. 참가자끼리 공유하는 방 키를 사용하지 않는다. 패킷 종류·방향·버전·세션 ID·패킷 번호는 AEAD 부가 인증 데이터이다. 검증·인증이 끝나기 전에는 재전송 방지 창과 활동 기한을 변경하지 않는다. 클라이언트는 다른 참가자의 발신자 ID를 주장할 수 없다.\n"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 102,
+      "end_line": 102,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "heading",
+      "start_line": 103,
+      "end_line": 103,
+      "raw": "### 프로토콜 v1\n",
+      "level": 3,
+      "title": "프로토콜 v1"
+    },
+    {
+      "id": "b000052",
+      "kind": "blank",
+      "start_line": 104,
+      "end_line": 104,
+      "raw": "\n"
+    },
+    {
+      "id": "b000053",
+      "kind": "paragraph",
+      "start_line": 105,
+      "end_line": 105,
+      "raw": "고정 헤더 32바이트 뒤에 기존 AES-GCM 봉투를 붙인다. 다중 바이트 정수는 빅엔디언이다. 헤더 전체가 부가 인증 데이터이다.\n"
+    },
+    {
+      "id": "b000054",
+      "kind": "blank",
+      "start_line": 106,
+      "end_line": 106,
+      "raw": "\n"
+    },
+    {
+      "id": "b000055",
+      "kind": "table",
+      "start_line": 107,
+      "end_line": 115,
+      "raw": "| 오프셋 | 크기 | 필드 |\n| --- | --- | --- |\n| 0 | 4 | `IIRT` 매직 |\n| 4 | 1 | 버전 1 |\n| 5 | 1 | 입장 1·확인 2·데이터 3·핑 4·퐁 5·종료 6 |\n| 6 | 1 | 클라이언트 발신 0·서버 발신 1 |\n| 7 | 1 | 예약 값 0 |\n| 8 | 16 | 입장권 세션 ID |\n| 24 | 8 | 방향별 암호화 패킷 번호, 1부터 시작 |\n",
+      "columns": [
+        "오프셋",
+        "크기",
+        "필드"
+      ],
+      "rows": [
+        [
+          "0",
+          "4",
+          "`IIRT` 매직"
+        ],
+        [
+          "4",
+          "1",
+          "버전 1"
+        ],
+        [
+          "5",
+          "1",
+          "입장 1·확인 2·데이터 3·핑 4·퐁 5·종료 6"
+        ],
+        [
+          "6",
+          "1",
+          "클라이언트 발신 0·서버 발신 1"
+        ],
+        [
+          "7",
+          "1",
+          "예약 값 0"
+        ],
+        [
+          "8",
+          "16",
+          "입장권 세션 ID"
+        ],
+        [
+          "24",
+          "8",
+          "방향별 암호화 패킷 번호, 1부터 시작"
+        ]
+      ]
+    },
+    {
+      "id": "b000056",
+      "kind": "blank",
+      "start_line": 116,
+      "end_line": 116,
+      "raw": "\n"
+    },
+    {
+      "id": "b000057",
+      "kind": "paragraph",
+      "start_line": 117,
+      "end_line": 117,
+      "raw": "AEAD 봉투는 기존 계약인 버전 1바이트·랜덤 nonce 12바이트·태그 16바이트·암호문이다. 복호화한 본문은 다음 계약을 사용한다.\n"
+    },
+    {
+      "id": "b000058",
+      "kind": "blank",
+      "start_line": 118,
+      "end_line": 118,
+      "raw": "\n"
+    },
+    {
+      "id": "b000059",
+      "kind": "list",
+      "start_line": 119,
+      "end_line": 123,
+      "raw": "- 입장: 클라이언트 nonce 16바이트, 채널 수 2바이트, 본문 한도 2바이트.\n- 확인: 같은 nonce 16바이트, 참가자 ID 8바이트, 협상 채널 수 2바이트, 본문 한도 2바이트, 방 길이 2바이트와 방 식별자.\n- 데이터: 원본 참가자 8바이트, 채널 2바이트, 값 시퀀스 8바이트와 바이너리 본문. 클라이언트가 서버로 보낼 때 원본 필드는 0이고, 서버가 인증된 참가자 ID를 붙인다.\n- 핑·퐁: 핑 식별자 8바이트, 수신 확인의 최대 패킷 번호 8바이트와 64비트 창. 비트 0은 그 최대 패킷이고 비트 n은 n개 이전 패킷이다. 핑 식별자는 해당 핑 패킷 번호이며 퐁이 그대로 반환한다. 최대 64개의 보류 핑을 추적하여 RTT가 하트비트 간격보다 길어도 측정한다.\n- 종료: 정상 종료 0·취소 1·만료 2 중 하나인 1바이트 사유.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "입장: 클라이언트 nonce 16바이트, 채널 수 2바이트, 본문 한도 2바이트.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "확인: 같은 nonce 16바이트, 참가자 ID 8바이트, 협상 채널 수 2바이트, 본문 한도 2바이트, 방 길이 2바이트와 방 식별자.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "데이터: 원본 참가자 8바이트, 채널 2바이트, 값 시퀀스 8바이트와 바이너리 본문. 클라이언트가 서버로 보낼 때 원본 필드는 0이고, 서버가 인증된 참가자 ID를 붙인다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "핑·퐁: 핑 식별자 8바이트, 수신 확인의 최대 패킷 번호 8바이트와 64비트 창. 비트 0은 그 최대 패킷이고 비트 n은 n개 이전 패킷이다. 핑 식별자는 해당 핑 패킷 번호이며 퐁이 그대로 반환한다. 최대 64개의 보류 핑을 추적하여 RTT가 하트비트 간격보다 길어도 측정한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "종료: 정상 종료 0·취소 1·만료 2 중 하나인 1바이트 사유.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000060",
+      "kind": "blank",
+      "start_line": 124,
+      "end_line": 124,
+      "raw": "\n"
+    },
+    {
+      "id": "b000061",
+      "kind": "paragraph",
+      "start_line": 125,
+      "end_line": 125,
+      "raw": "프로토콜은 연결당 64개 패킷의 재전송 방지 창과 스트림별 최신 값 기록을 사용한다. 송신 큐와 수신 최신 값 기록은 한도가 있으며, 오래된 수신 스트림 기록을 제거해도 동일한 이전 패킷은 패킷 재전송 방지 창을 통과하지 못한다. 방향별 새 암호화 패킷 번호가 `2^24`에 도달하기 전에 세션을 종료하고 새 입장권을 요구한다. 자동 키 갱신·전방향 안전성·범용 DTLS/QUIC 호환성을 제공하지 않는다.\n"
+    },
+    {
+      "id": "b000062",
+      "kind": "blank",
+      "start_line": 126,
+      "end_line": 126,
+      "raw": "\n"
+    },
+    {
+      "id": "b000063",
+      "kind": "paragraph",
+      "start_line": 127,
+      "end_line": 127,
+      "raw": "`close()`는 즉시 로컬 자원을 정리하고 가능한 경우 인증된 종료 메시지를 보낸다. 유실되더라도 상대는 유휴 기한으로 정리한다. 명시적 종료는 연결 해제 콜백을, 실패는 `failed` 다음 연결 해제를 전달하되 콜백이 객체를 제거하거나 새 접속을 만들면 이전 세션의 후속 콜백은 억제한다. 소멸자는 사용자 콜백을 실행하지 않는다. 콜백에서 객체 삭제·입장 취소·재접속이 가능하며, 콜백 예외는 상세를 상대에게 노출하지 않고 해당 세션에 한정한다.\n"
+    },
+    {
+      "id": "b000064",
+      "kind": "blank",
+      "start_line": 128,
+      "end_line": 128,
+      "raw": "\n"
+    },
+    {
+      "id": "b000065",
+      "kind": "heading",
+      "start_line": 129,
+      "end_line": 129,
+      "raw": "## 배포와 제어 평면\n",
+      "level": 2,
+      "title": "배포와 제어 평면"
+    },
+    {
+      "id": "b000066",
+      "kind": "blank",
+      "start_line": 130,
+      "end_line": 130,
+      "raw": "\n"
+    },
+    {
+      "id": "b000067",
+      "kind": "paragraph",
+      "start_line": 131,
+      "end_line": 131,
+      "raw": "공개 서버는 `listen({IpAddress::any(), 7777})`처럼 명시적으로 UDP 인터페이스를 선택한다. 클라이언트는 그 UDP 주소로 먼저 접속하며 서버를 통해 데이터를 전달한다. 직접 P2P 홀 펀칭·STUN·TURN·매치메이킹·자동 TCP 대체를 구현하지 않는다.\n"
+    },
+    {
+      "id": "b000068",
+      "kind": "blank",
+      "start_line": 132,
+      "end_line": 132,
+      "raw": "\n"
+    },
+    {
+      "id": "b000069",
+      "kind": "paragraph",
+      "start_line": 133,
+      "end_line": 133,
+      "raw": "iiWebServer·HTTPS·Peer/TLS는 인증과 방 관리 같은 제어 평면에 연결할 수 있다. iiNetwork가 그 상위 모듈을 참조하지 않는다. 이전 Nginx HTTP 리버스 프록시 예제는 이 UDP 프로토콜의 진입점이 아니므로 UDP 포트·방화벽·운영 경로는 별도로 구성한다. 실제 NAT·클라우드 방화벽·여러 운영체제의 연결성과 대규모 FPS 처리량은 해당 환경에서 별도 검증한다.\n"
+    },
+    {
+      "id": "b000070",
+      "kind": "blank",
+      "start_line": 134,
+      "end_line": 134,
+      "raw": "\n"
+    },
+    {
+      "id": "b000071",
+      "kind": "heading",
+      "start_line": 135,
+      "end_line": 135,
+      "raw": "## 검증과 근거\n",
+      "level": 2,
+      "title": "검증과 근거"
+    },
+    {
+      "id": "b000072",
+      "kind": "blank",
+      "start_line": 136,
+      "end_line": 136,
+      "raw": "\n"
+    },
+    {
+      "id": "b000073",
+      "kind": "paragraph",
+      "start_line": 137,
+      "end_line": 137,
+      "raw": "`tests/realtime.cpp`는 실제 UDP 서버·클라이언트와 손실·역전·차단을 주입하는 UDP 프록시로 방 격리, 중계, 바이너리, 순서·중복, 잘못된 자격 증명·출처, 큐·패킷 한도, 재접속·소멸, 혼잡 피드백을 검사한다. 같은 검사를 설치 소비자에서도 실행하며 `example/realtime.cpp`를 소스·설치·임베디드 소비자로 빌드한다.\n"
+    },
+    {
+      "id": "b000074",
+      "kind": "blank",
+      "start_line": 138,
+      "end_line": 138,
+      "raw": "\n"
+    },
+    {
+      "id": "b000075",
+      "kind": "paragraph",
+      "start_line": 139,
+      "end_line": 139,
+      "raw": "`tests/realtime_process.py`는 별도 서버 프로세스와 두 클라이언트 프로세스를 실행한다. 입장권은 익명 파이프에서만 전달하고, 상태 데이터와 발신자·시퀀스 검사는 실제 UDP 중계를 사용한다. 서로 다른 프로세스의 메모리를 직접 공유하는 방식으로 검사를 대체하지 않는다.\n"
+    },
+    {
+      "id": "b000076",
+      "kind": "blank",
+      "start_line": 140,
+      "end_line": 140,
+      "raw": "\n"
+    },
+    {
+      "id": "b000077",
+      "kind": "paragraph",
+      "start_line": 141,
+      "end_line": 141,
+      "raw": "설치 패키지에는 `iiNetwork_REALTIME_LATEST` 기능 표시가 있으며, 새 헤더·정적 라이브러리를 같은 빌드에서 설치하고 소비자를 함께 다시 빌드한다. 모든 빌드 산출물은 저장소의 `build/` 아래에 둔다. 실행 결과와 플랫폼 범위는 `build/realtime/evidence/`에 기록한다.\n"
+    },
+    {
+      "id": "b000078",
+      "kind": "blank",
+      "start_line": 142,
+      "end_line": 142,
+      "raw": "\n"
+    },
+    {
+      "id": "b000079",
+      "kind": "heading",
+      "start_line": 143,
+      "end_line": 143,
+      "raw": "### 2026-10-23 검증 결과\n",
+      "level": 3,
+      "title": "2026-10-23 검증 결과"
+    },
+    {
+      "id": "b000080",
+      "kind": "blank",
+      "start_line": 144,
+      "end_line": 144,
+      "raw": "\n"
+    },
+    {
+      "id": "b000081",
+      "kind": "table",
+      "start_line": 145,
+      "end_line": 151,
+      "raw": "| 검사 | 결과 |\n| --- | --- |\n| Qt 없는 소스 빌드와 전체 회귀 | 46/46 통과 |\n| 설치 스크립트의 정식 `build/` 빌드·전체 회귀 | 최종 46/46 통과 |\n| 설치 패키지의 독립 소비자 | 30/30 통과 |\n| 실시간 기능·예제·독립 프로세스의 ASan/UBSan | 14/14 통과 |\n| 소스 임베디드 소비자 | 3/3 통과 |\n",
+      "columns": [
+        "검사",
+        "결과"
+      ],
+      "rows": [
+        [
+          "Qt 없는 소스 빌드와 전체 회귀",
+          "46/46 통과"
+        ],
+        [
+          "설치 스크립트의 정식 `build/` 빌드·전체 회귀",
+          "최종 46/46 통과"
+        ],
+        [
+          "설치 패키지의 독립 소비자",
+          "30/30 통과"
+        ],
+        [
+          "실시간 기능·예제·독립 프로세스의 ASan/UBSan",
+          "14/14 통과"
+        ],
+        [
+          "소스 임베디드 소비자",
+          "3/3 통과"
+        ]
+      ]
+    },
+    {
+      "id": "b000082",
+      "kind": "blank",
+      "start_line": 152,
+      "end_line": 152,
+      "raw": "\n"
+    },
+    {
+      "id": "b000083",
+      "kind": "paragraph",
+      "start_line": 153,
+      "end_line": 153,
+      "raw": "macOS arm64에서 실행하였다. 서버 1개와 클라이언트 2개의 독립 프로세스 검사도 소스·설치·sanitizer 실행에 포함한다. 설치된 공개 헤더 21개는 소스와 일치하고 실시간 오브젝트는 소스 빌드와 설치 아카이브에서 일치한다. 실행 파일의 실제 링크 목록에도 Qt 의존성이 없다. 검증 설치 위치는 저장소의 `build/package`이며 사용자 전역 설치는 교체하지 않았다.\n"
+    },
+    {
+      "id": "b000084",
+      "kind": "blank",
+      "start_line": 154,
+      "end_line": 154,
+      "raw": "\n"
+    },
+    {
+      "id": "b000085",
+      "kind": "paragraph",
+      "start_line": 155,
+      "end_line": 155,
+      "raw": "초기 임베디드 검증에서는 깊은 빌드 경로가 macOS Unix 소켓 경로 한도를 넘어 기존 IPC 검사 4개가 실패하였다. 검증용 하위 디렉터리를 짧게 조정한 뒤 전체 회귀가 통과하였다. 첫 설치 실행의 기존 Peer 예제에는 외부 프로세스 제한 시간 초과가 있었으며, 기동 확인 뒤 같은 CTest 제한으로 재실행한 최종 전체 결과가 위 46/46이다. 기존 실패를 별도 성공과 합산하지 않는다. Windows·Linux·모바일·실제 NAT·프로덕션 트래픽의 실행 증거는 이 수치에 포함하지 않는다.\n"
+    },
+    {
+      "id": "b000086",
+      "kind": "blank",
+      "start_line": 156,
+      "end_line": 156,
+      "raw": "\n"
+    },
+    {
+      "id": "b000087",
+      "kind": "paragraph",
+      "start_line": 157,
+      "end_line": 157,
+      "raw": "`INSTALL_PREFIX=\"$PWD/build/package\" BUILD_JOBS=3 ./install.sh`로 빌드·소스 검사·설치·설치 소비자를 재현한다. 로그와 최종 파일 목록은 `build/realtime/evidence/result.json`에 기록한다.\n"
+    },
+    {
+      "id": "b000088",
+      "kind": "blank",
+      "start_line": 158,
+      "end_line": 158,
+      "raw": "\n"
+    },
+    {
+      "id": "b000089",
+      "kind": "list",
+      "start_line": 159,
+      "end_line": 160,
+      "raw": "- [RFC 8085: UDP 사용·혼잡 제어·메시지 크기 지침](https://www.rfc-editor.org/rfc/rfc8085.html)\n- [RFC 5116: AEAD 인터페이스·부가 인증 데이터·nonce 요구사항](https://www.rfc-editor.org/rfc/rfc5116.html)\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "[RFC 8085: UDP 사용·혼잡 제어·메시지 크기 지침](https://www.rfc-editor.org/rfc/rfc8085.html)",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "[RFC 5116: AEAD 인터페이스·부가 인증 데이터·nonce 요구사항](https://www.rfc-editor.org/rfc/rfc5116.html)",
+          "checked": null
+        }
+      ]
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "실시간 세션과 최신 값 스트리밍",
+      "anchor": "실시간-세션과-최신-값-스트리밍",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000011",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "API와 호스트 루프",
+      "anchor": "api와-호스트-루프",
+      "start_line": 17
+    },
+    {
+      "block_id": "b000025",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "최신 값 채널의 전달 계약",
+      "anchor": "최신-값-채널의-전달-계약",
+      "start_line": 61
+    },
+    {
+      "block_id": "b000033",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "기본값과 조절",
+      "anchor": "기본값과-조절",
+      "start_line": 73
+    },
+    {
+      "block_id": "b000043",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "입장권·암호화·수명",
+      "anchor": "입장권암호화수명",
+      "start_line": 95
+    },
+    {
+      "block_id": "b000051",
+      "parent_id": "b000043",
+      "level": 3,
+      "title": "프로토콜 v1",
+      "anchor": "프로토콜-v1",
+      "start_line": 103
+    },
+    {
+      "block_id": "b000065",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "배포와 제어 평면",
+      "anchor": "배포와-제어-평면",
+      "start_line": 129
+    },
+    {
+      "block_id": "b000071",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "검증과 근거",
+      "anchor": "검증과-근거",
+      "start_line": 135
+    },
+    {
+      "block_id": "b000079",
+      "parent_id": "b000071",
+      "level": 3,
+      "title": "2026-10-23 검증 결과",
+      "anchor": "2026-10-23-검증-결과",
+      "start_line": 143
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 3,
+        "text": "`RealtimeServer`와 `RealtimeClient`는 iiSDK 애플리케이션의 실시간 상태·입력·센서·협업 데이터를 전송하는 네이티브 UDP 계층이다. 게임의 플레이어 위치·방향·입력과 일반 앱의 커서·공유 상태·계측값을 같은 API로 다룬다. 게임 엔진, 물리 시뮬레이션, 계정 서비스와 데이터 스키마는 이 계층에 포함하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000009",
+        "line": 15,
+        "text": "헤더는 `<iiNetwork/Realtime.h>`, 링크 타깃은 기존 `iiNetwork::iiNetwork`이다. `<iiNetwork/Network.h>`에서도 제공한다. C++23과 iiSDKCore 이벤트 루프, 기존 iiNetwork UDP·AES-256-GCM·세션 ID를 사용하며 Qt 의존성을 추가하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000021",
+        "line": 57,
+        "text": "서버의 `send(peer, channel, bytes)`와 `broadcast(room, channel, bytes, except)`는 서버 애플리케이션이 생성한 상태를 전달한다. 이때 수신 프레임의 `peer`는 0이다. `relay(frame)`는 현재 방 참가자로부터 받은 최신 입력만 같은 방의 다른 참가자에게 전달하며, 인증된 발신자 ID와 입력 시퀀스를 유지하고 자기 자신은 제외한다. 자동 중계를 기본 정책으로 강제하지 않는다. `broadcast`와 `relay`는 큐에 수용한 수신자 수를 반환하므로 혼잡·협상 한도로 일부 참가자가 제외된 결과를 확인할 수 있다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000029",
+        "line": 66,
+        "text": "- 바이너리와 빈 본문을 지원하며 JSON·엔티티 모델·게임 전용 구조체를 요구하지 않는다.",
+        "basis": "lexical_match",
+        "context": "list"
+      },
+      {
+        "block_id": "b000029",
+        "line": 67,
+        "text": "- 데이터 패킷을 재전송하지 않는다. 일부 갱신을 잃어도 다음 값으로 진행하는 상태·입력 흐름에 사용한다.",
+        "basis": "lexical_match",
+        "context": "list"
+      },
+      {
+        "block_id": "b000037",
+        "line": 89,
+        "text": "`RealtimeLimits`로 조절한다. 운영체제의 기존 UDP 수신 폴링은 5 ms이며, 더 짧은 데이터 tick을 지정해도 실제 수신 지연이나 하드 실시간 기한을 보장하지 않는다. 한도는 초기화 때 검증하고 활성 연결의 `connect`/`listen` 재호출은 기존 연결을 교체하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000045",
+        "line": 97,
+        "text": "입장권은 참가자마다 다른 CSPRNG 세션 ID와 256비트 키를 갖는다. UDP로 키를 교환하지 않는다. 키가 담긴 입장권은 TLS·신뢰한 IPC에서만 전달하고 URL·로그·공개 로비에 넣지 않는다. 입장권 소유는 해당 참가자의 접속 증거이며, 계정 인증·방 참가 권한 판단은 발급하는 애플리케이션이 담당한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000047",
+        "line": 99,
+        "text": "입장 요청은 클라이언트 nonce와 채널·본문 한도를 인증한다. 서버의 확인은 nonce, 참가자 ID, 방과 협상 한도를 다시 인증한다. 최초 요청·확인이 유실되면 같은 엔드포인트와 nonce의 재시도로 복구하며 참가자 생성 콜백은 중복 실행하지 않는다. 확인된 엔드포인트는 세션 동안 고정한다. 주소·포트가 바뀌거나 세션이 끝나면 새 입장권으로 접속한다. 사용한 입장권은 세션 제거 후 다시 접속할 수 없다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000049",
+        "line": 101,
+        "text": "기존 `Aes256Gcm`이 각 홉을 암호화·인증한다. 서버는 입력을 복호화하고 수신 참가자별 키로 다시 암호화하므로 애플리케이션 검증과 중계 정책을 적용할 수 있다. 참가자끼리 공유하는 방 키를 사용하지 않는다. 패킷 종류·방향·버전·세션 ID·패킷 번호는 AEAD 부가 인증 데이터이다. 검증·인증이 끝나기 전에는 재전송 방지 창과 활동 기한을 변경하지 않는다. 클라이언트는 다른 참가자의 발신자 ID를 주장할 수 없다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000061",
+        "line": 125,
+        "text": "프로토콜은 연결당 64개 패킷의 재전송 방지 창과 스트림별 최신 값 기록을 사용한다. 송신 큐와 수신 최신 값 기록은 한도가 있으며, 오래된 수신 스트림 기록을 제거해도 동일한 이전 패킷은 패킷 재전송 방지 창을 통과하지 못한다. 방향별 새 암호화 패킷 번호가 `2^24`에 도달하기 전에 세션을 종료하고 새 입장권을 요구한다. 자동 키 갱신·전방향 안전성·범용 DTLS/QUIC 호환성을 제공하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000063",
+        "line": 127,
+        "text": "`close()`는 즉시 로컬 자원을 정리하고 가능한 경우 인증된 종료 메시지를 보낸다. 유실되더라도 상대는 유휴 기한으로 정리한다. 명시적 종료는 연결 해제 콜백을, 실패는 `failed` 다음 연결 해제를 전달하되 콜백이 객체를 제거하거나 새 접속을 만들면 이전 세션의 후속 콜백은 억제한다. 소멸자는 사용자 콜백을 실행하지 않는다. 콜백에서 객체 삭제·입장 취소·재접속이 가능하며, 콜백 예외는 상세를 상대에게 노출하지 않고 해당 세션에 한정한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000067",
+        "line": 131,
+        "text": "공개 서버는 `listen({IpAddress::any(), 7777})`처럼 명시적으로 UDP 인터페이스를 선택한다. 클라이언트는 그 UDP 주소로 먼저 접속하며 서버를 통해 데이터를 전달한다. 직접 P2P 홀 펀칭·STUN·TURN·매치메이킹·자동 TCP 대체를 구현하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000069",
+        "line": 133,
+        "text": "iiWebServer·HTTPS·Peer/TLS는 인증과 방 관리 같은 제어 평면에 연결할 수 있다. iiNetwork가 그 상위 모듈을 참조하지 않는다. 이전 Nginx HTTP 리버스 프록시 예제는 이 UDP 프로토콜의 진입점이 아니므로 UDP 포트·방화벽·운영 경로는 별도로 구성한다. 실제 NAT·클라우드 방화벽·여러 운영체제의 연결성과 대규모 FPS 처리량은 해당 환경에서 별도 검증한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000075",
+        "line": 139,
+        "text": "`tests/realtime_process.py`는 별도 서버 프로세스와 두 클라이언트 프로세스를 실행한다. 입장권은 익명 파이프에서만 전달하고, 상태 데이터와 발신자·시퀀스 검사는 실제 UDP 중계를 사용한다. 서로 다른 프로세스의 메모리를 직접 공유하는 방식으로 검사를 대체하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000085",
+        "line": 155,
+        "text": "초기 임베디드 검증에서는 깊은 빌드 경로가 macOS Unix 소켓 경로 한도를 넘어 기존 IPC 검사 4개가 실패하였다. 검증용 하위 디렉터리를 짧게 조정한 뒤 전체 회귀가 통과하였다. 첫 설치 실행의 기존 Peer 예제에는 외부 프로세스 제한 시간 초과가 있었으며, 기동 확인 뒤 같은 CTest 제한으로 재실행한 최종 전체 결과가 위 46/46이다. 기존 실패를 별도 성공과 합산하지 않는다. Windows·Linux·모바일·실제 NAT·프로덕션 트래픽의 실행 증거는 이 수치에 포함하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000089",
+        "label": "RFC 8085: UDP 사용·혼잡 제어·메시지 크기 지침",
+        "target": "https://www.rfc-editor.org/rfc/rfc8085.html",
+        "kind": "external",
+        "line": 159
+      },
+      {
+        "block_id": "b000089",
+        "label": "RFC 5116: AEAD 인터페이스·부가 인증 데이터·nonce 요구사항",
+        "target": "https://www.rfc-editor.org/rfc/rfc5116.html",
+        "kind": "external",
+        "line": 160
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000035",
+        "columns": [
+          "항목",
+          "기본값",
+          "계약"
+        ],
+        "rows": [
+          [
+            "참가자 정원",
+            "64",
+            "미사용 입장권과 활성 세션 합계, 최대 1024"
+          ],
+          [
+            "채널",
+            "16",
+            "0부터 시작, 서버·클라이언트의 작은 한도로 협상, 최대 256"
+          ],
+          [
+            "프레임 본문",
+            "1024바이트",
+            "양쪽의 작은 한도로 협상, 최대 1100바이트"
+          ],
+          [
+            "UDP 데이터그램",
+            "최대 1200바이트",
+            "자체 분할·재조립을 하지 않음"
+          ],
+          [
+            "참가자별 송신 큐",
+            "128프레임·128 KiB 본문",
+            "최신 값 병합, 명시적 역압력"
+          ],
+          [
+            "참가자별 데이터 전송 상한",
+            "128 KiB/s·2048패킷/s",
+            "RTT·피드백에 따라 실제 데이터 전송률을 더 낮출 수 있음"
+          ],
+          [
+            "데이터 tick",
+            "5 ms",
+            "tick당 최대 64개 데이터 패킷, 참가자별 한 회에 최대 4개"
+          ],
+          [
+            "입장 재시도·제한",
+            "100 ms·3초",
+            "최초 암호화 입장 패킷을 재사용"
+          ],
+          [
+            "하트비트·유휴 만료",
+            "250 ms·5초",
+            "인증된 새 패킷만 활동 기한을 갱신"
+          ],
+          [
+            "미사용 입장권",
+            "30초",
+            "발급 시 0초 초과·최대 5분으로 지정"
+          ],
+          [
+            "송신 대기 프레임 수명",
+            "250 ms",
+            "오래 대기한 미전송 상태 폐기; 원격 시계의 데이터 나이를 판정하지 않음"
+          ]
+        ]
+      },
+      {
+        "block_id": "b000055",
+        "columns": [
+          "오프셋",
+          "크기",
+          "필드"
+        ],
+        "rows": [
+          [
+            "0",
+            "4",
+            "`IIRT` 매직"
+          ],
+          [
+            "4",
+            "1",
+            "버전 1"
+          ],
+          [
+            "5",
+            "1",
+            "입장 1·확인 2·데이터 3·핑 4·퐁 5·종료 6"
+          ],
+          [
+            "6",
+            "1",
+            "클라이언트 발신 0·서버 발신 1"
+          ],
+          [
+            "7",
+            "1",
+            "예약 값 0"
+          ],
+          [
+            "8",
+            "16",
+            "입장권 세션 ID"
+          ],
+          [
+            "24",
+            "8",
+            "방향별 암호화 패킷 번호, 1부터 시작"
+          ]
+        ]
+      },
+      {
+        "block_id": "b000081",
+        "columns": [
+          "검사",
+          "결과"
+        ],
+        "rows": [
+          [
+            "Qt 없는 소스 빌드와 전체 회귀",
+            "46/46 통과"
+          ],
+          [
+            "설치 스크립트의 정식 `build/` 빌드·전체 회귀",
+            "최종 46/46 통과"
+          ],
+          [
+            "설치 패키지의 독립 소비자",
+            "30/30 통과"
+          ],
+          [
+            "실시간 기능·예제·독립 프로세스의 ASan/UBSan",
+            "14/14 통과"
+          ],
+          [
+            "소스 임베디드 소비자",
+            "3/3 통과"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

@@ -29,13 +29,16 @@ source compatible.
 `TcpRelay` bridges two connected sockets in both directions, enforces pending
 byte limits and reports forwarding counters/errors.
 
-`NetworkLoadBalancer` selects real backend endpoints using weighted rendezvous
+The independently built [load-balancer composition](example/LoadBalancer/) selects real backend endpoints using weighted rendezvous
 hashing of canonical IPv4/IPv6 TCP/UDP/TLS flow metadata. A Core `LoadLease` keeps
 each established connection pinned and counted through transport cleanup; new
 connections observe health, draining and resource limits. Targets added later
 only receive flows for which they win the hash. See [L4 load balancing](docs/LoadBalancer.md)
-and the [native loopback example](example/load_balancer.cpp). Application/Classic
-request policies remain in Core; this module owns network-specific flow identity.
+and the [native loopback example](example/LoadBalancer/App/main.cpp). Applications
+explicitly compose the network and runtime SDKs; the adapter is not part of the
+base iiNetwork package. Existing load-balancer clients must rebuild against
+`iiNetwork::LoadBalancer` from `iiNetworkLoadBalancer` and include its header
+explicitly.
 
 ## Realtime state streaming
 
@@ -204,3 +207,12 @@ headers in the package include directory. Generated export headers belong to
 Validate this layout from the SDK workspace with
 `python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,
 and verify a staged installed consumer after changing source/header paths.
+
+<!-- workspace-docs:readme:start -->
+## Documentation entry points
+
+- Human overview: this English `README.md`.
+- Agent instructions: [AGENT.md](AGENT.md).
+- Human documentation: [documentation index](docs/README.md).
+- Structured agent documentation: [agent index](docs/agent-index.json).
+<!-- workspace-docs:readme:end -->

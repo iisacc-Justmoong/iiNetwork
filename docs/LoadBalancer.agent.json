@@ -1,0 +1,595 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:2133e1df194fc059809e6dff666a44fc0537bffd66ed6b95d16f5820d36390ec",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/LoadBalancer.md",
+    "sha256": "496487a91d7681a115f8f809ee2e95d0c1e3644e08f345ee8223cf94e5da7822",
+    "bytes": 9302,
+    "line_count": 132,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "Network(L4) 로드 밸런서",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Network(L4) 로드 밸런서\n",
+      "level": 1,
+      "title": "Network(L4) 로드 밸런서"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 8,
+      "raw": "별도 소비자 프로젝트 `example/LoadBalancer`의 `<iiNetwork/LoadBalancer.h>`는 IP 주소·\n포트·전송 종류에서 연결 키를 만들고 실제 백엔드 주소를 선택한다. 이 어댑터는 독립적으로\n설치한 iiNetwork 0.6과 iiSDKCore 0.19의 LoadBalancer/LoadLease를 앱에서 조합한다.\n기본 iiNetwork 라이브러리는 이 어댑터를 컴파일하거나 내보내지 않는다. 다만 iiNetwork의\n다른 기능에는 아직 Core와 iiJson 의존성이 남아 있으므로 전체 모듈의 독립성을 뜻하지 않는다.\n하위 Address/Transport/TLS는 이 오케스트레이션 계층을 역참조하지 않는다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "heading",
+      "start_line": 10,
+      "end_line": 10,
+      "raw": "## 구성과 이전\n",
+      "level": 2,
+      "title": "구성과 이전"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 12,
+      "end_line": 13,
+      "raw": "두 SDK를 먼저 개별 빌드한 뒤 애플리케이션 또는 통합 빌드에서 이 디렉터리를 별도로\n구성하고 설치한다. 설치 소비자는 다음처럼 명시적으로 패키지를 찾고 연결한다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "fenced_code",
+      "start_line": 15,
+      "end_line": 18,
+      "raw": "```cmake\nfind_package(iiNetworkLoadBalancer 0.6 CONFIG REQUIRED)\ntarget_link_libraries(my_application PRIVATE iiNetwork::LoadBalancer)\n```\n",
+      "language": "cmake",
+      "code": "find_package(iiNetworkLoadBalancer 0.6 CONFIG REQUIRED)\ntarget_link_libraries(my_application PRIVATE iiNetwork::LoadBalancer)\n",
+      "closed": true
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 20,
+      "end_line": 24,
+      "raw": "`<iiNetwork/LoadBalancer.h>`를 직접 포함해야 한다. 이전 iiNetwork 기본 타깃과\n`<iiNetwork/Network.h>`만 사용하던 코드는 새 패키지·타깃을 추가하여 다시 빌드한다.\n기본 패키지의 `iiNetwork_LOAD_BALANCER`는 이제 `FALSE`이며 조합 패키지는 자체적으로\niiNetwork와 Core를 찾는다. 어댑터 자체는 애플리케이션 측 구성물이며 SDK 본체 사이에\n새 빌드 연결을 만들지 않는다.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 26,
+      "end_line": 28,
+      "raw": "AWS의 [Network Load Balancer 연결 단위 라우팅](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html)을\n요구사항 참고로 삼았다. AWS의 비공개 해시와 wire/API 호환을 보장하지 않는다. DNS·VIP·\n가용 영역 생성, 커널 패킷 프록시, 클라우드 리소스 자동 증설은 이 객체의 책임이 아니다.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 29,
+      "end_line": 29,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "heading",
+      "start_line": 30,
+      "end_line": 30,
+      "raw": "## 연결 선택과 수평 분산\n",
+      "level": 2,
+      "title": "연결 선택과 수평 분산"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 31,
+      "end_line": 31,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "paragraph",
+      "start_line": 32,
+      "end_line": 36,
+      "raw": "`NetworkFlow`는 TCP/UDP/TLS 종류와 source/destination `IpEndpoint`, 선택적인 TCP\ninitial_sequence를 가진다. 문자열 변환 없이 기존 IpAddress의 주소 바이트·주소군·IPv6\nscope·포트를 해시한다. TCP/TLS는 sequence를 포함하고 UDP는 무시한다. sequence를\n확보하지 않는 소켓 어댑터는 기본값 0을 사용한다. source와 destination의 주소군은 같아야\n하고 destination port는 0일 수 없다. TCP/TLS source port도 0이면 거절한다.\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "blank",
+      "start_line": 37,
+      "end_line": 37,
+      "raw": "\n"
+    },
+    {
+      "id": "b000019",
+      "kind": "paragraph",
+      "start_line": 38,
+      "end_line": 42,
+      "raw": "`acquire(flow)`는 capacity 가중 rendezvous 해시로 접수 가능한 대상을 선택하고\n`NetworkRoute { lease, backend }`를 반환한다. 동일 구성·그룹·키와 접수 상태에서는\n같은 대상을 선택한다. 다른 대상의 접수 가능 상태가 유지될 때 대상 추가 시 새 대상이 이긴 키만 이동하며, 대상 제거 시 제거된\n대상이 이겼던 키만 이동한다. 대상 식별자는 등록 수명 안에서 안정적이며 재시작/재등록을\n넘는 영속 매핑은 아니다. capacity는 선언한 동시 작업량이며 CPU 측정이나 네트워크 속도가 아니다.\n"
+    },
+    {
+      "id": "b000020",
+      "kind": "blank",
+      "start_line": 43,
+      "end_line": 43,
+      "raw": "\n"
+    },
+    {
+      "id": "b000021",
+      "kind": "paragraph",
+      "start_line": 44,
+      "end_line": 50,
+      "raw": "실제 TCP 연결/UDP flow를 만들 때 한 번 선택하고, 이후 패킷은 반환한 backend와 기존\n연결을 계속 사용한다. 활성 flow의 lease는 대상 추가·건강 변경·드레이닝에도 대상을\n바꾸지 않는다. 새로운 연결만 현재의 건강·용량·메모리·기능·그룹 조건에 따라 선택한다.\n대상 선택 비용은 새 flow당 O(max_targets), 주소 해시 비용은 고정 길이이며, 별도의\n전역 연결 맵이나 패킷별 재탐색을 만들지 않는다. 이미 확보한 backend 조회는 O(1)이다.\n포화 대상은 새 연결 후보에서 제외한다. 키 해시는 암호학적 인증 수단이 아니며 외부\n입력으로부터 패턴 예측을 줄이려면 호스트가 인스턴스별 hash_seed를 제공한다.\n"
+    },
+    {
+      "id": "b000022",
+      "kind": "blank",
+      "start_line": 51,
+      "end_line": 51,
+      "raw": "\n"
+    },
+    {
+      "id": "b000023",
+      "kind": "fenced_code",
+      "start_line": 52,
+      "end_line": 68,
+      "raw": "```cpp\nii::runtime::EventLoop loop;\nii::network::NetworkLoadBalancer routing;\nauto target = routing.add_target(loop, backend_endpoint, {.capacity=128});\nii::network::NetworkFlow flow{\n    .source = frontend_peer, .destination = frontend_local\n};\nauto selected = routing.acquire(flow);\nif (selected) {\n    ii::network::Tcp upstream(loop);\n    auto connecting = upstream.connect(selected->backend);\n    // loop에서 실제 연결·전송을 수행하고 결과를 관측한다.\n    // 성공 응답과 스트림을 정리한 뒤:\n    upstream.close();\n    selected->lease.complete();\n}\n```\n",
+      "language": "cpp",
+      "code": "ii::runtime::EventLoop loop;\nii::network::NetworkLoadBalancer routing;\nauto target = routing.add_target(loop, backend_endpoint, {.capacity=128});\nii::network::NetworkFlow flow{\n    .source = frontend_peer, .destination = frontend_local\n};\nauto selected = routing.acquire(flow);\nif (selected) {\n    ii::network::Tcp upstream(loop);\n    auto connecting = upstream.connect(selected->backend);\n    // loop에서 실제 연결·전송을 수행하고 결과를 관측한다.\n    // 성공 응답과 스트림을 정리한 뒤:\n    upstream.close();\n    selected->lease.complete();\n}\n",
+      "closed": true
+    },
+    {
+      "id": "b000024",
+      "kind": "blank",
+      "start_line": 69,
+      "end_line": 69,
+      "raw": "\n"
+    },
+    {
+      "id": "b000025",
+      "kind": "paragraph",
+      "start_line": 70,
+      "end_line": 73,
+      "raw": "실행 가능한 loopback 예제는 `example/LoadBalancer/App/main.cpp`이다. 이 선택 객체가 소켓을\n숨겨서 생성하거나 자동 프록시하는 것은 아니며 기존 Tcp/Udp/Tls 어댑터가 실제 연결을\n소유한다. 소켓 조작과 콜백은 해당 EventLoop 소유 스레드에서 수행한다. 순수 선택·대상\n등록은 인스턴스 잠금으로 보호된다. 대상 등록/주소 공개와 선택/주소 복사는 함께 처리한다.\n"
+    },
+    {
+      "id": "b000026",
+      "kind": "blank",
+      "start_line": 74,
+      "end_line": 74,
+      "raw": "\n"
+    },
+    {
+      "id": "b000027",
+      "kind": "heading",
+      "start_line": 75,
+      "end_line": 75,
+      "raw": "## 수명과 운영\n",
+      "level": 2,
+      "title": "수명과 운영"
+    },
+    {
+      "id": "b000028",
+      "kind": "blank",
+      "start_line": 76,
+      "end_line": 76,
+      "raw": "\n"
+    },
+    {
+      "id": "b000029",
+      "kind": "paragraph",
+      "start_line": 77,
+      "end_line": 79,
+      "raw": "`report_health`의 연속 실패/성공 임계값, `request_drain`, 자원 접수 한도와 통계는\nCore의 동일 계약을 따른다. 메모리와 기능은 `LoadRequest`로 신고한다. TLS 정책·세션 키·\n실제 통신 성공은 별도 전송 객체가 검증하며 capability 비트만으로 입증되지 않는다.\n"
+    },
+    {
+      "id": "b000030",
+      "kind": "blank",
+      "start_line": 80,
+      "end_line": 80,
+      "raw": "\n"
+    },
+    {
+      "id": "b000031",
+      "kind": "paragraph",
+      "start_line": 81,
+      "end_line": 85,
+      "raw": "전송 실패는 `lease.fail()`, 정상 종료는 실제 전송/버퍼 제거 후 `complete()`로 확정한다.\n미완료 lease의 소멸은 취소이다. 연결 소유자는 lease.stop_token()을 관측하여 전송을\n협력적으로 닫는다. 살아 있는 외부 lease 때문에 close/remove가 `would_block`이면\n전송과 lease를 정리한 뒤 같은 종료 장벽을 다시 호출한다. 같은 연결 소유자가 자신을\n기다리며 교착하지 않는다. `cancel_pending`은 모든 대상에 종료 요청을 전달한 뒤 대기한다.\n"
+    },
+    {
+      "id": "b000032",
+      "kind": "blank",
+      "start_line": 86,
+      "end_line": 86,
+      "raw": "\n"
+    },
+    {
+      "id": "b000033",
+      "kind": "paragraph",
+      "start_line": 87,
+      "end_line": 90,
+      "raw": "UDP의 flow 만료 시점은 호스트가 결정하고 만료 때 lease를 반환한다. 이 모듈은 별도\n타이머 스레드나 무제한 flow 캐시를 만들지 않는다. 등록 실행기는 성공한 대상 제거/전체\nclose까지 살아 있어야 한다. 후속 `lease.post`는 선택한 실행기로 전달하며 추가 연결로\n세지 않는다. 실행기/대상 정리 중 거절한 작업은 다른 백엔드에 자동 재실행하지 않는다.\n"
+    },
+    {
+      "id": "b000034",
+      "kind": "blank",
+      "start_line": 91,
+      "end_line": 91,
+      "raw": "\n"
+    },
+    {
+      "id": "b000035",
+      "kind": "heading",
+      "start_line": 92,
+      "end_line": 92,
+      "raw": "## 검사\n",
+      "level": 2,
+      "title": "검사"
+    },
+    {
+      "id": "b000036",
+      "kind": "blank",
+      "start_line": 93,
+      "end_line": 93,
+      "raw": "\n"
+    },
+    {
+      "id": "b000037",
+      "kind": "paragraph",
+      "start_line": 94,
+      "end_line": 98,
+      "raw": "`example/LoadBalancer/tests/load_balancer.cpp`는 IPv4/IPv6·TCP sequence·UDP 키, 동일 용량의 수평 분산,\n1:3 용량 가중치, 새 대상에 한정한 키 이동, 기존 연결 고정, 건강·드레이닝·접수 한도와\n종료 요청을 검사한다. 실제 네이티브 loopback TCP 스트림과 UDP 데이터그램을 선택한\n백엔드로 전송한다. 설치 소비자도 같은 검사를 설치된 공개 헤더/라이브러리로 수행한다.\n검증한 플랫폼과 결과는 `docs/Verification.md` 및 각 build/ 검증 기록으로 구분한다.\n"
+    },
+    {
+      "id": "b000038",
+      "kind": "blank",
+      "start_line": 99,
+      "end_line": 99,
+      "raw": "\n"
+    },
+    {
+      "id": "b000039",
+      "kind": "heading",
+      "start_line": 100,
+      "end_line": 100,
+      "raw": "### 2026-10-28 분리 검증\n",
+      "level": 3,
+      "title": "2026-10-28 분리 검증"
+    },
+    {
+      "id": "b000040",
+      "kind": "blank",
+      "start_line": 101,
+      "end_line": 101,
+      "raw": "\n"
+    },
+    {
+      "id": "b000041",
+      "kind": "paragraph",
+      "start_line": 102,
+      "end_line": 107,
+      "raw": "macOS arm64에서 기본 라이브러리와 공개 헤더를 빌드하고 관련 계약 검사 14/14를\n통과했다. 새 기본 설치본에는 로드 밸런서 헤더와 심벌이 없음을 확인한 뒤, 별도\n어댑터를 빌드해 루프백 계약 1/1 및 설치된 어댑터 소비자 계약 1/1을 통과했다.\n예제 프로그램은 빌드만 했다. 이 네트워크 검증은 기존 iiJson 설치본을 사용했으며,\n새로 분리된 iiJson 값 타입에 대한 네트워크 소비자 이전은 아직 완료되지 않았다.\nWindows·Linux 기기에서 이 변경을 실행하거나 전역 설치본을 교체하지 않았다.\n"
+    },
+    {
+      "id": "b000042",
+      "kind": "blank",
+      "start_line": 108,
+      "end_line": 108,
+      "raw": "\n"
+    },
+    {
+      "id": "b000043",
+      "kind": "heading",
+      "start_line": 109,
+      "end_line": 109,
+      "raw": "### 2026-10-25 검증 기록\n",
+      "level": 3,
+      "title": "2026-10-25 검증 기록"
+    },
+    {
+      "id": "b000044",
+      "kind": "blank",
+      "start_line": 110,
+      "end_line": 110,
+      "raw": "\n"
+    },
+    {
+      "id": "b000045",
+      "kind": "table",
+      "start_line": 111,
+      "end_line": 118,
+      "raw": "| 범위 | 결과 |\n|---|---|\n| macOS arm64 Release 전체 빌드·CTest | 48/48 통과 |\n| Core 0.19 + Network 0.6 설치 패키지 소비자 | 31/31 통과 |\n| ASan/UBSan Network 로드 밸런서 | 1/1 통과 |\n| TSan Network 로드 밸런서 | 1/1 통과, 경합 보고 없음 |\n| 새 구현의 C++23 엄격 경고 | `-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror` 통과 |\n| Windows x64·Linux arm64·WASM32 pthread 새 구현 문법 검사 | 3/3 통과, 링크·대상 장치 실행은 별도 |\n",
+      "columns": [
+        "범위",
+        "결과"
+      ],
+      "rows": [
+        [
+          "macOS arm64 Release 전체 빌드·CTest",
+          "48/48 통과"
+        ],
+        [
+          "Core 0.19 + Network 0.6 설치 패키지 소비자",
+          "31/31 통과"
+        ],
+        [
+          "ASan/UBSan Network 로드 밸런서",
+          "1/1 통과"
+        ],
+        [
+          "TSan Network 로드 밸런서",
+          "1/1 통과, 경합 보고 없음"
+        ],
+        [
+          "새 구현의 C++23 엄격 경고",
+          "`-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror` 통과"
+        ],
+        [
+          "Windows x64·Linux arm64·WASM32 pthread 새 구현 문법 검사",
+          "3/3 통과, 링크·대상 장치 실행은 별도"
+        ]
+      ]
+    },
+    {
+      "id": "b000046",
+      "kind": "blank",
+      "start_line": 119,
+      "end_line": 119,
+      "raw": "\n"
+    },
+    {
+      "id": "b000047",
+      "kind": "paragraph",
+      "start_line": 120,
+      "end_line": 124,
+      "raw": "동일 용량의 두 대상에 1,024개 새 연결 키가 492/532로 분산되었고 세 번째 대상 추가 시\n335개 키만 새 대상으로 이동했다. 기존 두 대상 사이의 불필요한 재매핑은 없었다.\n실제 TCP 연결은 대상 드레이닝 후에도 같은 백엔드에서 두 payload를 수신했고, UDP도\n선택한 실제 loopback 백엔드에서 두 데이터그램을 수신했다. 이는 macOS 로컬 소켓의\n실행 증거이며 인터넷/WAN 성능, TLS 로드 밸런서 종료, 다른 OS 실기기 실행은 아니다.\n"
+    },
+    {
+      "id": "b000048",
+      "kind": "blank",
+      "start_line": 125,
+      "end_line": 125,
+      "raw": "\n"
+    },
+    {
+      "id": "b000049",
+      "kind": "paragraph",
+      "start_line": 126,
+      "end_line": 128,
+      "raw": "리스너/전송 종류별 서비스가 다르면 대상의 `group`과 요청의 `group`을 분리한다.\n프로토콜 키가 다르다는 이유만으로 백엔드의 지원 프로토콜을 자동 추정하지 않는다.\nTLS는 flow 식별만 제공하며 암호화·인증 정책은 기존 TlsStream/TlsContext가 담당한다.\n"
+    },
+    {
+      "id": "b000050",
+      "kind": "blank",
+      "start_line": 129,
+      "end_line": 129,
+      "raw": "\n"
+    },
+    {
+      "id": "b000051",
+      "kind": "paragraph",
+      "start_line": 130,
+      "end_line": 132,
+      "raw": "XML·sanitizer·설치 소비자 로그는 `build/load-routing-20261025/`, 설치 검증 패키지는\n그 아래 `stage/iiNetwork`이다. 기본 설치본은 교체하지 않았다. 작업 전 존재한\nInterfaces.md·Tls.cpp·TLS fixture/인터페이스 테스트 변경은 그대로 보존했다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Network(L4) 로드 밸런서",
+      "anchor": "networkl4-로드-밸런서",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000005",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "구성과 이전",
+      "anchor": "구성과-이전",
+      "start_line": 10
+    },
+    {
+      "block_id": "b000015",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "연결 선택과 수평 분산",
+      "anchor": "연결-선택과-수평-분산",
+      "start_line": 30
+    },
+    {
+      "block_id": "b000027",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "수명과 운영",
+      "anchor": "수명과-운영",
+      "start_line": 75
+    },
+    {
+      "block_id": "b000035",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "검사",
+      "anchor": "검사",
+      "start_line": 92
+    },
+    {
+      "block_id": "b000039",
+      "parent_id": "b000035",
+      "level": 3,
+      "title": "2026-10-28 분리 검증",
+      "anchor": "2026-10-28-분리-검증",
+      "start_line": 100
+    },
+    {
+      "block_id": "b000043",
+      "parent_id": "b000035",
+      "level": 3,
+      "title": "2026-10-25 검증 기록",
+      "anchor": "2026-10-25-검증-기록",
+      "start_line": 109
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 7,
+        "text": "다른 기능에는 아직 Core와 iiJson 의존성이 남아 있으므로 전체 모듈의 독립성을 뜻하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000003",
+        "line": 8,
+        "text": "하위 Address/Transport/TLS는 이 오케스트레이션 계층을 역참조하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000011",
+        "line": 20,
+        "text": "`<iiNetwork/LoadBalancer.h>`를 직접 포함해야 한다. 이전 iiNetwork 기본 타깃과",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000013",
+        "line": 27,
+        "text": "요구사항 참고로 삼았다. AWS의 비공개 해시와 wire/API 호환을 보장하지 않는다. DNS·VIP·",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000031",
+        "line": 85,
+        "text": "기다리며 교착하지 않는다. `cancel_pending`은 모든 대상에 종료 요청을 전달한 뒤 대기한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000033",
+        "line": 90,
+        "text": "세지 않는다. 실행기/대상 정리 중 거절한 작업은 다른 백엔드에 자동 재실행하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000049",
+        "line": 127,
+        "text": "프로토콜 키가 다르다는 이유만으로 백엔드의 지원 프로토콜을 자동 추정하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000013",
+        "label": "Network Load Balancer 연결 단위 라우팅",
+        "target": "https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html",
+        "kind": "external",
+        "line": 26
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000045",
+        "columns": [
+          "범위",
+          "결과"
+        ],
+        "rows": [
+          [
+            "macOS arm64 Release 전체 빌드·CTest",
+            "48/48 통과"
+          ],
+          [
+            "Core 0.19 + Network 0.6 설치 패키지 소비자",
+            "31/31 통과"
+          ],
+          [
+            "ASan/UBSan Network 로드 밸런서",
+            "1/1 통과"
+          ],
+          [
+            "TSan Network 로드 밸런서",
+            "1/1 통과, 경합 보고 없음"
+          ],
+          [
+            "새 구현의 C++23 엄격 경고",
+            "`-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror` 통과"
+          ],
+          [
+            "Windows x64·Linux arm64·WASM32 pthread 새 구현 문법 검사",
+            "3/3 통과, 링크·대상 장치 실행은 별도"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

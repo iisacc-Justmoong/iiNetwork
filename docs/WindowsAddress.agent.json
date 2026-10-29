@@ -1,0 +1,157 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:e711a15b058d7a882c17447116c89627708e88e221167852e6cd2092859ce546",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/WindowsAddress.md",
+    "sha256": "7c49a898a820961cb8b206d0203e1814a760737625c678a8d9b2f0963580d95a",
+    "bytes": 1870,
+    "line_count": 24,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "Windows IPv6 scope 검증",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# Windows IPv6 scope 검증\n",
+      "level": 1,
+      "title": "Windows IPv6 scope 검증"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 6,
+      "raw": "이름으로 지정한 IPv6 scope는 Windows IP Helper의 `if_nametoindex`로 실제 인터페이스\n인덱스에 대응한다. 해당 선언을 소유한 `iphlpapi.h`를 Address 구현에서 직접 포함한다.\nIphlpapi 링크는 기존 Windows 타깃 설정을 사용하며 public API에 OS 타입을 노출하지 않는다.\n[Microsoft의 선언·링크 계약](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-if_nametoindex)을 따른다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 8,
+      "end_line": 10,
+      "raw": "`iiNetwork.interfaces.address`는 실제 loopback의 인덱스와 OS 이름 변환을 사용하여\n이름 scope와 숫자 scope가 같은 주소·scope 값을 만드는지 확인한다. 존재하지 않는\n이름은 계속 거절한다. 외부 서버나 실제 네트워크 구성을 변경하지 않는다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 11,
+      "end_line": 11,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 12,
+      "end_line": 15,
+      "raw": "Windows ROOT 인증서 저장소를 여는 예약 인자는 정수 핸들 형식\n`HCRYPTPROV_LEGACY`의 0을 사용한다. 포인터 nullptr와 혼동하여 MSVC 컴파일이\n실패하지 않게 하며, 기본 TLS 클라이언트 context 생성으로 실제 시스템 신뢰\n초기화 경로도 검사한다. 인증서를 추가하거나 시스템 저장소를 수정하지 않는다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 17,
+      "end_line": 20,
+      "raw": "AF_UNIX의 Windows 파일 항목은 reparse point이므로 일반 파일처럼 따라가는\n`std::filesystem::exists`가 `ERROR_CANT_ACCESS_FILE`을 반환할 수 있다. IPC 검사는\n`GetFileAttributesW`로 항목 존재를 확인하고, 실제 소켓 왕복·소유 항목 정리·교체된\n사용자 파일 보존을 그대로 검증한다.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 21,
+      "end_line": 21,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 22,
+      "end_line": 24,
+      "raw": "HTTP graceful shutdown 검사는 500ms 유예 안에 이미 수락한 요청의 나머지 본문과\n응답을 완료한다. Windows에서 수 초가 걸릴 수 있는 별도 연결의 거절 알림은 그 뒤\n확인한다. 종료 시 새 연결 거절, 진행 중 응답 보존, 유예 만료 강제 종료 조건은 유지한다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "Windows IPv6 scope 검증",
+      "anchor": "windows-ipv6-scope-검증",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 5,
+        "text": "Iphlpapi 링크는 기존 Windows 타깃 설정을 사용하며 public API에 OS 타입을 노출하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000005",
+        "line": 10,
+        "text": "이름은 계속 거절한다. 외부 서버나 실제 네트워크 구성을 변경하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000007",
+        "line": 15,
+        "text": "초기화 경로도 검사한다. 인증서를 추가하거나 시스템 저장소를 수정하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000003",
+        "label": "Microsoft의 선언·링크 계약",
+        "target": "https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-if_nametoindex",
+        "kind": "external",
+        "line": 6
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

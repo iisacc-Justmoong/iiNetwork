@@ -7,4 +7,3 @@
 #include <iiNetwork/Peer.h>
 #include <iiNetwork/WebSocket.h>
 #include <iiNetwork/Realtime.h>
-#include <iiNetwork/LoadBalancer.h>

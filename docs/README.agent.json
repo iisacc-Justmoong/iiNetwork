@@ -1,0 +1,448 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:51821e1ca430b6ebc248db0467bad97ad3f1c261dfd4400804b060ebd67bc86f",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/README.md",
+    "sha256": "5e32b583758ad6bda60bff596c84ed611a41e467f3900da2c98467e36a5815b8",
+    "bytes": 1369,
+    "line_count": 24,
+    "encoding": "utf-8",
+    "language": "en"
+  },
+  "document": {
+    "title": "iiNetwork Documentation",
+    "role": "overview",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiNetwork Documentation\n",
+      "level": 1,
+      "title": "iiNetwork Documentation"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "html",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "<!-- workspace-docs:document-map:start -->\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "heading",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "## Human and agent document map\n",
+      "level": 2,
+      "title": "Human and agent document map"
+    },
+    {
+      "id": "b000005",
+      "kind": "blank",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "paragraph",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "Markdown is the maintained human source. Agent JSON is a structured, source-traceable projection.\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "blank",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "table",
+      "start_line": 8,
+      "end_line": 23,
+      "raw": "| Document | Agent JSON |\n| --- | --- |\n| [`AGENT.md`](../AGENT.md) | [JSON](entrypoints/AGENT.agent.json) |\n| [`README.md`](../README.md) | [JSON](entrypoints/README.agent.json) |\n| [`docs/Architecture.md`](Architecture.md) | [JSON](Architecture.agent.json) |\n| [`docs/IPADOS.md`](IPADOS.md) | [JSON](IPADOS.agent.json) |\n| [`docs/Interfaces.md`](Interfaces.md) | [JSON](Interfaces.agent.json) |\n| [`docs/LoadBalancer.md`](LoadBalancer.md) | [JSON](LoadBalancer.agent.json) |\n| [`docs/Peers.md`](Peers.md) | [JSON](Peers.agent.json) |\n| [`docs/Realtime.md`](Realtime.md) | [JSON](Realtime.agent.json) |\n| [`docs/Verification.md`](Verification.md) | [JSON](Verification.agent.json) |\n| [`docs/WebSocket.md`](WebSocket.md) | [JSON](WebSocket.agent.json) |\n| [`docs/WindowsAddress.md`](WindowsAddress.md) | [JSON](WindowsAddress.agent.json) |\n| [`docs/documentation-structure.md`](documentation-structure.md) | [JSON](documentation-structure.agent.json) |\n| [`docs/system-trust.md`](system-trust.md) | [JSON](system-trust.agent.json) |\n| [`example/README.md`](../example/README.md) | [JSON](mirrors/example/README.agent.json) |\n",
+      "columns": [
+        "Document",
+        "Agent JSON"
+      ],
+      "rows": [
+        [
+          "[`AGENT.md`](../AGENT.md)",
+          "[JSON](entrypoints/AGENT.agent.json)"
+        ],
+        [
+          "[`README.md`](../README.md)",
+          "[JSON](entrypoints/README.agent.json)"
+        ],
+        [
+          "[`docs/Architecture.md`](Architecture.md)",
+          "[JSON](Architecture.agent.json)"
+        ],
+        [
+          "[`docs/IPADOS.md`](IPADOS.md)",
+          "[JSON](IPADOS.agent.json)"
+        ],
+        [
+          "[`docs/Interfaces.md`](Interfaces.md)",
+          "[JSON](Interfaces.agent.json)"
+        ],
+        [
+          "[`docs/LoadBalancer.md`](LoadBalancer.md)",
+          "[JSON](LoadBalancer.agent.json)"
+        ],
+        [
+          "[`docs/Peers.md`](Peers.md)",
+          "[JSON](Peers.agent.json)"
+        ],
+        [
+          "[`docs/Realtime.md`](Realtime.md)",
+          "[JSON](Realtime.agent.json)"
+        ],
+        [
+          "[`docs/Verification.md`](Verification.md)",
+          "[JSON](Verification.agent.json)"
+        ],
+        [
+          "[`docs/WebSocket.md`](WebSocket.md)",
+          "[JSON](WebSocket.agent.json)"
+        ],
+        [
+          "[`docs/WindowsAddress.md`](WindowsAddress.md)",
+          "[JSON](WindowsAddress.agent.json)"
+        ],
+        [
+          "[`docs/documentation-structure.md`](documentation-structure.md)",
+          "[JSON](documentation-structure.agent.json)"
+        ],
+        [
+          "[`docs/system-trust.md`](system-trust.md)",
+          "[JSON](system-trust.agent.json)"
+        ],
+        [
+          "[`example/README.md`](../example/README.md)",
+          "[JSON](mirrors/example/README.agent.json)"
+        ]
+      ]
+    },
+    {
+      "id": "b000009",
+      "kind": "html",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "<!-- workspace-docs:document-map:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiNetwork Documentation",
+      "anchor": "iinetwork-documentation",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000004",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "Human and agent document map",
+      "anchor": "human-and-agent-document-map",
+      "start_line": 4
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000008",
+        "label": "`AGENT.md`",
+        "target": "../AGENT.md",
+        "kind": "relative",
+        "line": 10
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "entrypoints/AGENT.agent.json",
+        "kind": "relative",
+        "line": 10
+      },
+      {
+        "block_id": "b000008",
+        "label": "`README.md`",
+        "target": "../README.md",
+        "kind": "relative",
+        "line": 11
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "entrypoints/README.agent.json",
+        "kind": "relative",
+        "line": 11
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/Architecture.md`",
+        "target": "Architecture.md",
+        "kind": "relative",
+        "line": 12
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "Architecture.agent.json",
+        "kind": "relative",
+        "line": 12
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/IPADOS.md`",
+        "target": "IPADOS.md",
+        "kind": "relative",
+        "line": 13
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "IPADOS.agent.json",
+        "kind": "relative",
+        "line": 13
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/Interfaces.md`",
+        "target": "Interfaces.md",
+        "kind": "relative",
+        "line": 14
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "Interfaces.agent.json",
+        "kind": "relative",
+        "line": 14
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/LoadBalancer.md`",
+        "target": "LoadBalancer.md",
+        "kind": "relative",
+        "line": 15
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "LoadBalancer.agent.json",
+        "kind": "relative",
+        "line": 15
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/Peers.md`",
+        "target": "Peers.md",
+        "kind": "relative",
+        "line": 16
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "Peers.agent.json",
+        "kind": "relative",
+        "line": 16
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/Realtime.md`",
+        "target": "Realtime.md",
+        "kind": "relative",
+        "line": 17
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "Realtime.agent.json",
+        "kind": "relative",
+        "line": 17
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/Verification.md`",
+        "target": "Verification.md",
+        "kind": "relative",
+        "line": 18
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "Verification.agent.json",
+        "kind": "relative",
+        "line": 18
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/WebSocket.md`",
+        "target": "WebSocket.md",
+        "kind": "relative",
+        "line": 19
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "WebSocket.agent.json",
+        "kind": "relative",
+        "line": 19
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/WindowsAddress.md`",
+        "target": "WindowsAddress.md",
+        "kind": "relative",
+        "line": 20
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "WindowsAddress.agent.json",
+        "kind": "relative",
+        "line": 20
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/documentation-structure.md`",
+        "target": "documentation-structure.md",
+        "kind": "relative",
+        "line": 21
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "documentation-structure.agent.json",
+        "kind": "relative",
+        "line": 21
+      },
+      {
+        "block_id": "b000008",
+        "label": "`docs/system-trust.md`",
+        "target": "system-trust.md",
+        "kind": "relative",
+        "line": 22
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "system-trust.agent.json",
+        "kind": "relative",
+        "line": 22
+      },
+      {
+        "block_id": "b000008",
+        "label": "`example/README.md`",
+        "target": "../example/README.md",
+        "kind": "relative",
+        "line": 23
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "mirrors/example/README.agent.json",
+        "kind": "relative",
+        "line": 23
+      }
+    ],
+    "tables": [
+      {
+        "block_id": "b000008",
+        "columns": [
+          "Document",
+          "Agent JSON"
+        ],
+        "rows": [
+          [
+            "[`AGENT.md`](../AGENT.md)",
+            "[JSON](entrypoints/AGENT.agent.json)"
+          ],
+          [
+            "[`README.md`](../README.md)",
+            "[JSON](entrypoints/README.agent.json)"
+          ],
+          [
+            "[`docs/Architecture.md`](Architecture.md)",
+            "[JSON](Architecture.agent.json)"
+          ],
+          [
+            "[`docs/IPADOS.md`](IPADOS.md)",
+            "[JSON](IPADOS.agent.json)"
+          ],
+          [
+            "[`docs/Interfaces.md`](Interfaces.md)",
+            "[JSON](Interfaces.agent.json)"
+          ],
+          [
+            "[`docs/LoadBalancer.md`](LoadBalancer.md)",
+            "[JSON](LoadBalancer.agent.json)"
+          ],
+          [
+            "[`docs/Peers.md`](Peers.md)",
+            "[JSON](Peers.agent.json)"
+          ],
+          [
+            "[`docs/Realtime.md`](Realtime.md)",
+            "[JSON](Realtime.agent.json)"
+          ],
+          [
+            "[`docs/Verification.md`](Verification.md)",
+            "[JSON](Verification.agent.json)"
+          ],
+          [
+            "[`docs/WebSocket.md`](WebSocket.md)",
+            "[JSON](WebSocket.agent.json)"
+          ],
+          [
+            "[`docs/WindowsAddress.md`](WindowsAddress.md)",
+            "[JSON](WindowsAddress.agent.json)"
+          ],
+          [
+            "[`docs/documentation-structure.md`](documentation-structure.md)",
+            "[JSON](documentation-structure.agent.json)"
+          ],
+          [
+            "[`docs/system-trust.md`](system-trust.md)",
+            "[JSON](system-trust.agent.json)"
+          ],
+          [
+            "[`example/README.md`](../example/README.md)",
+            "[JSON](mirrors/example/README.agent.json)"
+          ]
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

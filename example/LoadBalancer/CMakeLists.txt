@@ -1,0 +1,36 @@
+cmake_minimum_required(VERSION 3.24)
+# iisdk:consumer-application
+project(iiNetworkLoadBalancer VERSION 0.6.0 LANGUAGES CXX)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+include(CTest)
+find_package(iiNetwork 0.6 CONFIG REQUIRED)
+find_package(iiSDKCore 0.19 CONFIG REQUIRED COMPONENTS Runtime)
+add_library(iiNetworkLoadBalancer STATIC App/iiNetwork/LoadBalancer.cpp)
+add_library(iiNetwork::LoadBalancer ALIAS iiNetworkLoadBalancer)
+set_target_properties(iiNetworkLoadBalancer PROPERTIES EXPORT_NAME LoadBalancer CXX_EXTENSIONS OFF POSITION_INDEPENDENT_CODE ON)
+target_compile_features(iiNetworkLoadBalancer PUBLIC cxx_std_23)
+target_include_directories(iiNetworkLoadBalancer PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/App>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_link_libraries(iiNetworkLoadBalancer PUBLIC iiNetwork::iiNetwork iiSDKCore::Runtime)
+add_executable(iiNetworkLoadBalancerExample App/main.cpp)
+target_link_libraries(iiNetworkLoadBalancerExample PRIVATE iiNetwork::LoadBalancer)
+if(BUILD_TESTING)
+    add_executable(iiNetworkLoadBalancerTests tests/load_balancer.cpp)
+    target_link_libraries(iiNetworkLoadBalancerTests PRIVATE iiNetwork::LoadBalancer)
+    add_test(NAME iiNetwork.LoadBalancer COMMAND iiNetworkLoadBalancerTests)
+    set_tests_properties(iiNetwork.LoadBalancer PROPERTIES TIMEOUT 30)
+    add_test(NAME iiNetwork.LoadBalancerExample COMMAND iiNetworkLoadBalancerExample)
+    set_tests_properties(iiNetwork.LoadBalancerExample PROPERTIES TIMEOUT 15)
+endif()
+set(package_dir "${CMAKE_INSTALL_LIBDIR}/cmake/iiNetworkLoadBalancer")
+install(TARGETS iiNetworkLoadBalancer EXPORT iiNetworkLoadBalancerTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(EXPORT iiNetworkLoadBalancerTargets NAMESPACE iiNetwork:: DESTINATION "${package_dir}")
+install(FILES App/iiNetwork/LoadBalancer.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iiNetwork)
+configure_package_config_file(cmake/iiNetworkLoadBalancerConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/iiNetworkLoadBalancerConfig.cmake" INSTALL_DESTINATION "${package_dir}")
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/iiNetworkLoadBalancerConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION} COMPATIBILITY SameMinorVersion)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiNetworkLoadBalancerConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/iiNetworkLoadBalancerConfigVersion.cmake" DESTINATION "${package_dir}")

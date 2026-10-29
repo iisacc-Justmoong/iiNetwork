@@ -1,0 +1,316 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:672e95fd01d630af344412d28fe164238ef475c60ace1882bcbd684e5b4ae252",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "AGENT.md",
+    "sha256": "8194e60d4a6755710be819dee7ad5eee4eb8927adeb8bc7bc16eecf2c9832f35",
+    "bytes": 4088,
+    "line_count": 33,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "iiNetwork 작업 지침",
+    "role": "instructions",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# iiNetwork 작업 지침\n",
+      "level": 1,
+      "title": "iiNetwork 작업 지침"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "이 모듈은 앱과 게임이 함께 사용하는 iiSDK 네트워크 기반이다. C++23과 표준 라이브러리, 기존 iiSDK 및 허용된 오픈소스를 사용한다. Qt 타입·패키지 의존성과 상위 제품·iiWebServer 의존성을 추가하지 않는다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "list",
+      "start_line": 5,
+      "end_line": 13,
+      "raw": "- SDK 소스와 공개 헤더는 `src/iiNetwork/`에 같은 이름으로 함께 둔다. 설치할 때만 소비자용 `include/iiNetwork/`에 배치한다.\n- 새 예제는 `example/`, 검사는 `tests/`, 한국어 사용·유지보수 문서는 `docs/`에 둔다. 기존 `examples/`의 경로는 이전 소비자 호환성을 위해 보존한다. README는 영어로 유지한다.\n- 실행 중 작업과 기존 변경을 보존한다. 빌드 산출물·검증 설치본·테스트 자원은 저장소의 `build/` 아래에 둔다. 독립 최상위 구성은 저장소의 `build/`를 사용하고, 임베디드 검증은 그 하위의 `build/` 디렉터리를 사용한다.\n- 구현 전에 의미 있는 실패 검사를 마련한다. 모든 소스 변경에는 문서와 실제 빌드·테스트를 동반한다. 실제 소켓, 설치 소비자, 수명·경계 조건을 검증하고 실행한 플랫폼 범위를 구분한다.\n- 하위 전송·세션·표현 계층에서 애플리케이션·오케스트레이션 계층을 참조하지 않는다. `tests/boundary.py`가 이 방향과 Qt 제거를 검사한다.\n- 네트워크 객체와 콜백은 소유 iiSDKCore 이벤트 루프 스레드에 한정한다. 콜백 중 삭제·종료·재접속, 큐·입력 한도와 타임아웃을 처리한다. 미래 기능을 위한 추측성 계층보다 실제 수정 이유에 따라 구현을 분리한다.\n- 로드 밸런서의 Core 조합은 기본 타깃이 아니라 독립적으로 구성하는 `example/LoadBalancer`가 소유한다. 기본 모듈에 다시 통합하지 않는다. 다른 Core·iiJson 의존성은 아직 이전 전이다.\n- 실시간 입장권의 키는 TLS 또는 신뢰한 IPC로만 전달하고 URL·로그·테스트 결과 파일에 출력하지 않는다. `tests/realtime_process.py`는 비공개 익명 파이프에서만 임시 입장권을 전달한다.\n- `install.sh`는 빌드·소스 검사·설치·설치 소비자 검증을 순서대로 수행한다. 기존 전역 설치 교체를 원하지 않는 검증에서는 `INSTALL_PREFIX=\"$PWD/build/package\"`를 지정한다.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "SDK 소스와 공개 헤더는 `src/iiNetwork/`에 같은 이름으로 함께 둔다. 설치할 때만 소비자용 `include/iiNetwork/`에 배치한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "새 예제는 `example/`, 검사는 `tests/`, 한국어 사용·유지보수 문서는 `docs/`에 둔다. 기존 `examples/`의 경로는 이전 소비자 호환성을 위해 보존한다. README는 영어로 유지한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "실행 중 작업과 기존 변경을 보존한다. 빌드 산출물·검증 설치본·테스트 자원은 저장소의 `build/` 아래에 둔다. 독립 최상위 구성은 저장소의 `build/`를 사용하고, 임베디드 검증은 그 하위의 `build/` 디렉터리를 사용한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "구현 전에 의미 있는 실패 검사를 마련한다. 모든 소스 변경에는 문서와 실제 빌드·테스트를 동반한다. 실제 소켓, 설치 소비자, 수명·경계 조건을 검증하고 실행한 플랫폼 범위를 구분한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "하위 전송·세션·표현 계층에서 애플리케이션·오케스트레이션 계층을 참조하지 않는다. `tests/boundary.py`가 이 방향과 Qt 제거를 검사한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "네트워크 객체와 콜백은 소유 iiSDKCore 이벤트 루프 스레드에 한정한다. 콜백 중 삭제·종료·재접속, 큐·입력 한도와 타임아웃을 처리한다. 미래 기능을 위한 추측성 계층보다 실제 수정 이유에 따라 구현을 분리한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "로드 밸런서의 Core 조합은 기본 타깃이 아니라 독립적으로 구성하는 `example/LoadBalancer`가 소유한다. 기본 모듈에 다시 통합하지 않는다. 다른 Core·iiJson 의존성은 아직 이전 전이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "실시간 입장권의 키는 TLS 또는 신뢰한 IPC로만 전달하고 URL·로그·테스트 결과 파일에 출력하지 않는다. `tests/realtime_process.py`는 비공개 익명 파이프에서만 임시 입장권을 전달한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "`install.sh`는 빌드·소스 검사·설치·설치 소비자 검증을 순서대로 수행한다. 기존 전역 설치 교체를 원하지 않는 검증에서는 `INSTALL_PREFIX=\"$PWD/build/package\"`를 지정한다.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 14,
+      "end_line": 14,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 15,
+      "end_line": 15,
+      "raw": "실시간 데이터 계약은 `docs/Realtime.md`, 기존 피어 제어 계약은 `docs/Peers.md`, 일반 통신 API는 `docs/Interfaces.md`를 먼저 읽는다. 기능 추가는 그 경계와 기존 공개 API를 보존하면서 수행한다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "html",
+      "start_line": 17,
+      "end_line": 17,
+      "raw": "<!-- workspace-docs:agent:start -->\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "heading",
+      "start_line": 18,
+      "end_line": 18,
+      "raw": "## 문서 구조와 에이전트 탐색\n",
+      "level": 2,
+      "title": "문서 구조와 에이전트 탐색"
+    },
+    {
+      "id": "b000011",
+      "kind": "blank",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "list",
+      "start_line": 20,
+      "end_line": 26,
+      "raw": "- 프로젝트 루트의 `README.md`는 사람용 영문 진입 문서이며 `AGENT.md`는 에이전트 진입점이다.\n- 하위 인간용 Markdown과 구조화된 agent JSON을 함께 유지한다. Markdown이 원본이며 JSON은 원문 해시와 줄 범위를 가진 파생 문서이다.\n- 먼저 [docs/agent-index.json](docs/agent-index.json)에서 관련 문서와 JSON 투영을 찾는다. 원문 SHA-256이 다르면 현재 Markdown을 읽고 투영을 갱신한다.\n- JSON의 규칙 후보는 검색용 어휘 일치 결과이다. 과거 기록·예제·실패 상태를 현재 지시나 검증 완료로 자동 해석하지 않는다.\n- 기존 프로젝트별 규칙, 동결된 증거, 라이선스, 외부 원본, 사용자 데이터와 다른 작업의 변경을 보존한다.\n- 이 문서 재편 지침은 과거 작업의 기능 구현·배포를 자동 재개하라는 요청이 아니다. 현재 사용자의 작업 범위를 우선한다.\n- 문서를 수정하면 JSON 쌍·색인을 함께 갱신하고 검증한다. 기존 소스 변경에 대한 빌드·테스트 규칙은 계속 따른다.\n",
+      "items": [
+        {
+          "marker": "-",
+          "text": "프로젝트 루트의 `README.md`는 사람용 영문 진입 문서이며 `AGENT.md`는 에이전트 진입점이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "하위 인간용 Markdown과 구조화된 agent JSON을 함께 유지한다. Markdown이 원본이며 JSON은 원문 해시와 줄 범위를 가진 파생 문서이다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "먼저 [docs/agent-index.json](docs/agent-index.json)에서 관련 문서와 JSON 투영을 찾는다. 원문 SHA-256이 다르면 현재 Markdown을 읽고 투영을 갱신한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "JSON의 규칙 후보는 검색용 어휘 일치 결과이다. 과거 기록·예제·실패 상태를 현재 지시나 검증 완료로 자동 해석하지 않는다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "기존 프로젝트별 규칙, 동결된 증거, 라이선스, 외부 원본, 사용자 데이터와 다른 작업의 변경을 보존한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "이 문서 재편 지침은 과거 작업의 기능 구현·배포를 자동 재개하라는 요청이 아니다. 현재 사용자의 작업 범위를 우선한다.",
+          "checked": null
+        },
+        {
+          "marker": "-",
+          "text": "문서를 수정하면 JSON 쌍·색인을 함께 갱신하고 검증한다. 기존 소스 변경에 대한 빌드·테스트 규칙은 계속 따른다.",
+          "checked": null
+        }
+      ]
+    },
+    {
+      "id": "b000013",
+      "kind": "blank",
+      "start_line": 27,
+      "end_line": 27,
+      "raw": "\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "paragraph",
+      "start_line": 28,
+      "end_line": 28,
+      "raw": "Workspace에서 이 프로젝트의 문서를 갱신하는 명령은 다음과 같다.\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "blank",
+      "start_line": 29,
+      "end_line": 29,
+      "raw": "\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "fenced_code",
+      "start_line": 30,
+      "end_line": 32,
+      "raw": "```sh\npython3 ../../Engineering/WorkspaceDocumentation/App/workspace_docs.py --workspace ../.. sync --project SDK/iiNetwork\n```\n",
+      "language": "sh",
+      "code": "python3 ../../Engineering/WorkspaceDocumentation/App/workspace_docs.py --workspace ../.. sync --project SDK/iiNetwork\n",
+      "closed": true
+    },
+    {
+      "id": "b000017",
+      "kind": "html",
+      "start_line": 33,
+      "end_line": 33,
+      "raw": "<!-- workspace-docs:agent:end -->\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "iiNetwork 작업 지침",
+      "anchor": "iinetwork-작업-지침",
+      "start_line": 1
+    },
+    {
+      "block_id": "b000010",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "문서 구조와 에이전트 탐색",
+      "anchor": "문서-구조와-에이전트-탐색",
+      "start_line": 18
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 3,
+        "text": "이 모듈은 앱과 게임이 함께 사용하는 iiSDK 네트워크 기반이다. C++23과 표준 라이브러리, 기존 iiSDK 및 허용된 오픈소스를 사용한다. Qt 타입·패키지 의존성과 상위 제품·iiWebServer 의존성을 추가하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000005",
+        "line": 9,
+        "text": "- 하위 전송·세션·표현 계층에서 애플리케이션·오케스트레이션 계층을 참조하지 않는다. `tests/boundary.py`가 이 방향과 Qt 제거를 검사한다.",
+        "basis": "lexical_match",
+        "context": "list"
+      },
+      {
+        "block_id": "b000005",
+        "line": 11,
+        "text": "- 로드 밸런서의 Core 조합은 기본 타깃이 아니라 독립적으로 구성하는 `example/LoadBalancer`가 소유한다. 기본 모듈에 다시 통합하지 않는다. 다른 Core·iiJson 의존성은 아직 이전 전이다.",
+        "basis": "lexical_match",
+        "context": "list"
+      },
+      {
+        "block_id": "b000005",
+        "line": 12,
+        "text": "- 실시간 입장권의 키는 TLS 또는 신뢰한 IPC로만 전달하고 URL·로그·테스트 결과 파일에 출력하지 않는다. `tests/realtime_process.py`는 비공개 익명 파이프에서만 임시 입장권을 전달한다.",
+        "basis": "lexical_match",
+        "context": "list"
+      },
+      {
+        "block_id": "b000012",
+        "line": 23,
+        "text": "- JSON의 규칙 후보는 검색용 어휘 일치 결과이다. 과거 기록·예제·실패 상태를 현재 지시나 검증 완료로 자동 해석하지 않는다.",
+        "basis": "lexical_match",
+        "context": "list"
+      }
+    ],
+    "commands": [
+      {
+        "block_id": "b000016",
+        "language": "sh",
+        "code": "python3 ../../Engineering/WorkspaceDocumentation/App/workspace_docs.py --workspace ../.. sync --project SDK/iiNetwork\n"
+      }
+    ],
+    "links": [
+      {
+        "block_id": "b000012",
+        "label": "docs/agent-index.json",
+        "target": "docs/agent-index.json",
+        "kind": "relative",
+        "line": 22
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}
