@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "docs/README.md",
-    "sha256": "5e32b583758ad6bda60bff596c84ed611a41e467f3900da2c98467e36a5815b8",
-    "bytes": 1369,
-    "line_count": 24,
+    "sha256": "ec63eaa90681799a6f767ce71ebbaf1fea0eb47d0949111e74c182b1e78b65cb",
+    "bytes": 1449,
+    "line_count": 25,
     "encoding": "utf-8",
     "language": "en"
   },
@@ -79,8 +79,8 @@
       "id": "b000008",
       "kind": "table",
       "start_line": 8,
-      "end_line": 23,
-      "raw": "| Document | Agent JSON |\n| --- | --- |\n| [`AGENT.md`](../AGENT.md) | [JSON](entrypoints/AGENT.agent.json) |\n| [`README.md`](../README.md) | [JSON](entrypoints/README.agent.json) |\n| [`docs/Architecture.md`](Architecture.md) | [JSON](Architecture.agent.json) |\n| [`docs/IPADOS.md`](IPADOS.md) | [JSON](IPADOS.agent.json) |\n| [`docs/Interfaces.md`](Interfaces.md) | [JSON](Interfaces.agent.json) |\n| [`docs/LoadBalancer.md`](LoadBalancer.md) | [JSON](LoadBalancer.agent.json) |\n| [`docs/Peers.md`](Peers.md) | [JSON](Peers.agent.json) |\n| [`docs/Realtime.md`](Realtime.md) | [JSON](Realtime.agent.json) |\n| [`docs/Verification.md`](Verification.md) | [JSON](Verification.agent.json) |\n| [`docs/WebSocket.md`](WebSocket.md) | [JSON](WebSocket.agent.json) |\n| [`docs/WindowsAddress.md`](WindowsAddress.md) | [JSON](WindowsAddress.agent.json) |\n| [`docs/documentation-structure.md`](documentation-structure.md) | [JSON](documentation-structure.agent.json) |\n| [`docs/system-trust.md`](system-trust.md) | [JSON](system-trust.agent.json) |\n| [`example/README.md`](../example/README.md) | [JSON](mirrors/example/README.agent.json) |\n",
+      "end_line": 24,
+      "raw": "| Document | Agent JSON |\n| --- | --- |\n| [`AGENT.md`](../AGENT.md) | [JSON](entrypoints/AGENT.agent.json) |\n| [`README.md`](../README.md) | [JSON](entrypoints/README.agent.json) |\n| [`docs/Architecture.md`](Architecture.md) | [JSON](Architecture.agent.json) |\n| [`docs/IPADOS.md`](IPADOS.md) | [JSON](IPADOS.agent.json) |\n| [`docs/Interfaces.md`](Interfaces.md) | [JSON](Interfaces.agent.json) |\n| [`docs/LoadBalancer.md`](LoadBalancer.md) | [JSON](LoadBalancer.agent.json) |\n| [`docs/Peers.md`](Peers.md) | [JSON](Peers.agent.json) |\n| [`docs/Realtime.md`](Realtime.md) | [JSON](Realtime.agent.json) |\n| [`docs/SourceLayout.md`](SourceLayout.md) | [JSON](SourceLayout.agent.json) |\n| [`docs/Verification.md`](Verification.md) | [JSON](Verification.agent.json) |\n| [`docs/WebSocket.md`](WebSocket.md) | [JSON](WebSocket.agent.json) |\n| [`docs/WindowsAddress.md`](WindowsAddress.md) | [JSON](WindowsAddress.agent.json) |\n| [`docs/documentation-structure.md`](documentation-structure.md) | [JSON](documentation-structure.agent.json) |\n| [`docs/system-trust.md`](system-trust.md) | [JSON](system-trust.agent.json) |\n| [`example/README.md`](../example/README.md) | [JSON](mirrors/example/README.agent.json) |\n",
       "columns": [
         "Document",
         "Agent JSON"
@@ -119,6 +119,10 @@
           "[JSON](Realtime.agent.json)"
         ],
         [
+          "[`docs/SourceLayout.md`](SourceLayout.md)",
+          "[JSON](SourceLayout.agent.json)"
+        ],
+        [
           "[`docs/Verification.md`](Verification.md)",
           "[JSON](Verification.agent.json)"
         ],
@@ -147,8 +151,8 @@
     {
       "id": "b000009",
       "kind": "html",
-      "start_line": 24,
-      "end_line": 24,
+      "start_line": 25,
+      "end_line": 25,
       "raw": "<!-- workspace-docs:document-map:end -->\n"
     }
   ],
@@ -288,87 +292,101 @@
       },
       {
         "block_id": "b000008",
+        "label": "`docs/SourceLayout.md`",
+        "target": "SourceLayout.md",
+        "kind": "relative",
+        "line": 18
+      },
+      {
+        "block_id": "b000008",
+        "label": "JSON",
+        "target": "SourceLayout.agent.json",
+        "kind": "relative",
+        "line": 18
+      },
+      {
+        "block_id": "b000008",
         "label": "`docs/Verification.md`",
         "target": "Verification.md",
         "kind": "relative",
-        "line": 18
+        "line": 19
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "Verification.agent.json",
         "kind": "relative",
-        "line": 18
+        "line": 19
       },
       {
         "block_id": "b000008",
         "label": "`docs/WebSocket.md`",
         "target": "WebSocket.md",
         "kind": "relative",
-        "line": 19
+        "line": 20
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "WebSocket.agent.json",
         "kind": "relative",
-        "line": 19
+        "line": 20
       },
       {
         "block_id": "b000008",
         "label": "`docs/WindowsAddress.md`",
         "target": "WindowsAddress.md",
         "kind": "relative",
-        "line": 20
+        "line": 21
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "WindowsAddress.agent.json",
         "kind": "relative",
-        "line": 20
+        "line": 21
       },
       {
         "block_id": "b000008",
         "label": "`docs/documentation-structure.md`",
         "target": "documentation-structure.md",
         "kind": "relative",
-        "line": 21
+        "line": 22
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "documentation-structure.agent.json",
         "kind": "relative",
-        "line": 21
+        "line": 22
       },
       {
         "block_id": "b000008",
         "label": "`docs/system-trust.md`",
         "target": "system-trust.md",
         "kind": "relative",
-        "line": 22
+        "line": 23
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "system-trust.agent.json",
         "kind": "relative",
-        "line": 22
+        "line": 23
       },
       {
         "block_id": "b000008",
         "label": "`example/README.md`",
         "target": "../example/README.md",
         "kind": "relative",
-        "line": 23
+        "line": 24
       },
       {
         "block_id": "b000008",
         "label": "JSON",
         "target": "mirrors/example/README.agent.json",
         "kind": "relative",
-        "line": 23
+        "line": 24
       }
     ],
     "tables": [
@@ -410,6 +428,10 @@
           [
             "[`docs/Realtime.md`](Realtime.md)",
             "[JSON](Realtime.agent.json)"
+          ],
+          [
+            "[`docs/SourceLayout.md`](SourceLayout.md)",
+            "[JSON](SourceLayout.agent.json)"
           ],
           [
             "[`docs/Verification.md`](Verification.md)",

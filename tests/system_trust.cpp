@@ -1,5 +1,5 @@
 #include <iiNetwork/Tls.h>
-#include <iiNetwork/SystemTrustInternal.h>
+#include "../src/Security/SystemTrustInternal.h"
 #include <cstdlib>
 #include <iostream>
 #ifdef __APPLE__

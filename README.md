@@ -198,7 +198,7 @@ backpressure, unsupported extensions and the actual loopback integration test.
 
 ## Source header layout
 
-Public headers and implementations live together in `src/iiNetwork/`.
+Public headers and implementations live together under `src/`, grouped by responsibility; see [source layout](docs/SourceLayout.md).
 There is no separate authored `include/` tree. Existing public `#include` names
 and exported CMake targets are unchanged; installation still places only public
 headers in the package include directory. Generated export headers belong to

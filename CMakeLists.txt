@@ -19,16 +19,45 @@ if(APPLE)
     include(cmake/AppleCurlIncludes.cmake)
     iinetwork_normalize_apple_curl(CURL::libcurl "${CMAKE_OSX_SYSROOT}")
 endif()
-add_library(iiNetwork STATIC src/iiNetwork/Network.cpp src/iiNetwork/Wire.cpp src/iiNetwork/Layers.cpp src/iiNetwork/Session.cpp
-    src/iiNetwork/Presentation.cpp src/iiNetwork/Application.cpp src/iiNetwork/Relay.cpp src/iiNetwork/Stack.cpp src/iiNetwork/Server.cpp
-    src/iiNetwork/Address.cpp src/iiNetwork/ByteStream.cpp src/iiNetwork/Transport.cpp src/iiNetwork/Local.cpp src/iiNetwork/Security.cpp src/iiNetwork/Tls.cpp src/iiNetwork/Headers.cpp src/iiNetwork/Peer.cpp)
+set(_network_public_headers
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Application/Realtime.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Session/WebSocket.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Transport/Address.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Application/Application.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Transport/ByteStream.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Error.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Presentation/Headers.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Presentation/Http.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Layers.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Transport/Local.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Network.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Application/Peer.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Presentation/Presentation.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Application/Relay.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Security/Security.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Application/Server.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Session/Session.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Application/Stack.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Security/Tls.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Transport/Transport.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Presentation/Wire.h"
+)
+foreach(_header IN LISTS _network_public_headers)
+    get_filename_component(_name "${_header}" NAME)
+    file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/iiNetwork/${_name}"
+        CONTENT "#pragma once\n#include \"${_header}\"\n")
+endforeach()
+add_library(iiNetwork STATIC src/Core/Network.cpp src/Presentation/Wire.cpp src/Core/Layers.cpp src/Session/Session.cpp
+    src/Presentation/Presentation.cpp src/Application/Application.cpp src/Application/Relay.cpp src/Application/Stack.cpp src/Application/Server.cpp
+    src/Transport/Address.cpp src/Transport/ByteStream.cpp src/Transport/Transport.cpp src/Transport/Local.cpp src/Security/Security.cpp src/Security/Tls.cpp src/Presentation/Headers.cpp src/Application/Peer.cpp)
 add_library(iiNetwork::iiNetwork ALIAS iiNetwork)
-target_sources(iiNetwork PRIVATE src/iiNetwork/WebSocket.cpp)
-target_sources(iiNetwork PRIVATE src/iiNetwork/SystemTrust.cpp)
-target_sources(iiNetwork PRIVATE src/iiNetwork/Realtime.cpp)
+target_sources(iiNetwork PRIVATE src/Session/WebSocket.cpp)
+target_sources(iiNetwork PRIVATE src/Security/SystemTrust.cpp)
+target_sources(iiNetwork PRIVATE src/Application/Realtime.cpp)
 target_compile_features(iiNetwork PUBLIC cxx_std_23)
-target_include_directories(iiNetwork PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_include_directories(iiNetwork PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE src/Core src/Transport src/Security src/Session src/Presentation src/Application)
 target_link_libraries(iiNetwork PUBLIC iiSDKCore::Runtime iiJson::iiJson PRIVATE CURL::libcurl OpenSSL::SSL OpenSSL::Crypto)
 set_target_properties(iiNetwork PROPERTIES AUTOMOC OFF AUTORCC OFF AUTOUIC OFF
     CXX_EXTENSIONS OFF POSITION_INDEPENDENT_CODE ON)
@@ -39,6 +68,8 @@ elseif(APPLE)
     target_link_libraries(iiNetwork PRIVATE "-framework Security" "-framework CoreFoundation")
 endif()
 if(IINETWORK_BUILD_TESTS)
+    add_test(NAME iiNetwork.SourceLayout COMMAND ${CMAKE_COMMAND}
+        "-DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}" -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/source_layout.cmake")
     add_executable(iiNetworkTransportAllocation tests/transport_allocation.cpp)
     target_link_libraries(iiNetworkTransportAllocation PRIVATE iiNetwork::iiNetwork)
     foreach(_case IN ITEMS shared view)
@@ -58,7 +89,6 @@ if(IINETWORK_BUILD_TESTS)
     endforeach()
     add_executable(iiNetworkSystemTrust tests/system_trust.cpp)
     target_link_libraries(iiNetworkSystemTrust PRIVATE iiNetwork::iiNetwork OpenSSL::SSL OpenSSL::Crypto)
-    target_include_directories(iiNetworkSystemTrust PRIVATE src)
     add_test(NAME iiNetwork.system_trust COMMAND iiNetworkSystemTrust)
     find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
     add_executable(iiNetworkRealtimeProcess tests/realtime_process.cpp)
@@ -136,28 +166,7 @@ if(IINETWORK_BUILD_EXAMPLES)
 endif()
 install(TARGETS iiNetwork EXPORT iiNetworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES cmake/AppleCurlIncludes.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiNetwork)
-install(FILES
-    src/iiNetwork/Realtime.h
-    src/iiNetwork/WebSocket.h
-    src/iiNetwork/Address.h
-    src/iiNetwork/Application.h
-    src/iiNetwork/ByteStream.h
-    src/iiNetwork/Error.h
-    src/iiNetwork/Headers.h
-    src/iiNetwork/Http.h
-    src/iiNetwork/Layers.h
-    src/iiNetwork/Local.h
-    src/iiNetwork/Network.h
-    src/iiNetwork/Peer.h
-    src/iiNetwork/Presentation.h
-    src/iiNetwork/Relay.h
-    src/iiNetwork/Security.h
-    src/iiNetwork/Server.h
-    src/iiNetwork/Session.h
-    src/iiNetwork/Stack.h
-    src/iiNetwork/Tls.h
-    src/iiNetwork/Transport.h
-    src/iiNetwork/Wire.h
+install(FILES ${_network_public_headers}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iiNetwork)
 install(EXPORT iiNetworkTargets NAMESPACE iiNetwork:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiNetwork)
 configure_package_config_file(cmake/iiNetworkConfig.cmake.in

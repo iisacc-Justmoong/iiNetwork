@@ -1,0 +1,93 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:d2fbc053ddb772380914463fa30a93320b050ac1fd6861640b51d3a6d05f1cb7",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/SourceLayout.md",
+    "sha256": "406ec90d37f35811d7ef26ddc651876a4d176b24e8c54c6eeb8ff8874281dd3c",
+    "bytes": 613,
+    "line_count": 5,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "네트워크 소스 책임 분류",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 네트워크 소스 책임 분류\n",
+      "level": 1,
+      "title": "네트워크 소스 책임 분류"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "공개 헤더와 구현은 `src/` 아래에서 핵심 계약(`Core`), 전송(`Transport`), 보안(`Security`), 세션(`Session`), 표현(`Presentation`), 애플리케이션·오케스트레이션(`Application`)으로 나눈다. 내부 구현 헤더는 해당 책임과 함께 둔다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "생성된 빌드 forwarding 헤더와 설치 헤더는 기존 `<iiNetwork/...>` 경로를 유지한다. `tests/boundary.py`는 Qt 금지와 하위 계층의 의존 방향을, `tests/source_layout.cmake`는 구조를 검사한다. 로드 밸런서는 별도 소비자 예제로 유지한다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "네트워크 소스 책임 분류",
+      "anchor": "네트워크-소스-책임-분류",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000005",
+        "line": 5,
+        "text": "생성된 빌드 forwarding 헤더와 설치 헤더는 기존 `<iiNetwork/...>` 경로를 유지한다. `tests/boundary.py`는 Qt 금지와 하위 계층의 의존 방향을, `tests/source_layout.cmake`는 구조를 검사한다. 로드 밸런서는 별도 소비자 예제로 유지한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

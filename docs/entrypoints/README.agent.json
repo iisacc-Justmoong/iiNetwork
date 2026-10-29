@@ -10,8 +10,8 @@
   },
   "source": {
     "path": "README.md",
-    "sha256": "ed57c0154199b77d77db4361bd6a618404bb6f1d58d8f2f16351aedfc211d924",
-    "bytes": 13452,
+    "sha256": "439643396c0207b17218e56e13dafefb00ee65fb6dbe7cc464ca0fe8c3046f5a",
+    "bytes": 13515,
     "line_count": 218,
     "encoding": "utf-8",
     "language": "en"
@@ -671,7 +671,7 @@
       "kind": "paragraph",
       "start_line": 201,
       "end_line": 205,
-      "raw": "Public headers and implementations live together in `src/iiNetwork/`.\nThere is no separate authored `include/` tree. Existing public `#include` names\nand exported CMake targets are unchanged; installation still places only public\nheaders in the package include directory. Generated export headers belong to\n`build/`, not to the authored source tree.\n"
+      "raw": "Public headers and implementations live together under `src/`, grouped by responsibility; see [source layout](docs/SourceLayout.md).\nThere is no separate authored `include/` tree. Existing public `#include` names\nand exported CMake targets are unchanged; installation still places only public\nheaders in the package include directory. Generated export headers belong to\n`build/`, not to the authored source tree.\n"
     },
     {
       "id": "b000074",
@@ -958,6 +958,13 @@
         "target": "docs/WebSocket.md",
         "kind": "relative",
         "line": 196
+      },
+      {
+        "block_id": "b000073",
+        "label": "source layout",
+        "target": "docs/SourceLayout.md",
+        "kind": "relative",
+        "line": 201
       },
       {
         "block_id": "b000080",
