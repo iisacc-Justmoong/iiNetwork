@@ -6,6 +6,25 @@ This is the iiNetwork 0.4 C++23 communication contract. Include
 headers expose no Qt, libcurl or OpenSSL types. `Result<T>` carries a value or
 an `Error` with code, OSI responsibility layer and message.
 
+Socket readiness is delivered through a shared, blocking native readiness
+reactor and a bounded owner-loop notification. An idle socket schedules no
+periodic status check; close unregisters the socket before releasing its native
+handle. Actual connection, idle and graceful-close deadlines remain timers.
+HTTP uses libcurl's socket and one-shot timer callbacks, and progress callbacks
+are emitted when the corresponding transfer counts change.
+
+공유 준비 감시 워커가 복구할 수 없는 오류로 중단되면 기존 등록에 오류 준비
+이벤트를 전달하고 새 등록을 거부한다. TCP·UDP와 수신 서버는 오류를 자신의
+콜백과 상태로 전달한 다음 네이티브 핸들을 정리한다. 취소되어 이미 제거된 감시는
+통지하지 않는다. 이 오류를 유휴 상태나 정상적인 원격 종료로 해석하지 않는다.
+리스너는 `Listener::on_failure` 또는 `LocalServer::on_failure`로 오류를 구독하며,
+UDP는 기존 `failed` 콜백을 사용한다. 콜백은 소유 루프에서 호출된다.
+
+Windows 소비자가 운영체제 헤더를 먼저 포함해 `min`·`max` 매크로가 활성화되어도
+바이트 스트림의 기본 한도는 정상적으로 선언되도록 표준 극한값 호출을 보호한다.
+소비자의 매크로 설정은 변경하지 않는다. Windows 테스트 빌드에 이 포함 순서의
+컴파일 전용 검사를 추가했으며, 현재 변경의 Windows 빌드 결과는 아직 없다.
+
 The application relationship model is an equal peer connection. `Peer` combines
 listening/dialing and publishes explicit operations; `PeerConnection` supports
 mutual requests, replies and events over one TCP/TLS/local stream. Transport
@@ -15,9 +34,16 @@ setup roles do not determine application authority. See [Equal peers](Peers.md).
 
 Network operations, callback assignment and destruction have owner-thread
 affinity. The supplied iiSDKCore `EventLoop` must outlive its objects. It runs
-readiness/transfer work in bounded 5 ms timer slices. The caller pumps/runs the
-loop; the module creates no per-socket threads or nested blocking loops. This
-is polling integration, rather than a high-throughput completion-port backend.
+socket readiness through one shared native waiter and delivers callbacks to the
+owner loop. Registrations are one-shot while callbacks run and are rearmed
+afterwards; a socket does not own a dedicated thread. `Http` uses libcurl socket
+notifications and one-shot deadlines, while peer and TLS work is driven by
+stream events. The caller pumps/runs the loop and must also honor its next
+deadline. This is a readiness backend, not an I/O completion-port backend.
+Windows reports failed nonblocking connects through `WSAPoll` as of Windows 10
+version 2004; on older versions an undelivered failure can instead reach the
+configured connect deadline. Native Windows and Linux execution of this change
+has not been verified in the macOS test run.
 
 `Tcp`, `LocalSocket` and `TlsStream` implement `ByteStream`:
 
@@ -148,6 +174,10 @@ are not implemented. Windows/Linux source paths were not executed in this
 macOS verification.
 
 ## TLS and certificate policy
+
+TLS advances on transport connection, readable/written/drained notifications,
+explicit writes and the actual handshake or close deadline. An idle handshake
+does not perform recurring status checks.
 
 `TlsContext::client(options)` / `server(options)` creates a shared immutable
 context. `TlsOptions` supplies `TlsPolicy`, ALPN names, verification depth and

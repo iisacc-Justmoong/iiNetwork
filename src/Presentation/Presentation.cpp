@@ -67,7 +67,7 @@ Result<std::string> PresentationLayer::encode(const core::Value& value, Encoding
 {
     if (encoding != Encoding::json && encoding != Encoding::base64_json)
         return fail(layer, ErrorCode::unsupported, "Unknown presentation encoding");
-    auto result = ii::json::stringify(value, limits_);
+    auto result = wire::json_codec::stringify(value, limits_);
     if (!result) return fail(layer, ErrorCode::malformed, result.error().message);
     if (encoding == Encoding::base64_json) *result = wire::base64(*result);
     if (result->size() > limits_.output_bytes) return fail(layer, ErrorCode::too_large, "Encoded presentation limit exceeded");
@@ -84,7 +84,7 @@ Result<core::Value> PresentationLayer::decode(std::string_view bytes, Encoding e
         decoded = std::move(*result); bytes = decoded;
     }
     else if (encoding != Encoding::json) return fail(layer, ErrorCode::unsupported, "Unknown presentation encoding");
-    auto result = ii::json::parse(bytes, limits_);
+    auto result = wire::json_codec::parse(bytes, limits_);
     if (!result) return fail(layer, ErrorCode::malformed, result.error().message);
     return std::move(*result);
 }

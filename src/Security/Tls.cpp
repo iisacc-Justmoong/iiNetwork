@@ -153,7 +153,9 @@ Result<std::shared_ptr<TlsContext>> TlsContext::create(TlsRole role, TlsOptions 
 struct TlsStream::Impl : std::enable_shared_from_this<TlsStream::Impl>
 {
     runtime::EventLoop& loop; TlsStream* owner; std::shared_ptr<TlsContext> context;
-    TlsStreamOptions options; std::unique_ptr<ByteStream> stream; SSL* ssl = nullptr; runtime::TaskToken tick;
+    TlsStreamOptions options; std::unique_ptr<ByteStream> stream; SSL* ssl = nullptr;
+    runtime::TaskToken deadline_timer, continuation;
+    std::optional<runtime::Clock::time_point> scheduled_deadline;
     TlsState state = TlsState::idle; bool alive = true, pumping = false, closing = false, peer_notify = false, was_pending = false;
     std::string incoming, error, cipher_pending; std::deque<std::string> outgoing; std::size_t offset = 0, queued = 0;
     StreamStatistics statistics; std::optional<TlsConnectionInfo> info;
@@ -166,7 +168,8 @@ struct TlsStream::Impl : std::enable_shared_from_this<TlsStream::Impl>
     void stop(std::string message = {}, bool notify = true)
     {
         bool running = state != TlsState::closed && state != TlsState::failed && state != TlsState::idle;
-        tick.cancel(); error = std::move(message); state = error.empty() ? TlsState::closed : TlsState::failed;
+        deadline_timer.cancel(); continuation.cancel(); scheduled_deadline.reset();
+        error = std::move(message); state = error.empty() ? TlsState::closed : TlsState::failed;
         if (stream) { detach(*stream); stream->close(); }
         SSL_free(std::exchange(ssl, nullptr)); outgoing.clear(); queued = offset = 0; cipher_pending.clear(); closing = false;
         if (!alive || !notify || !running) return;
@@ -194,6 +197,39 @@ struct TlsStream::Impl : std::enable_shared_from_this<TlsStream::Impl>
         }
         return !BIO_ctrl_pending(output);
     }
+    bool refresh_deadline()
+    {
+        if (!alive || !ssl) return false;
+        auto next=runtime::Clock::time_point::max();
+        if (state==TlsState::handshaking) next=started+options.handshake_timeout;
+        else if (state==TlsState::closing) next=close_deadline;
+        if (scheduled_deadline && *scheduled_deadline==next && deadline_timer.pending()) return true;
+        deadline_timer.cancel(); scheduled_deadline.reset();
+        if (next==runtime::Clock::time_point::max()) return true;
+        auto weak=weak_from_this();
+        auto submitted=loop.at(next,[weak] {
+            if (auto keep=weak.lock()) {
+                keep->deadline_timer={}; keep->scheduled_deadline.reset();
+                keep->pump();
+                if (keep->alive && keep->ssl) (void)keep->refresh_deadline();
+            }
+        });
+        if (!submitted) { stop("Core TLS deadline admission failed"); return false; }
+        deadline_timer=submitted.token; scheduled_deadline=next; return true;
+    }
+    bool queue_pump()
+    {
+        if (continuation.pending()) return true;
+        auto weak=weak_from_this();
+        auto submitted=loop.post([weak] {
+            if (auto keep=weak.lock()) {
+                keep->continuation={}; keep->pump();
+                if (keep->alive && keep->ssl) (void)keep->refresh_deadline();
+            }
+        });
+        if (!submitted) { stop("Core TLS dispatch admission failed"); return false; }
+        continuation=submitted.token; return true;
+    }
     bool secured()
     {
         const bool verify = context->role() == TlsRole::client || context->p_->options.require_client_certificate;
@@ -219,6 +255,7 @@ struct TlsStream::Impl : std::enable_shared_from_this<TlsStream::Impl>
              CRYPTO_memcmp(pin->data(), value.peer_certificate->certificate_sha256.data(), pin->size())))
         { stop("TLS trusted certificate mismatch or expiry"); return false; }
         info = std::move(value); state = TlsState::secured;
+        if (!refresh_deadline()) return false;
         auto callback = owner->connected; if (callback) callback();
         return alive && ssl && state == TlsState::secured;
     }
@@ -276,7 +313,11 @@ struct TlsStream::Impl : std::enable_shared_from_this<TlsStream::Impl>
             ERR_clear_error(); int result = SSL_read_ex(ssl, bytes.data(), bytes.size(), &size); int code = result == 1 ? SSL_ERROR_NONE : SSL_get_error(ssl, result);
             if (result != 1)
             {
-                if (code == SSL_ERROR_ZERO_RETURN) { peer_notify = true; closing = true; state = TlsState::closing; close_deadline = runtime::Clock::now() + 1s; break; }
+                if (code == SSL_ERROR_ZERO_RETURN) {
+                    peer_notify = true; closing = true; state = TlsState::closing; close_deadline = runtime::Clock::now() + 1s;
+                    if (!refresh_deadline()) return;
+                    break;
+                }
                 if (code != SSL_ERROR_WANT_READ && code != SSL_ERROR_WANT_WRITE) { stop(failure("TLS read failed").error().message); return; }
                 break;
             }
@@ -325,14 +366,20 @@ Result<void> TlsStream::prepare(std::unique_ptr<ByteStream> stream, std::string 
     else SSL_set_accept_state(p.ssl);
     p.stream->receive_limit(p.options.cipher_bytes); p.stream->send_limit(p.options.cipher_bytes);
     auto weak = std::weak_ptr<Impl>(p_);
-    p.stream->readable = [weak] { if (auto keep = weak.lock()) keep->pump(); };
-    p.stream->connected = [weak] { if (auto keep = weak.lock()) { keep->state = TlsState::handshaking; keep->started = runtime::Clock::now(); } };
+    p.stream->readable = [weak] { if (auto keep = weak.lock()) { keep->pump(); if (keep->alive && keep->ssl) (void)keep->refresh_deadline(); } };
+    p.stream->connected = [weak] { if (auto keep = weak.lock()) {
+        keep->state = TlsState::handshaking; keep->started = runtime::Clock::now();
+        if (keep->refresh_deadline()) (void)keep->queue_pump();
+    } };
+    p.stream->bytes_written = [weak](std::size_t) { if (auto keep=weak.lock()) (void)keep->queue_pump(); };
+    p.stream->drained = [weak] { if (auto keep=weak.lock()) (void)keep->queue_pump(); };
     p.stream->failed = [weak](std::string error) { if (auto keep = weak.lock()) keep->stop(std::move(error)); };
     p.stream->disconnected = [weak]
     { if (auto keep = weak.lock()) keep->stop(keep->peer_notify ? "" : "TLS transport closed without close_notify"); };
     p.state = connecting ? TlsState::connecting : TlsState::handshaking; p.started = runtime::Clock::now();
-    p.tick = p.loop.every(5ms, [weak] { if (auto keep = weak.lock()) keep->pump(); }).token;
-    if (!p.tick.pending()) { p.stop("Core TLS dispatch admission failed", false); return failure(p.error, ErrorCode::unavailable); }
+    if (!p.refresh_deadline() || !p.queue_pump()) {
+        p.stop("Core TLS dispatch admission failed", false); return failure(p.error, ErrorCode::unavailable);
+    }
     return {};
 }
 Result<void> TlsStream::connect(IpEndpoint endpoint, std::string name, TcpOptions options)
@@ -348,7 +395,8 @@ bool TlsStream::write(std::string_view bytes)
     auto& p = *p_;
     if (p.state != TlsState::secured || p.queued > p.options.pending_bytes || bytes.size() > p.options.pending_bytes - p.queued || p.outgoing.size() >= 1024) return false;
     if (bytes.empty()) return true;
-    p.outgoing.emplace_back(bytes); p.queued += bytes.size(); p.was_pending = true; return true;
+    p.outgoing.emplace_back(bytes); p.queued += bytes.size(); p.was_pending = true;
+    return p.queue_pump();
 }
 std::string TlsStream::read() { return std::exchange(p_->incoming, {}); }
 std::string TlsStream::read_some(std::size_t maximum)
@@ -361,7 +409,8 @@ void TlsStream::send_limit(std::size_t bytes) { p_->options.pending_bytes = std:
 void TlsStream::close(bool flush)
 {
     if (flush && p_->state == TlsState::secured)
-    { p_->closing = true; p_->state = TlsState::closing; p_->close_deadline = runtime::Clock::now() + 1s; return; }
+    { p_->closing = true; p_->state = TlsState::closing; p_->close_deadline = runtime::Clock::now() + 1s;
+      if (p_->refresh_deadline()) (void)p_->queue_pump(); return; }
     p_->stop({}, false);
 }
 bool TlsStream::is_connected() const { return p_->state == TlsState::secured || p_->state == TlsState::closing; }
@@ -389,6 +438,12 @@ struct TlsListener::Impl
 TlsListener::TlsListener(runtime::EventLoop& loop, std::shared_ptr<TlsContext> context, TlsStreamOptions options)
     : p_(std::make_shared<Impl>(loop, this, std::move(context), options))
 {
+    p_->listener.on_failure([weak = std::weak_ptr<Impl>(p_)](std::string message) {
+        if (auto keep = weak.lock(); keep && keep->alive) {
+            auto callback = keep->owner->failed;
+            if (callback) callback(std::move(message));
+        }
+    });
     p_->listener.accepted = [weak = std::weak_ptr<Impl>(p_)](std::unique_ptr<Tcp> stream)
     {
         auto keep = weak.lock(); if (!keep || !keep->alive) return;

@@ -1,0 +1,156 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:97189164c9885c0ac44edb298f6ea81816cc50d4eafc84fcc04dc8288cb4f032",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/ComputeMigration.md",
+    "sha256": "90422761641c4df4ad6b019dfb4e6904e02a83b7a1b10d32580fe02b67a66ebd",
+    "bytes": 2875,
+    "line_count": 35,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "피어 간 컴퓨팅 체크포인트 전달",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 피어 간 컴퓨팅 체크포인트 전달\n",
+      "level": 1,
+      "title": "피어 간 컴퓨팅 체크포인트 전달"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 5,
+      "raw": "`example/ComputeMigration`은 iiSDKCore의 협력적 `MigratingWork`와 iiNetwork\n`Peer`를 애플리케이션에서 조합하는 선택적 어댑터이다. 두 SDK의 기본 라이브러리는\n이 예제의 오케스트레이션 계층을 참조하지 않는다.\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 15,
+      "raw": "송신 측은 이미 일시 중지·추출한 체크포인트와 호출자가 정한 고유 전송 ID를\n`RemoteTransfer`에 넘긴다. 수신 측은 명시적으로 등록한 같은 작업 종류·버전만\n재개하며, 애플리케이션이 제공한 승인 함수가 허용한 피어의 요청만 처리한다.\n같은 ID와 같은 내용의 재전송에는 기존 접수 결과를 돌려주고, 같은 ID에 다른 내용이\n오면 거절한다. `work.result`는 요청 시 상태와 완료 결과를 조회한다. 피어 양쪽에\n같은 어댑터를 설치하면 양방향으로 작업을 넘길 수 있다.\n작업을 접수한 후 응답 전송이 실패하거나 예외가 발생해도 수신 기록은 유지한다.\n완료된 수신 기록은 `work.release` 또는 로컬 `release`로 제거할 수 있다. 제거하면\n그 ID의 메모리 내 중복 방지 기록도 없어지므로 상위 시스템이 재사용을 차단해야 한다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 16,
+      "end_line": 16,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 17,
+      "end_line": 22,
+      "raw": "체크포인트와 접수 기록에는 개수·바이트 한도가 있다. 전송은 하나의 Peer 요청으로\n이뤄지며 설정한 프레임 크기 이내여야 한다. 전송 계층은 프레임을 기록한 뒤에도\n오류를 반환할 수 있으므로, 요청을 시도한 뒤 확인 응답이 없으면 원격 실행 여부는\n불명이다. 송신 측은 이 상태에서 로컬로 되돌리는 것을\n허용하지 않고 같은 ID로 재시도할 수 있다. 수신 측 중복 기록은 프로세스 메모리에만\n있으며 삭제·재시작을 견디는 내구성 있는 펜싱은 애플리케이션이 제공해야 한다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 23,
+      "end_line": 23,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 24,
+      "end_line": 28,
+      "raw": "실제 배포는 상호 인증 TLS와 피어 권한 정책을 사용해야 한다. 테스트의 루프백 TCP는\n전송 기능의 검사이며 인증된 원격 장치를 검증한 것은 아니다. 실행 중인 임의의\n스택이나 이미 제출된 GPU 명령을 복제하지 않으며, 단계가 반환한 상태와 명시적으로\n등록된 구현을 전달한다. 외부 부작용의 정확히 한 번 실행도 이 예제만으로 보장하지\n않는다.\n"
+    },
+    {
+      "id": "b000010",
+      "kind": "blank",
+      "start_line": 29,
+      "end_line": 29,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 30,
+      "end_line": 35,
+      "raw": "설치된 iiSDKCore·iiNetwork·iiGPU 패키지를 찾을 수 있는 환경에서는 원본 또는\n설치된 `example/ComputeMigration`을 CMake의 소스 경로로 지정하고 빌드 경로를\n`build/compute-migration`으로 지정한 뒤 CTest를 실행한다. 네트워크 어댑터 자체는\niiSDKCore와 iiNetwork만 필요하며, iiGPU가 있는 경우 CPU→GPU 작업 전이 검사도\n추가된다. 네트워크 어댑터는 C++ 예제로 제공되며 Python 원격 전이 API는 제공하지\n않는다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "피어 간 컴퓨팅 체크포인트 전달",
+      "anchor": "피어-간-컴퓨팅-체크포인트-전달",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [
+      {
+        "block_id": "b000003",
+        "line": 5,
+        "text": "이 예제의 오케스트레이션 계층을 참조하지 않는다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000005",
+        "line": 15,
+        "text": "그 ID의 메모리 내 중복 방지 기록도 없어지므로 상위 시스템이 재사용을 차단해야 한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000007",
+        "line": 22,
+        "text": "있으며 삭제·재시작을 견디는 내구성 있는 펜싱은 애플리케이션이 제공해야 한다.",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      },
+      {
+        "block_id": "b000009",
+        "line": 24,
+        "text": "실제 배포는 상호 인증 TLS와 피어 권한 정책을 사용해야 한다. 테스트의 루프백 TCP는",
+        "basis": "lexical_match",
+        "context": "paragraph"
+      }
+    ],
+    "commands": [],
+    "links": [],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

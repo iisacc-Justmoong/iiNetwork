@@ -10,8 +10,8 @@
   },
   "source": {
     "path": "docs/Realtime.md",
-    "sha256": "3eaf967480f5f471c5d5316297a08095f72901fdb4ba24d1eeeb1cdd1fd4fb95",
-    "bytes": 17280,
+    "sha256": "6f7c1e8fbad25284d2d0ba5b1a8d94cc53f7485d7e3ee60acb11fc6f0172d3b6",
+    "bytes": 17571,
     "line_count": 160,
     "encoding": "utf-8",
     "language": "ko"
@@ -382,7 +382,7 @@
       "kind": "paragraph",
       "start_line": 89,
       "end_line": 89,
-      "raw": "`RealtimeLimits`로 조절한다. 운영체제의 기존 UDP 수신 폴링은 5 ms이며, 더 짧은 데이터 tick을 지정해도 실제 수신 지연이나 하드 실시간 기한을 보장하지 않는다. 한도는 초기화 때 검증하고 활성 연결의 `connect`/`listen` 재호출은 기존 연결을 교체하지 않는다.\n"
+      "raw": "`RealtimeLimits`로 조절한다. UDP 수신은 운영체제 소켓 준비 알림을 사용한다. 미사용 입장권의 만료, 입장 재시도, 활성 연결의 하트비트와 유휴 만료는 실제 기한에만 단발 타이머를 예약한다. 전송 대기 데이터가 남으면 `tick_interval`로 다음 전송 배치를 예약하고, 대기 데이터와 참가자가 없는 서버는 주기적으로 깨어나지 않는다. 이 방식은 하드 실시간 기한을 보장하지 않는다. 한도는 초기화 때 검증하고 활성 연결의 `connect`/`listen` 재호출은 기존 연결을 교체하지 않는다.\n"
     },
     {
       "id": "b000038",
@@ -980,7 +980,7 @@
       {
         "block_id": "b000037",
         "line": 89,
-        "text": "`RealtimeLimits`로 조절한다. 운영체제의 기존 UDP 수신 폴링은 5 ms이며, 더 짧은 데이터 tick을 지정해도 실제 수신 지연이나 하드 실시간 기한을 보장하지 않는다. 한도는 초기화 때 검증하고 활성 연결의 `connect`/`listen` 재호출은 기존 연결을 교체하지 않는다.",
+        "text": "`RealtimeLimits`로 조절한다. UDP 수신은 운영체제 소켓 준비 알림을 사용한다. 미사용 입장권의 만료, 입장 재시도, 활성 연결의 하트비트와 유휴 만료는 실제 기한에만 단발 타이머를 예약한다. 전송 대기 데이터가 남으면 `tick_interval`로 다음 전송 배치를 예약하고, 대기 데이터와 참가자가 없는 서버는 주기적으로 깨어나지 않는다. 이 방식은 하드 실시간 기한을 보장하지 않는다. 한도는 초기화 때 검증하고 활성 연결의 `connect`/`listen` 재호출은 기존 연결을 교체하지 않는다.",
         "basis": "lexical_match",
         "context": "paragraph"
       },

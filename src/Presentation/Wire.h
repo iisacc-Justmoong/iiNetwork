@@ -1,5 +1,6 @@
 #pragma once
 #include <iiJson/Json.h>
+#include <iiSDKCore/Core/Value/Value.h>
 #include <algorithm>
 #include <cmath>
 #include <cctype>
@@ -113,18 +114,24 @@ inline bool canonical_uuid(std::string_view s)
     return true;
 }
 std::string uuid();
+// Keep the network API's Core values independent of the JSON codec's value
+// representation. The conversion is confined to the serialization boundary.
+namespace json_codec {
+ii::json::Result<std::string> stringify(const Value&, ii::json::Limits limits = {});
+ii::json::Result<Value> parse(std::string_view, ii::json::Limits limits = {});
+}
 inline std::string json(const Value& v, std::size_t limit = 8 * 1024 * 1024)
 {
     ii::json::Limits limits;
     limits.output_bytes = limit;
-    auto result = ii::json::stringify(v, limits);
+    auto result = json_codec::stringify(v, limits);
     return result ? std::move(*result) : std::string{};
 }
 inline std::optional<Value> parse_json(std::string_view s, std::size_t limit = 8 * 1024 * 1024)
 {
     ii::json::Limits limits;
     limits.input_bytes = limit;
-    auto result = ii::json::parse(s, limits);
+    auto result = json_codec::parse(s, limits);
     if (!result)
         return {};
     return std::move(*result);

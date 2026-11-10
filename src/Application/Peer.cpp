@@ -1,5 +1,6 @@
 #include <iiNetwork/Peer.h>
 #include <iiJson/Json.h>
+#include <iiNetwork/Wire.h>
 #include "ProtocolInternal.h"
 #include <algorithm>
 #include <array>
@@ -95,7 +96,8 @@ struct PeerConnection::Impl : std::enable_shared_from_this<PeerConnection::Impl>
     std::size_t expected_bytes = 0, remote_frame_bytes = 0;
     std::uint64_t next_request = 1, last_incoming = 0;
     bool alive = true, callbacks_enabled = true, pumping = false, hello_sent = false;
-    runtime::TaskToken tick;
+    runtime::TaskToken deadline_timer, continuation;
+    std::optional<Clock::time_point> scheduled_deadline;
     Clock::time_point created = Clock::now();
     struct Pending { Completion complete; Clock::time_point expires; };
     struct Incoming { std::shared_ptr<PeerReply::State> reply; Clock::time_point expires; };
@@ -115,7 +117,8 @@ struct PeerConnection::Impl : std::enable_shared_from_this<PeerConnection::Impl>
         auto retained = self.lock();
         state = cause.code == ErrorCode::closed ? PeerState::closed : PeerState::failed;
         if (state == PeerState::failed) last_error = cause;
-        tick.cancel(); detach(*stream); stream->close(); body.clear(); expected_bytes = 0;
+        deadline_timer.cancel(); continuation.cancel(); scheduled_deadline.reset();
+        detach(*stream); stream->close(); body.clear(); expected_bytes = 0;
         auto pending = std::exchange(outgoing, {});
         for (auto& [id, call] : incoming) { call.reply->pending = false; call.reply->cancelled = true; }
         incoming.clear();
@@ -134,7 +137,7 @@ struct PeerConnection::Impl : std::enable_shared_from_this<PeerConnection::Impl>
         if (terminal() || !stream->is_connected()) return reject(ErrorCode::closed, "Peer transport is closed");
         auto maximum = remote_frame_bytes ? std::min(limits.frame_bytes, remote_frame_bytes) : limits.frame_bytes;
         ii::json::Limits bounds; bounds.input_bytes = bounds.output_bytes = bounds.string_bytes = maximum; bounds.items = 65536; bounds.depth = 32;
-        auto encoded = ii::json::stringify(message, bounds);
+        auto encoded = wire::json_codec::stringify(message, bounds);
         if (!encoded) return reject(encoded.error().code == ii::json::ErrorCode::limit_exceeded ? ErrorCode::too_large : ErrorCode::invalid_argument, encoded.error().message);
         std::string frame; detail::put32(frame, static_cast<std::uint32_t>(encoded->size())); frame += *encoded;
         if (stream->pending_bytes() > limits.pending_bytes || frame.size() > limits.pending_bytes - stream->pending_bytes() || !stream->write(frame))
@@ -152,12 +155,54 @@ struct PeerConnection::Impl : std::enable_shared_from_this<PeerConnection::Impl>
     void required_error(std::uint64_t id, Error cause)
     { auto sent = send_error(id, std::move(cause)); if (!sent) stop(sent.error()); }
     void malformed(std::string message) { stop(peer_error(ErrorCode::malformed, std::move(message))); }
+    bool refresh_deadline()
+    {
+        if (!alive || terminal()) return false;
+        auto next=Clock::time_point::max();
+        if (state!=PeerState::ready) next=created+limits.handshake_timeout;
+        else {
+            for (const auto& [id,call]:incoming) { (void)id; next=std::min(next,call.expires); }
+            for (const auto& [id,call]:outgoing) { (void)id; next=std::min(next,call.expires); }
+        }
+        if (scheduled_deadline && *scheduled_deadline==next && deadline_timer.pending()) return true;
+        deadline_timer.cancel(); scheduled_deadline.reset();
+        if (next==Clock::time_point::max()) return true;
+        auto weak=weak_from_this();
+        auto submitted=loop.at(next,[weak] {
+            if (auto keep=weak.lock()) {
+                keep->deadline_timer={}; keep->scheduled_deadline.reset();
+                keep->pump();
+                if (keep->alive && !keep->terminal()) (void)keep->refresh_deadline();
+            }
+        });
+        if (!submitted) {
+            stop(peer_error(ErrorCode::unavailable,"Core peer deadline admission failed"));
+            return false;
+        }
+        deadline_timer=submitted.token; scheduled_deadline=next; return true;
+    }
+    bool queue_pump()
+    {
+        if (continuation.pending()) return true;
+        auto weak=weak_from_this();
+        auto submitted=loop.post([weak] {
+            if (auto keep=weak.lock()) {
+                keep->continuation={}; keep->pump();
+                if (keep->alive && !keep->terminal()) (void)keep->refresh_deadline();
+            }
+        });
+        if (!submitted) {
+            stop(peer_error(ErrorCode::unavailable,"Core peer dispatch admission failed"));
+            return false;
+        }
+        continuation=submitted.token; return true;
+    }
     bool start()
     {
         stream->receive_limit(limits.frame_bytes * 2 + 8); stream->send_limit(limits.pending_bytes);
         auto weak = weak_from_this();
-        stream->connected = [weak] { if (auto keep = weak.lock()) keep->pump(); };
-        stream->readable = [weak] { if (auto keep = weak.lock()) keep->pump(); };
+        stream->connected = [weak] { if (auto keep = weak.lock()) { keep->pump(); (void)keep->refresh_deadline(); } };
+        stream->readable = [weak] { if (auto keep = weak.lock()) { keep->pump(); (void)keep->refresh_deadline(); } };
         stream->failed = [weak](std::string message) { if (auto keep = weak.lock()) keep->stop(peer_error(ErrorCode::io_error, std::move(message), Layer::transport)); };
         stream->disconnected = [weak]
         {
@@ -169,8 +214,7 @@ struct PeerConnection::Impl : std::enable_shared_from_this<PeerConnection::Impl>
             }
         };
         stream->read_closed = stream->disconnected; // Peer operations require both directions, even on half-close-capable transports.
-        tick = loop.every(5ms, [weak] { if (auto keep = weak.lock()) keep->pump(); }).token;
-        return tick.pending();
+        return refresh_deadline() && queue_pump();
     }
     void establish(const Object& object)
     {
@@ -215,11 +259,12 @@ struct PeerConnection::Impl : std::enable_shared_from_this<PeerConnection::Impl>
             {
                 found->second.reply->pending = false; found->second.reply->cancelled = true; keep->incoming.erase(found);
                 keep->required_error(call_id, peer_error(ErrorCode::expired, "Peer operation deadline elapsed"));
+                if (keep->alive && !keep->terminal()) (void)keep->refresh_deadline();
                 return reject(ErrorCode::expired, "Peer reply exceeded its deadline");
             }
             auto sent = result ? keep->send(Value(Object{{"type", Value("result")}, {"id", Value(std::to_string(call_id))}, {"value", std::move(*result)}})) :
                 keep->send_error(call_id, std::move(result.error()));
-            if (sent) { found->second.reply->pending = false; keep->incoming.erase(found); }
+            if (sent) { found->second.reply->pending = false; keep->incoming.erase(found); (void)keep->refresh_deadline(); }
             return sent;
         };
         incoming.emplace(call_id, Incoming{token, expires});
@@ -319,11 +364,13 @@ struct PeerConnection::Impl : std::enable_shared_from_this<PeerConnection::Impl>
             body += stream->read_some(expected_bytes - body.size());
             if (body.size() != expected_bytes) break;
             ii::json::Limits bounds; bounds.input_bytes = bounds.output_bytes = bounds.string_bytes = limits.frame_bytes; bounds.items = 65536; bounds.depth = 32;
-            auto parsed = ii::json::parse(body, bounds); body.clear(); expected_bytes = 0;
+            auto parsed = wire::json_codec::parse(body, bounds); body.clear(); expected_bytes = 0;
             if (!parsed) { malformed("Invalid peer JSON: " + parsed.error().message); return; }
             dispatch(std::move(*parsed));
         }
         if (alive && state == PeerState::ready) deadlines();
+        if (alive && !terminal() && stream->available_bytes() >= (expected_bytes ? expected_bytes-body.size() : 4))
+            (void)queue_pump();
     }
 };
 PeerConnection::PeerConnection(std::shared_ptr<Impl> impl) : p_(std::move(impl)) { p_->owner = this; }
@@ -342,7 +389,9 @@ Result<std::uint64_t> PeerConnection::request(std::string operation, Value argum
     auto sent = p.send(Value(Object{{"type", Value("call")}, {"id", Value(std::to_string(id))}, {"operation", Value(std::move(operation))},
         {"arguments", std::move(arguments)}, {"timeout", Value(timeout.count())}}));
     if (!sent) return std::unexpected(sent.error());
-    ++p.next_request; p.outgoing.emplace(id, Impl::Pending{std::move(complete), Clock::now() + timeout}); return id;
+    ++p.next_request; p.outgoing.emplace(id, Impl::Pending{std::move(complete), Clock::now() + timeout});
+    if (!p.refresh_deadline()) return reject(ErrorCode::unavailable,"Core peer deadline admission failed");
+    return id;
 }
 Result<void> PeerConnection::notify(std::string topic, Value value)
 {
@@ -353,7 +402,9 @@ Result<void> PeerConnection::notify(std::string topic, Value value)
 bool PeerConnection::cancel(std::uint64_t id)
 {
     auto found = p_->outgoing.find(id); if (found == p_->outgoing.end()) return false;
-    p_->outgoing.erase(found); (void)p_->send(Value(Object{{"type", Value("cancel")}, {"id", Value(std::to_string(id))}})); return true;
+    p_->outgoing.erase(found); (void)p_->send(Value(Object{{"type", Value("cancel")}, {"id", Value(std::to_string(id))}}));
+    if (p_->alive && !p_->terminal()) (void)p_->refresh_deadline();
+    return true;
 }
 PeerState PeerConnection::state() const { return p_->state; }
 std::optional<PeerInfo> PeerConnection::info() const { return p_->info; }

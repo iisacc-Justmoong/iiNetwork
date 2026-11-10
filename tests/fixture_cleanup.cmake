@@ -1,0 +1,5 @@
+include("${CMAKE_CURRENT_LIST_DIR}/fixture_layout.cmake")
+if(IS_SYMLINK "${FIXTURE}")
+    message(FATAL_ERROR "Refusing to remove a symlink fixture directory")
+endif()
+file(REMOVE_RECURSE "${FIXTURE}")

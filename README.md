@@ -40,6 +40,11 @@ base iiNetwork package. Existing load-balancer clients must rebuild against
 `iiNetwork::LoadBalancer` from `iiNetworkLoadBalancer` and include its header
 explicitly.
 
+The [compute migration composition](example/ComputeMigration/) transfers
+bounded cooperative checkpoints over explicitly authorized Peer operations.
+Applications supply the task implementation, transport trust and any durable
+replay fencing. See [the migration contract](docs/ComputeMigration.md).
+
 ## Realtime state streaming
 
 `RealtimeServer` and `RealtimeClient` provide native encrypted UDP sessions,
@@ -58,8 +63,11 @@ authentication, loss semantics and validation scope.
 
 ## Build and consume
 
-Dependencies are iiSDKCore >= 0.19 (Runtime), iiJson >= 0.1, libcurl >= 7.62 and
+Dependencies are iiSDKCore >= 0.19 (Runtime) with the `EventLoop::Sender`
+`on_signal`/`signal` API, iiJson >= 0.1, libcurl >= 7.62 and
 OpenSSL >= 3 (Crypto and SSL). C++23 is required. Use the repository-local `build/`.
+An older installation with the same Core version number may lack the signal API;
+rebuild and select a Core package containing both the current headers and runtime.
 The following installation is a workspace staging area, preserving installed SDKs.
 
 ```sh
@@ -84,8 +92,7 @@ target_link_libraries(my_application PRIVATE iiNetwork::iiNetwork)
 ```
 
 Static library dependencies are exported. `add_subdirectory()` integration is
-also supported. `IINETWORK_BUILD_TESTS` and `IINETWORK_BUILD_EXAMPLES` default on
-for standalone builds and off for embedded builds.
+also supported. `IINETWORK_BUILD_TESTS` defaults on for a top-level build; `IINETWORK_BUILD_EXAMPLES` defaults off.
 
 `examples/roundtrip.cpp` is a compiled example of an authenticated Value passing
 through presentation, session, UDP, IPv4, Ethernet and a paired memory medium.
@@ -207,6 +214,8 @@ headers in the package include directory. Generated export headers belong to
 Validate this layout from the SDK workspace with
 `python3 -B tests/test_source_header_layout.py`. Reconfigure, build, run CTest,
 and verify a staged installed consumer after changing source/header paths.
+
+Temporary TLS test certificates are created under `resources/.state/` and removed by the CTest fixture cleanup. Curl configure probes also remove their temporary build directory. Examples are opt-in.
 
 <!-- workspace-docs:readme:start -->
 ## Documentation entry points

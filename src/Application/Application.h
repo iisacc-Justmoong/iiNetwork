@@ -2,6 +2,7 @@
 #include <iiNetwork/Error.h>
 #include <iiNetwork/Http.h>
 #include <iiJson/Json.h>
+#include <iiSDKCore/Core/Value/Value.h>
 #include <iiNetwork/ByteStream.h>
 #include <optional>
 #include <utility>

@@ -1,6 +1,7 @@
 #pragma once
 #include <iiNetwork/Error.h>
 #include <iiJson/Json.h>
+#include <iiSDKCore/Core/Value/Value.h>
 #include <array>
 #include <string_view>
 

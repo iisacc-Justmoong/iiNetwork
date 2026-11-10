@@ -35,7 +35,7 @@ class ByteStream
     virtual bool write(std::shared_ptr<const std::string>);
     [[nodiscard]] virtual std::string read() = 0;
     [[nodiscard]] virtual std::string read_some(std::size_t) = 0;
-    [[nodiscard]] virtual std::string peek(std::size_t maximum = std::numeric_limits<std::size_t>::max()) const = 0;
+    [[nodiscard]] virtual std::string peek(std::size_t maximum = (std::numeric_limits<std::size_t>::max)()) const = 0;
     [[nodiscard]] virtual std::size_t available_bytes() const = 0;
     [[nodiscard]] virtual std::size_t pending_bytes() const = 0;
     virtual void receive_limit(std::size_t) = 0;

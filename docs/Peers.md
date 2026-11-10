@@ -65,6 +65,10 @@ Remote close/cancellation observation happens when the other endpoint pumps its
 loop. Node destruction releases operation/authorizer captures even when callers
 retain closed connection handles. Call deadlines are absolute: delayed polling
 cannot make an expired reply successful.
+Connection work is triggered by stream connection/readability, explicitly
+submitted work, or the nearest handshake/request deadline. A ready idle peer
+does not maintain a repeating status timer. A bounded frame batch schedules a
+continuation only when complete buffered input remains.
 A peer relationship requires both directions. Read EOF ends the relationship
 even if the underlying TCP/local socket was configured to allow half-close.
 

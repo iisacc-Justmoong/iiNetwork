@@ -1,5 +1,6 @@
 #include <iiNetwork/Http.h>
 #include "HttpInternal.h"
+#include "../Transport/SocketReactor.h"
 #include <curl/curl.h>
 #include <algorithm>
 #include <limits>
@@ -119,24 +120,28 @@ bool http_request(const HttpRequest& request)
     return true;
 }
 } // namespace detail
-struct Http::Impl
+struct Http::Impl : std::enable_shared_from_this<Http::Impl>
 {
     runtime::EventLoop& loop;
     CURLM* multi = nullptr;
     CURLSH* share = nullptr;
     CURL* easy = nullptr;
     curl_slist* headers = nullptr;
-    runtime::TaskToken tick;
+    runtime::TaskToken curl_timer, response_timer;
+    std::optional<runtime::Clock::time_point> response_deadline;
+    std::map<curl_socket_t,std::unique_ptr<detail::SocketWatch>> sockets;
     HttpResponse response;
     HttpRequest request;
     std::size_t received = 0, header_received = 0;
     runtime::Clock::time_point started{}, last_received{};
-    std::uint64_t progress_total = 0, progress_received = 0, last_progress = UINT64_MAX;
+    std::uint64_t progress_total = 0, progress_received = 0, last_progress = UINT64_MAX, last_progress_total = UINT64_MAX;
+    std::uint64_t generation = 0;
     std::function<void(HttpResponse)> completion;
     std::optional<Error> last_error;
     TransferProgress progress;
+    std::optional<TransferProgress> last_transfer;
     bool headers_complete = false;
-    bool alive = true, performing = false, stop_requested = false;
+    bool alive = true, performing = false, stop_requested = false, clearing = false, reactor_error = false;
     explicit Impl(runtime::EventLoop& l) : loop(l)
     {
         initialize_curl();
@@ -146,13 +151,15 @@ struct Http::Impl
     }
     void clear()
     {
-        tick.cancel();
+        ++generation;
+        clearing=true; curl_timer.cancel(); response_timer.cancel(); response_deadline.reset();
         if (easy)
         {
-            curl_multi_remove_handle(multi, easy);
-            curl_easy_cleanup(easy);
-            easy = nullptr;
+            auto* previous=std::exchange(easy,nullptr);
+            curl_multi_remove_handle(multi, previous);
+            curl_easy_cleanup(previous);
         }
+        sockets.clear();
         curl_slist_free_all(headers);
         headers = nullptr;
         std::fill(request.body.begin(), request.body.end(), '\0');
@@ -164,12 +171,14 @@ struct Http::Impl
         auto cleanse = [](std::string& secret) { std::fill(secret.begin(), secret.end(), '\0'); secret.clear(); };
         cleanse(request.authentication.password); cleanse(request.authentication.token);
         cleanse(request.proxy.password); cleanse(request.tls.identity.private_key_password);
-        stop_requested = false;
+        stop_requested = false; clearing=false;
     }
     ~Impl()
     {
         clear();
+        clearing=true;
         curl_multi_cleanup(multi);
+        sockets.clear();
         if (share) curl_share_cleanup(share);
     }
     void metadata(CURLcode code)
@@ -187,6 +196,129 @@ struct Http::Impl
         curl_off_t downloaded = 0, uploaded = 0; curl_easy_getinfo(easy, CURLINFO_SIZE_DOWNLOAD_T, &downloaded); curl_easy_getinfo(easy, CURLINFO_SIZE_UPLOAD_T, &uploaded);
         response.transfer = progress; response.transfer.downloaded = static_cast<std::uint64_t>(std::max<curl_off_t>(0, downloaded));
         response.transfer.uploaded = static_cast<std::uint64_t>(std::max<curl_off_t>(0, uploaded));
+    }
+    bool schedule_curl(long timeout_ms)
+    {
+        curl_timer.cancel(); curl_timer={};
+        if (timeout_ms<0 || clearing) return true;
+        auto weak=weak_from_this();
+        auto admitted=loop.after(std::chrono::milliseconds(timeout_ms),[weak] {
+            if(auto keep=weak.lock()) { keep->curl_timer={}; keep->drive(CURL_SOCKET_TIMEOUT,0); }
+        });
+        if(!admitted) return false;
+        curl_timer=admitted.token; return true;
+    }
+    bool refresh_deadline()
+    {
+        auto next=runtime::Clock::time_point::max();
+        if(received==0 && request.initial_response_timeout.count()>0)
+            next=started+request.initial_response_timeout;
+        else if(received>0 && request.inactivity_timeout.count()>0)
+            next=last_received+request.inactivity_timeout;
+        if(response_deadline && *response_deadline==next && response_timer.pending()) return true;
+        response_timer.cancel(); response_timer={}; response_deadline.reset();
+        if(next==runtime::Clock::time_point::max()) return true;
+        auto weak=weak_from_this();
+        auto admitted=loop.at(next,[weak] {
+            if(auto keep=weak.lock()) {
+                keep->response_timer={}; keep->response_deadline.reset();
+                if(!keep->easy || !keep->alive) return;
+                const auto now=runtime::Clock::now();
+                const bool initial=keep->received==0 && keep->request.initial_response_timeout.count()>0 &&
+                    now-keep->started>=keep->request.initial_response_timeout;
+                const bool idle=keep->received>0 && keep->request.inactivity_timeout.count()>0 &&
+                    now-keep->last_received>=keep->request.inactivity_timeout;
+                if(initial || idle) {
+                    keep->response.error="HTTP response deadline elapsed";
+                    keep->finish(CURLE_OPERATION_TIMEDOUT);
+                } else if(!keep->refresh_deadline()) {
+                    keep->response.error="HTTP deadline admission failed";
+                    keep->finish(CURLE_FAILED_INIT);
+                }
+            }
+        });
+        if(!admitted) return false;
+        response_timer=admitted.token; response_deadline=next; return true;
+    }
+    bool configure_reactor()
+    {
+        if(!multi) return false;
+        auto socket_callback=+[](CURL*,curl_socket_t fd,int action,void* raw,void*) -> int {
+            auto& p=*static_cast<Impl*>(raw);
+            try {
+                if(action==CURL_POLL_REMOVE || p.clearing) { p.sockets.erase(fd); return 0; }
+                auto found=p.sockets.find(fd);
+                if(found==p.sockets.end()) {
+                    auto weak=p.weak_from_this();
+                    auto watch=detail::SocketWatch::create(p.loop,static_cast<native::Handle>(fd),[weak,fd](short events) {
+                        if(auto keep=weak.lock()) {
+                            int flags=0;
+#if defined(_WIN32)
+                            if(events & POLLRDNORM) flags|=CURL_CSELECT_IN;
+                            if(events & POLLWRNORM) flags|=CURL_CSELECT_OUT;
+#else
+                            if(events & POLLIN) flags|=CURL_CSELECT_IN;
+                            if(events & POLLOUT) flags|=CURL_CSELECT_OUT;
+#endif
+                            if(events & (POLLERR|POLLHUP|POLLNVAL)) flags|=CURL_CSELECT_ERR;
+                            keep->drive(fd,flags);
+                        }
+                    });
+                    if(!watch) { p.reactor_error=true; return -1; }
+                    found=p.sockets.emplace(fd,std::move(watch)).first;
+                }
+                const bool input=action==CURL_POLL_IN || action==CURL_POLL_INOUT;
+                const bool output=action==CURL_POLL_OUT || action==CURL_POLL_INOUT;
+                if(!found->second->set_interest(input,output)) { p.reactor_error=true; return -1; }
+                return 0;
+            } catch (...) { p.reactor_error=true; return -1; }
+        };
+        auto timer_callback=+[](CURLM*,long timeout_ms,void* raw) -> int {
+            auto& p=*static_cast<Impl*>(raw);
+            try { if(p.schedule_curl(timeout_ms)) return 0; }
+            catch (...) {}
+            p.reactor_error=true; return -1;
+        };
+        return curl_multi_setopt(multi,CURLMOPT_SOCKETFUNCTION,socket_callback)==CURLM_OK &&
+            curl_multi_setopt(multi,CURLMOPT_SOCKETDATA,this)==CURLM_OK &&
+            curl_multi_setopt(multi,CURLMOPT_TIMERFUNCTION,timer_callback)==CURLM_OK &&
+            curl_multi_setopt(multi,CURLMOPT_TIMERDATA,this)==CURLM_OK;
+    }
+    void finish(CURLcode result)
+    {
+        if(!easy) return;
+        metadata(result); response.timed_out=result==CURLE_OPERATION_TIMEDOUT;
+        if(result!=CURLE_OK && response.error.empty()) response.error=curl_easy_strerror(result);
+        auto value=std::move(response); auto callback=std::move(completion);
+        clear();
+        if(alive && callback) callback(std::move(value));
+    }
+    void drive(curl_socket_t fd,int flags)
+    {
+        if(!alive || !easy || stop_requested) return;
+        const auto epoch=generation;
+        int running=0;
+        performing=true;
+        const auto code=curl_multi_socket_action(multi,fd,flags,&running);
+        performing=false;
+        if(stop_requested || !alive) { clear(); return; }
+        int count=0; auto* message=curl_multi_info_read(multi,&count);
+        if(code!=CURLM_OK || reactor_error || message) {
+            finish(message ? message->data.result : CURLE_FAILED_INIT); return;
+        }
+        const auto got=progress_received,total=progress_total;
+        auto on_progress=request.progress;
+        if(got!=last_progress || total!=last_progress_total) {
+            last_progress=got; last_progress_total=total; if(on_progress) on_progress(got,total);
+        }
+        if(!alive || !easy || stop_requested || generation!=epoch) return;
+        const bool changed=!last_transfer || last_transfer->download_total!=progress.download_total ||
+            last_transfer->downloaded!=progress.downloaded || last_transfer->upload_total!=progress.upload_total ||
+            last_transfer->uploaded!=progress.uploaded;
+        if(changed) { last_transfer=progress; auto callback=request.transfer_progress; if(callback) callback(progress); }
+        if(alive && easy && !stop_requested && generation==epoch && !refresh_deadline()) {
+            response.error="HTTP deadline admission failed"; finish(CURLE_FAILED_INIT);
+        }
     }
 };
 Http::Http(runtime::EventLoop& l) : p_(std::make_shared<Impl>(l))
@@ -215,7 +347,7 @@ bool Http::start(HttpRequest request, std::function<void(HttpResponse)> completi
     p.progress = {}; p.headers_complete = false;
     p.received = p.header_received = 0;
     p.progress_total = p.progress_received = 0;
-    p.last_progress = UINT64_MAX;
+    ++p.generation; p.last_progress = p.last_progress_total = UINT64_MAX; p.last_transfer.reset(); p.reactor_error=false;
     p.started = p.last_received = runtime::Clock::now();
     p.completion = std::move(completion);
     p.easy = p.multi && p.share ? curl_easy_init() : nullptr;
@@ -394,77 +526,16 @@ bool Http::start(HttpRequest request, std::function<void(HttpResponse)> completi
             }
             return n;
         });
-    if (configuration != CURLE_OK || curl_multi_add_handle(p.multi, p.easy) != CURLM_OK)
-    {
-        p.last_error = Error{ErrorCode::unsupported, Layer::application, configuration == CURLE_OK ? "HTTP multi-handle admission failed" : curl_easy_strerror(configuration)};
-        p.clear();
-        p.completion = {};
-        return false;
+    if (configuration != CURLE_OK || !p.configure_reactor()) {
+        p.last_error = Error{ErrorCode::unsupported, Layer::application,
+            configuration == CURLE_OK ? "HTTP reactor configuration failed" : curl_easy_strerror(configuration)};
+        p.completion={}; p.clear(); return false;
     }
-    p.tick =
-        p.loop
-            .every(5ms,
-                   [weak = std::weak_ptr<Impl>(p_)]
-                   {
-                       auto keep = weak.lock();
-                       if (!keep || !keep->alive) return;
-                       auto& p = *keep;
-                       const auto now = runtime::Clock::now();
-                       const bool initial = p.request.initial_response_timeout.count() > 0 &&
-                                            p.received == 0 &&
-                                            now - p.started >= p.request.initial_response_timeout;
-                       const bool idle = p.request.inactivity_timeout.count() > 0 &&
-                                         p.received > 0 &&
-                                         now - p.last_received >= p.request.inactivity_timeout;
-                       if (initial || idle)
-                       {
-                           p.response.timed_out = true;
-                           p.response.error = "HTTP response deadline elapsed";
-                           p.metadata(CURLE_OPERATION_TIMEDOUT);
-                           auto response = std::move(p.response);
-                           auto callback = std::move(p.completion);
-                           p.clear();
-                           if (callback)
-                               callback(std::move(response));
-                           return;
-                       }
-                       int running = 0;
-                       p.performing = true;
-                       auto code = curl_multi_perform(p.multi, &running);
-                       p.performing = false;
-                       if (p.stop_requested || !p.alive)
-                       { p.clear(); return; }
-                       int count = 0;
-                       auto* message = curl_multi_info_read(p.multi, &count);
-                       if (code == CURLM_OK && !message)
-                       {
-                           auto progress = p.request.progress;
-                           auto transfer_progress = p.request.transfer_progress; auto transfer = p.progress;
-                           auto got = p.progress_received, total = p.progress_total;
-                           bool emit = got != p.last_progress;
-                           p.last_progress = got;
-                           if (emit && progress)
-                               progress(got, total);
-                           if (p.alive && p.easy && !p.stop_requested && transfer_progress) transfer_progress(transfer);
-                           return;
-                       }
-                       CURLcode result = message ? message->data.result : CURLE_FAILED_INIT;
-                       p.metadata(result);
-                       p.response.timed_out = result == CURLE_OPERATION_TIMEDOUT;
-                       if (result != CURLE_OK)
-                           p.response.error = curl_easy_strerror(result);
-                       auto response = std::move(p.response);
-                       auto callback = std::move(p.completion);
-                       p.clear();
-                       if (callback)
-                           callback(std::move(response));
-                   })
-            .token;
-    if (!p.tick.pending())
-    {
-        p.completion = {};
-        p.clear();
-        return false;
+    const auto admission=curl_multi_add_handle(p.multi,p.easy);
+    if (admission!=CURLM_OK || p.reactor_error || !p.refresh_deadline() ||
+        (!p.curl_timer.pending() && !p.schedule_curl(0))) {
+        p.last_error=Error{ErrorCode::unavailable,Layer::application,"HTTP native event admission failed"};
+        p.completion={}; p.clear(); return false;
     }
     return true;
 }
@@ -474,7 +545,7 @@ void Http::cancel()
     if (p_->performing)
     {
         p_->stop_requested = true;
-        p_->tick.cancel();
+        p_->curl_timer.cancel(); p_->response_timer.cancel();
         return;
     }
     p_->clear();

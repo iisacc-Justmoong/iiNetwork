@@ -29,9 +29,11 @@ The private peer stream protocol and exact lifetime bounds are in [Peers](Peers.
 The native path uses `Tcp`, `Listener`, `Udp`, `LocalSocket`, OpenSSL-backed
 `TlsStream` and libcurl-backed `Http`. The OS
 owns physical/link/IP implementation. Callbacks execute through the supplied
-Core EventLoop in bounded 5 ms timer slices. Cancellation removes registration.
-POSIX readiness uses `poll`; Windows uses Winsock. No socket worker or nested
-loop is created. The EventLoop must outlive its network objects; HTTP transports
+Core EventLoop via a shared native socket-readiness waiter. Cancellation removes
+the registration before the socket closes. Timers represent actual deadlines,
+and bounded continuation tasks are submitted only while work remains.
+POSIX readiness uses `poll`; Windows uses `WSAPoll`. One shared worker waits for
+registered sockets; no per-socket worker or nested loop is created. The EventLoop must outlive its network objects; HTTP transports
 must outlive clients that borrow them. These APIs have owner-thread affinity.
 Numeric parsing never does DNS. `resolve_host()` and `reverse_lookup()` are
 explicitly blocking utilities. Applications choose Core worker scheduling.

@@ -27,7 +27,7 @@ class LocalSocket final : public ByteStream
     bool write(std::string_view) override;
     std::string read() override;
     std::string read_some(std::size_t) override;
-    std::string peek(std::size_t maximum = std::numeric_limits<std::size_t>::max()) const override;
+    std::string peek(std::size_t maximum = (std::numeric_limits<std::size_t>::max)()) const override;
     std::size_t available_bytes() const override;
     std::size_t pending_bytes() const override;
     void receive_limit(std::size_t) override;
@@ -58,6 +58,7 @@ class LocalServer final
     LocalServer& operator=(const LocalServer&) = delete;
     std::function<void(std::unique_ptr<LocalSocket>)> accepted;
     Result<void> listen(LocalEndpoint, LocalServerOptions = {});
+    void on_failure(std::function<void(std::string)>);
     void close();
     [[nodiscard]] std::string path() const;
     [[nodiscard]] std::string error() const;

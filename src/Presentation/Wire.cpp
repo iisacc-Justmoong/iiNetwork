@@ -4,6 +4,90 @@
 #include <stdexcept>
 namespace ii::network::wire
 {
+namespace {
+ii::json::Error json_error(ii::json::ErrorCode code, const char* message)
+{
+    ii::json::Error error{};
+    error.code = code;
+    error.line = error.column = 1;
+    error.message = message;
+    return error;
+}
+ii::json::Result<ii::json::Value> to_json(const Value& source, const ii::json::Limits& limits,
+                                         std::size_t depth, std::size_t& items)
+{
+    if (depth > limits.depth || depth > 256)
+        return std::unexpected(json_error(ii::json::ErrorCode::limit_exceeded, "JSON depth limit exceeded"));
+    if (items >= limits.items)
+        return std::unexpected(json_error(ii::json::ErrorCode::limit_exceeded, "JSON item limit exceeded"));
+    ++items;
+    return std::visit([&](const auto& value) -> ii::json::Result<ii::json::Value> {
+        using T = std::decay_t<decltype(value)>;
+        if constexpr (std::same_as<T, std::monostate>) return ii::json::Value{};
+        else if constexpr (std::same_as<T, Value::Array>) {
+            if (value.size() > limits.items - items)
+                return std::unexpected(json_error(ii::json::ErrorCode::limit_exceeded, "JSON item limit exceeded"));
+            ii::json::Value::Array out; out.reserve(value.size());
+            for (const auto& child : value) {
+                auto converted = to_json(child, limits, depth + 1, items);
+                if (!converted) return std::unexpected(converted.error());
+                out.push_back(std::move(*converted));
+            }
+            return ii::json::Value(std::move(out));
+        } else if constexpr (std::same_as<T, Value::Object>) {
+            ii::json::Value::Object out;
+            for (const auto& [key, child] : value) {
+                if (items >= limits.items)
+                    return std::unexpected(json_error(ii::json::ErrorCode::limit_exceeded, "JSON item limit exceeded"));
+                ++items;
+                if (key.size() > limits.string_bytes || key.size() > limits.output_bytes)
+                    return std::unexpected(json_error(ii::json::ErrorCode::limit_exceeded, "JSON string byte limit exceeded"));
+                auto converted = to_json(child, limits, depth + 1, items);
+                if (!converted) return std::unexpected(converted.error());
+                out.emplace(key, std::move(*converted));
+            }
+            return ii::json::Value(std::move(out));
+        } else if constexpr (std::same_as<T, std::string>) {
+            if (value.size() > limits.string_bytes || value.size() > limits.output_bytes)
+                return std::unexpected(json_error(ii::json::ErrorCode::limit_exceeded, "JSON string byte limit exceeded"));
+            return ii::json::Value(value);
+        } else if constexpr (std::same_as<T, ii::core::Bytes>) {
+            return std::unexpected(json_error(ii::json::ErrorCode::unsupported_value, "Binary bytes need an explicit domain encoding for JSON"));
+        } else return ii::json::Value(value);
+    }, source.storage());
+}
+Value from_json(const ii::json::Value& source)
+{
+    return std::visit([](const auto& value) -> Value {
+        using T = std::decay_t<decltype(value)>;
+        if constexpr (std::same_as<T, std::monostate>) return Value{};
+        else if constexpr (std::same_as<T, ii::json::Value::Array>) {
+            Value::Array out; out.reserve(value.size());
+            for (const auto& child : value) out.push_back(from_json(child));
+            return Value(std::move(out));
+        } else if constexpr (std::same_as<T, ii::json::Value::Object>) {
+            Value::Object out;
+            for (const auto& [key, child] : value) out.emplace(key, from_json(child));
+            return Value(std::move(out));
+        } else return Value(value);
+    }, source.storage());
+}
+}
+ii::json::Result<std::string> json_codec::stringify(const Value& value, ii::json::Limits limits)
+{
+    if (limits.depth > 256)
+        return std::unexpected(json_error(ii::json::ErrorCode::limit_exceeded, "JSON depth configuration exceeds hard ceiling"));
+    std::size_t items = 0;
+    auto converted = to_json(value, limits, 1, items);
+    if (!converted) return std::unexpected(converted.error());
+    return ii::json::stringify(*converted, limits);
+}
+ii::json::Result<Value> json_codec::parse(std::string_view text, ii::json::Limits limits)
+{
+    auto parsed = ii::json::parse(text, limits);
+    if (!parsed) return std::unexpected(parsed.error());
+    return from_json(*parsed);
+}
 std::string uuid()
 {
     std::random_device random;

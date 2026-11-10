@@ -1,5 +1,6 @@
 #include <iiNetwork/Transport.h>
 #include "SocketInternal.h"
+#include "SocketReactor.h"
 #include <deque>
 #include <map>
 #include <new>
@@ -102,9 +103,12 @@ bool local_address(std::string_view text)
 }
 struct Tcp::Impl
 {
-    struct State
+    struct State : std::enable_shared_from_this<State>
     {
-        Handle fd = invalid; runtime::TaskToken tick; Tcp* owner;
+        Handle fd = invalid; runtime::EventLoop& loop; Tcp* owner;
+        std::unique_ptr<detail::SocketWatch> watch;
+        runtime::TaskToken deadline_timer;
+        std::optional<runtime::Clock::time_point> scheduled_deadline;
         TcpOptions options; SocketState state = SocketState::closed;
         bool alive = true, local = false, read_open = true, write_open = true, shutdown_pending = false;
         std::string incoming, error, peer_name, local_name;
@@ -113,7 +117,7 @@ struct Tcp::Impl
         struct Pending { std::shared_ptr<const std::string> bytes; std::size_t offset = 0; };
         std::deque<Pending> outgoing; std::size_t queued = 0;
         runtime::Clock::time_point started{}, last_activity{}, close_deadline{};
-        explicit State(Tcp* value) : owner(value) {}
+        explicit State(runtime::EventLoop& event_loop,Tcp* value) : loop(event_loop),owner(value) {}
         void capture()
         {
             local_endpoint = native::endpoint(fd, false); peer_endpoint = native::endpoint(fd, true);
@@ -123,12 +127,35 @@ struct Tcp::Impl
         void finish(std::string message = {})
         {
             if (fd == invalid) return;
-            native::close(std::exchange(fd, invalid)); tick.cancel(); outgoing.clear(); queued = 0;
+            watch.reset(); deadline_timer.cancel(); scheduled_deadline.reset();
+            native::close(std::exchange(fd, invalid)); outgoing.clear(); queued = 0;
             state = message.empty() ? SocketState::closed : SocketState::failed; error = std::move(message);
             auto failure = owner->failed;
             auto disconnect = owner->disconnected;
             if (!error.empty() && failure) failure(error);
             if (alive && disconnect) disconnect();
+        }
+        bool refresh()
+        {
+            if (!alive || fd==invalid || !watch) return false;
+            const bool write_interest=state==SocketState::connecting || !outgoing.empty();
+            if (!watch->set_interest(read_open,write_interest)) return false;
+            auto next=runtime::Clock::time_point::max();
+            if(state==SocketState::connecting) next=started+options.stream.connect_timeout;
+            else if(options.stream.idle_timeout.count()) next=last_activity+options.stream.idle_timeout;
+            if(state==SocketState::closing) next=std::min(next,close_deadline);
+            if(scheduled_deadline && *scheduled_deadline==next && deadline_timer.pending()) return true;
+            deadline_timer.cancel(); scheduled_deadline.reset();
+            if(next==runtime::Clock::time_point::max()) return true;
+            auto weak=weak_from_this();
+            auto admitted=loop.at(next,[weak] {
+                if(auto keep=weak.lock()) {
+                    keep->deadline_timer={}; keep->scheduled_deadline.reset(); keep->pump();
+                    if(keep->alive && keep->fd!=invalid && !keep->refresh()) keep->finish("Core stream readiness update failed");
+                }
+            });
+            if(!admitted) return false;
+            deadline_timer=admitted.token; scheduled_deadline=next; return true;
         }
         void pump()
         {
@@ -188,11 +215,17 @@ struct Tcp::Impl
     };
     runtime::EventLoop& loop;
     std::shared_ptr<State> state;
-    Impl(runtime::EventLoop& value, Tcp* owner) : loop(value), state(std::make_shared<State>(owner)) { native::initialize(); }
+    Impl(runtime::EventLoop& value, Tcp* owner) : loop(value), state(std::make_shared<State>(value,owner)) { native::initialize(); }
     bool start()
     {
-        state->tick = loop.every(5ms, [weak = std::weak_ptr<State>(state)] { if (auto keep = weak.lock()) keep->pump(); }).token;
-        return state->tick.pending();
+        state->watch=detail::SocketWatch::create(loop,state->fd,[weak=std::weak_ptr<State>(state)](short events) {
+            if(auto keep=weak.lock()) {
+                if(events & POLLNVAL) { keep->finish("Socket readiness monitor failed"); return; }
+                keep->pump();
+                if(keep->alive && keep->fd!=invalid && !keep->refresh()) keep->finish("Core stream readiness update failed");
+            }
+        });
+        return state->watch && state->refresh();
     }
     Result<void> connect(native::Address address, TcpOptions options, bool local)
     {
@@ -202,7 +235,8 @@ struct Tcp::Impl
         s.local_endpoint.reset(); s.peer_endpoint.reset(); s.local_name.clear(); s.peer_name.clear();
         s.fd = ::socket(address.storage.ss_family, SOCK_STREAM, 0);
         auto reject = [&](Error failure) -> Result<void>
-        { s.error = failure.message; s.state = SocketState::failed; native::close(std::exchange(s.fd, invalid)); return std::unexpected(std::move(failure)); };
+        { s.error = failure.message; s.state = SocketState::failed; s.watch.reset(); s.deadline_timer.cancel();
+          s.scheduled_deadline.reset(); native::close(std::exchange(s.fd, invalid)); return std::unexpected(std::move(failure)); };
         if (s.fd == invalid || !native::options(s.fd)) return reject(native::failure("socket/nonblocking").error());
         auto configured = tcp_options(s.fd, s.options, local); if (!configured) return reject(configured.error());
         if (s.options.bind_address && !local)
@@ -230,7 +264,15 @@ Result<void> Tcp::connect_local(std::string_view path, bool abstract, StreamOpti
     close(); TcpOptions configuration; configuration.stream = options; return p_->connect(*address, configuration, true);
 }
 Result<void> Tcp::configure(TcpOptions options)
-{ auto valid = tcp_options(p_->state->fd, options, p_->state->local); if (valid) p_->state->options = std::move(options); return valid; }
+{
+    auto valid = tcp_options(p_->state->fd, options, p_->state->local);
+    if (valid) {
+        p_->state->options = std::move(options);
+        if(p_->state->fd!=invalid && !p_->state->refresh())
+            return detail::fail(Layer::transport,ErrorCode::unavailable,"Core stream readiness update failed");
+    }
+    return valid;
+}
 Result<void> Tcp::no_delay(bool value) { auto options = p_->state->options; options.no_delay = value; return configure(std::move(options)); }
 Result<void> Tcp::keep_alive(bool value) { auto options = p_->state->options; options.keep_alive = value; return configure(std::move(options)); }
 bool Tcp::write(std::string_view bytes)
@@ -240,7 +282,7 @@ bool Tcp::write(std::string_view bytes)
 }
 bool Tcp::write(std::shared_ptr<const std::string> bytes)
 {
-    auto& s = *p_->state;
+    auto retained=p_->state; auto& s = *retained;
     if (!bytes || s.state != SocketState::connected || !s.write_open || s.shutdown_pending || s.queued > s.options.stream.pending_bytes ||
         bytes->size() > s.options.stream.pending_bytes - s.queued || s.outgoing.size() >= 1024) return false;
     if (bytes->empty()) return true;
@@ -248,6 +290,7 @@ bool Tcp::write(std::shared_ptr<const std::string> bytes)
     try { s.outgoing.push_back({std::move(bytes), 0}); }
     catch (const std::bad_alloc&) { return false; }
     s.queued += size;
+    if (!s.watch || !s.watch->kick() || !s.refresh()) { s.finish("Core stream dispatch failed"); return false; }
     return true;
 }
 std::string Tcp::read() { return std::exchange(p_->state->incoming, {}); }
@@ -259,15 +302,19 @@ void Tcp::close(bool flush)
 {
     auto& s = *p_->state;
     if (flush && s.state == SocketState::connected && !s.outgoing.empty())
-    { s.state = SocketState::closing; s.close_deadline = runtime::Clock::now() + 1s; return; }
-    s.tick.cancel(); native::close(std::exchange(s.fd, invalid)); s.state = SocketState::closed;
+    { s.state = SocketState::closing; s.close_deadline = runtime::Clock::now() + 1s;
+      if(s.refresh() && s.watch->kick()) return; }
+    s.watch.reset(); s.deadline_timer.cancel(); s.scheduled_deadline.reset();
+    native::close(std::exchange(s.fd, invalid)); s.state = SocketState::closed;
     s.outgoing.clear(); s.queued = 0; s.read_open = s.write_open = false;
 }
 Result<void> Tcp::shutdown_write()
 {
     auto& s = *p_->state;
     if (s.state != SocketState::connected || !s.write_open || s.shutdown_pending) return detail::fail(Layer::transport, ErrorCode::invalid_state, "Stream write side is not open");
-    s.shutdown_pending = true; return {};
+    s.shutdown_pending = true;
+    if(!s.watch || !s.watch->kick() || !s.refresh()) return detail::fail(Layer::transport,ErrorCode::unavailable,"Core stream dispatch failed");
+    return {};
 }
 bool Tcp::is_connected() const { return p_->state->state == SocketState::connected || p_->state->state == SocketState::closing; }
 SocketState Tcp::state() const { return p_->state->state; }
@@ -283,11 +330,16 @@ std::optional<IpEndpoint> Tcp::peer_endpoint() const { return p_->state->peer_en
 std::optional<PeerCredentials> Tcp::peer_credentials() const { return p_->state->local && p_->state->fd != invalid ? native::credentials(p_->state->fd) : std::nullopt; }
 struct Listener::Impl
 {
-    runtime::EventLoop& loop; Handle fd = invalid; runtime::TaskToken tick; Listener* owner;
+    runtime::EventLoop& loop; Handle fd = invalid; std::unique_ptr<detail::SocketWatch> watch; Listener* owner;
     std::string error, path; std::optional<IpEndpoint> endpoint; ListenerOptions options;
+    std::function<void(std::string)> failure;
     native::LocalBinding binding; bool alive = true, local = false;
     Impl(runtime::EventLoop& value, Listener* parent) : loop(value), owner(parent) { native::initialize(); }
-    void close() { tick.cancel(); native::close(std::exchange(fd, invalid)); binding.cleanup(); endpoint.reset(); path.clear(); }
+    void close() { watch.reset(); native::close(std::exchange(fd, invalid)); binding.cleanup(); endpoint.reset(); path.clear(); }
+    void fail() {
+        error="Socket readiness monitor failed"; auto callback=failure; auto message=error;
+        close(); if(alive && callback) callback(std::move(message));
+    }
 };
 Listener::Listener(runtime::EventLoop& loop) : p_(std::make_shared<Impl>(loop, this)) {}
 Listener::~Listener() { p_->alive = false; close(); }
@@ -306,9 +358,10 @@ Result<void> Listener::listen(IpEndpoint endpoint, ListenerOptions options)
     if (!configured || ::bind(p.fd, address.data(), address.size) || ::listen(p.fd, p.options.backlog))
     { auto failure = configured ? native::failure("bind/listen") : std::unexpected(configured.error()); p.error = failure.error().message; close(); return failure; }
     p.endpoint = native::endpoint(p.fd, false);
-    p.tick = p.loop.every(5ms, [weak = std::weak_ptr<Impl>(p_)]
+    p.watch = detail::SocketWatch::create(p.loop,p.fd, [weak = std::weak_ptr<Impl>(p_)](short events)
     {
         auto keep = weak.lock(); if (!keep) return; auto& p = *keep;
+        if(events & POLLNVAL) { p.fail(); return; }
         for (unsigned i = 0; i < 16 && p.alive && p.fd != invalid && native::ready(p.fd, false); ++i)
         {
             auto fd = ::accept(p.fd, nullptr, nullptr); if (fd == invalid) break;
@@ -319,8 +372,8 @@ Result<void> Listener::listen(IpEndpoint endpoint, ListenerOptions options)
             if (!tcp_options(fd, s.options, p.local) || !stream->p_->start()) continue;
             auto callback = p.owner->accepted; if (callback) callback(std::move(stream));
         }
-    }).token;
-    if (!p.tick.pending()) { close(); return detail::fail(Layer::transport, ErrorCode::unavailable, "Core listener dispatch admission failed"); }
+    });
+    if (!p.watch || !p.watch->set_interest(true,false)) { close(); return detail::fail(Layer::transport, ErrorCode::unavailable, "Core listener dispatch admission failed"); }
     return {};
 }
 Result<void> Listener::listen_local(std::string_view path, bool abstract, int backlog, StreamOptions stream, unsigned permissions, bool remove)
@@ -341,9 +394,10 @@ Result<void> Listener::listen_local(std::string_view path, bool abstract, int ba
     { auto failure = native::failure("local socket permissions"); p.error = failure.error().message; close(); return failure; }
 #endif
     if (::listen(p.fd, backlog)) { auto failure = native::failure("local listen"); p.error = failure.error().message; close(); return failure; }
-    p.tick = p.loop.every(5ms, [weak = std::weak_ptr<Impl>(p_)]
+    p.watch = detail::SocketWatch::create(p.loop,p.fd, [weak = std::weak_ptr<Impl>(p_)](short events)
     {
         auto keep = weak.lock(); if (!keep) return; auto& p = *keep;
+        if(events & POLLNVAL) { p.fail(); return; }
         for (unsigned i = 0; i < 16 && p.alive && p.fd != invalid && native::ready(p.fd, false); ++i)
         {
             auto fd = ::accept(p.fd, nullptr, nullptr); if (fd == invalid) break;
@@ -354,18 +408,19 @@ Result<void> Listener::listen_local(std::string_view path, bool abstract, int ba
             if (!client->p_->start()) continue;
             auto callback = p.owner->accepted; if (callback) callback(std::move(client));
         }
-    }).token;
-    if (!p.tick.pending()) { close(); return detail::fail(Layer::transport, ErrorCode::unavailable, "Core local listener dispatch admission failed"); }
+    });
+    if (!p.watch || !p.watch->set_interest(true,false)) { close(); return detail::fail(Layer::transport, ErrorCode::unavailable, "Core local listener dispatch admission failed"); }
     return {};
 }
 void Listener::close() { p_->close(); }
+void Listener::on_failure(std::function<void(std::string)> callback) { p_->failure=std::move(callback); }
 std::uint16_t Listener::port() const { return p_->endpoint ? p_->endpoint->port : 0; }
 std::optional<IpEndpoint> Listener::local_endpoint() const { return p_->endpoint; }
 std::string Listener::error() const { return p_->error; }
 std::string Listener::local_path() const { return p_->path; }
 struct Udp::Impl
 {
-    runtime::EventLoop& loop; Handle fd = invalid; runtime::TaskToken tick; Udp* owner;
+    runtime::EventLoop& loop; Handle fd = invalid; std::unique_ptr<detail::SocketWatch> watch; Udp* owner;
     UdpOptions options; std::optional<IpEndpoint> local, bound, peer; std::string error, group;
     bool alive = true, include_loopback = false; std::vector<Interface> routes;
     std::vector<std::pair<IpAddress, std::uint32_t>> memberships; StreamStatistics statistics;
@@ -421,9 +476,13 @@ Result<void> Udp::bind(IpEndpoint endpoint, UdpOptions options)
 }
 bool Udp::start_receiving()
 {
-    p_->tick = p_->loop.every(5ms, [weak = std::weak_ptr<Impl>(p_)]
+    p_->watch = detail::SocketWatch::create(p_->loop,p_->fd, [weak = std::weak_ptr<Impl>(p_)](short events)
     {
         auto keep = weak.lock(); if (!keep) return; auto& p = *keep;
+        if(events & POLLNVAL) {
+            p.error="Socket readiness monitor failed"; auto message=p.error; auto callback=p.owner->failed;
+            p.owner->close(); if(p.alive && callback) callback(std::move(message)); return;
+        }
         for (unsigned i = 0; i < 64 && p.alive && p.fd != invalid && native::ready(p.fd, false); ++i)
         {
             std::array<char, 65536> bytes{}; native::Address sender; sender.size = sizeof(sender.storage);
@@ -436,8 +495,8 @@ bool Udp::start_receiving()
             auto callback = p.owner->received;
             if (callback) callback({std::string(bytes.data(), count), endpoint->address.string(), endpoint->port, *endpoint});
         }
-    }).token;
-    if (!p_->tick.pending()) { p_->error = "Core UDP dispatch admission failed"; close(); return false; }
+    });
+    if (!p_->watch || !p_->watch->set_interest(true,false)) { p_->error = "Core UDP dispatch admission failed"; close(); return false; }
     return true;
 }
 bool Udp::bind_multicast(std::string_view group, std::uint16_t port, bool loopback)
@@ -554,7 +613,7 @@ Result<void> Udp::multicast_loopback(bool enabled)
     if (result) p_->options.multicast_loopback = enabled; return result;
 }
 void Udp::close()
-{ p_->tick.cancel(); native::close(std::exchange(p_->fd, invalid)); p_->local.reset(); p_->bound.reset(); p_->peer.reset(); p_->memberships.clear(); p_->routes.clear(); p_->group.clear(); }
+{ p_->watch.reset(); native::close(std::exchange(p_->fd, invalid)); p_->local.reset(); p_->bound.reset(); p_->peer.reset(); p_->memberships.clear(); p_->routes.clear(); p_->group.clear(); }
 std::string Udp::error() const { return p_->error; }
 std::uint16_t Udp::port() const { return p_->local ? p_->local->port : 0; }
 std::optional<IpEndpoint> Udp::local_endpoint() const { return p_->local; }

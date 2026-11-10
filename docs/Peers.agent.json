@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "docs/Peers.md",
-    "sha256": "afb7e12d8923a0e6bb7262a25c5bf806fcc30d6674d826548453a6b9219ff1b9",
-    "bytes": 7334,
-    "line_count": 115,
+    "sha256": "78fac584b082c6deb1ef70bd0898396c0b501f86e7f719678ae0f4ff692cbd7d",
+    "bytes": 7619,
+    "line_count": 119,
     "encoding": "utf-8",
     "language": "en"
   },
@@ -156,35 +156,35 @@
       "id": "b000019",
       "kind": "paragraph",
       "start_line": 56,
-      "end_line": 69,
-      "raw": "`connected` on a link runs first, then the node's common `connected(link)` hook.\nBoth are emitted only after negotiation and apply equally to accepted and dialed\nlinks. Transport or framing failures are reported on link/node failure hooks.\n`close()` stops a connection and settles pending calls. `Peer::close()` stops\nall listeners/links while retaining operation registration for a later reopen.\nDestruction closes links and suppresses pending callbacks. Reply handles become\ncancelled; external connection handles may remain, but are closed. The loop must\noutlive nodes and all objects that continue using it.\nRemote close/cancellation observation happens when the other endpoint pumps its\nloop. Node destruction releases operation/authorizer captures even when callers\nretain closed connection handles. Call deadlines are absolute: delayed polling\ncannot make an expired reply successful.\nA peer relationship requires both directions. Read EOF ends the relationship\neven if the underlying TCP/local socket was configured to allow half-close.\n"
+      "end_line": 73,
+      "raw": "`connected` on a link runs first, then the node's common `connected(link)` hook.\nBoth are emitted only after negotiation and apply equally to accepted and dialed\nlinks. Transport or framing failures are reported on link/node failure hooks.\n`close()` stops a connection and settles pending calls. `Peer::close()` stops\nall listeners/links while retaining operation registration for a later reopen.\nDestruction closes links and suppresses pending callbacks. Reply handles become\ncancelled; external connection handles may remain, but are closed. The loop must\noutlive nodes and all objects that continue using it.\nRemote close/cancellation observation happens when the other endpoint pumps its\nloop. Node destruction releases operation/authorizer captures even when callers\nretain closed connection handles. Call deadlines are absolute: delayed polling\ncannot make an expired reply successful.\nConnection work is triggered by stream connection/readability, explicitly\nsubmitted work, or the nearest handshake/request deadline. A ready idle peer\ndoes not maintain a repeating status timer. A bounded frame batch schedules a\ncontinuation only when complete buffered input remains.\nA peer relationship requires both directions. Read EOF ends the relationship\neven if the underlying TCP/local socket was configured to allow half-close.\n"
     },
     {
       "id": "b000020",
       "kind": "blank",
-      "start_line": 70,
-      "end_line": 70,
+      "start_line": 74,
+      "end_line": 74,
       "raw": "\n"
     },
     {
       "id": "b000021",
       "kind": "paragraph",
-      "start_line": 71,
-      "end_line": 75,
+      "start_line": 75,
+      "end_line": 79,
       "raw": "TCP, TLS and local listeners can coexist within one node. Re-listening replaces\nonly that transport's listener. `stop_listening()` leaves established links\nalive. `connect_tls()` and `listen_tls()` retain TLS handshake roles internally;\nmutual TLS is selected in their contexts. `attach()` takes ownership of a\nconnected/connecting callback-free ByteStream, including a handshaking TlsStream.\n"
     },
     {
       "id": "b000022",
       "kind": "blank",
-      "start_line": 76,
-      "end_line": 76,
+      "start_line": 80,
+      "end_line": 80,
       "raw": "\n"
     },
     {
       "id": "b000023",
       "kind": "heading",
-      "start_line": 77,
-      "end_line": 77,
+      "start_line": 81,
+      "end_line": 81,
       "raw": "## Bounds and private wire format\n",
       "level": 2,
       "title": "Bounds and private wire format"
@@ -192,43 +192,43 @@
     {
       "id": "b000024",
       "kind": "blank",
-      "start_line": 78,
-      "end_line": 78,
+      "start_line": 82,
+      "end_line": 82,
       "raw": "\n"
     },
     {
       "id": "b000025",
       "kind": "paragraph",
-      "start_line": 79,
-      "end_line": 86,
+      "start_line": 83,
+      "end_line": 90,
       "raw": "`PeerLimits` defaults to 1 MiB frames, 2 MiB queued output, 64 links, 64 outgoing\nand 64 incoming calls per link, 128 registered operations, a 10 second negotiation\ndeadline and a 60 second maximum call timeout. A request defaults to 10 seconds.\nFrames range from 512 bytes to 16 MiB; pending bytes range from one full frame\nplus prefix to 64 MiB. Link/call/operation counts cap at 4096, and handshake/call\ndeadlines cap at one hour. Invalid options fail admission. The receiver clamps\nthe supplied call budget to its own maximum. Receive storage and parsing slices\nare bounded. Backpressure is a reported admission failure.\n"
     },
     {
       "id": "b000026",
       "kind": "blank",
-      "start_line": 87,
-      "end_line": 87,
+      "start_line": 91,
+      "end_line": 91,
       "raw": "\n"
     },
     {
       "id": "b000027",
       "kind": "paragraph",
-      "start_line": 88,
-      "end_line": 91,
+      "start_line": 92,
+      "end_line": 95,
       "raw": "The private `iin-peer/1` protocol uses an unsigned 32-bit network-order length\nfollowed by bounded UTF-8 JSON. This format is not HTTP, REST, GraphQL or a public\nRPC standard. Hello advertises version 1, logical identity, fresh session UUID\nand maximum frame bytes. Messages have these exact shapes:\n"
     },
     {
       "id": "b000028",
       "kind": "blank",
-      "start_line": 92,
-      "end_line": 92,
+      "start_line": 96,
+      "end_line": 96,
       "raw": "\n"
     },
     {
       "id": "b000029",
       "kind": "fenced_code",
-      "start_line": 93,
-      "end_line": 100,
+      "start_line": 97,
+      "end_line": 104,
       "raw": "```json\n{\"type\":\"hello\",\"version\":1,\"identity\":\"alpha\",\"session\":\"01234567-89ab-4cde-8fab-0123456789ab\",\"maximum_frame\":1048576}\n{\"type\":\"call\",\"id\":\"1\",\"operation\":\"counter.add\",\"arguments\":2,\"timeout\":10000}\n{\"type\":\"result\",\"id\":\"1\",\"value\":3}\n{\"type\":\"error\",\"id\":\"1\",\"code\":\"permission_denied\",\"layer\":7,\"message\":\"Operation denied\"}\n{\"type\":\"event\",\"topic\":\"counter.changed\",\"value\":3}\n{\"type\":\"cancel\",\"id\":\"1\"}\n```\n",
       "language": "json",
       "code": "{\"type\":\"hello\",\"version\":1,\"identity\":\"alpha\",\"session\":\"01234567-89ab-4cde-8fab-0123456789ab\",\"maximum_frame\":1048576}\n{\"type\":\"call\",\"id\":\"1\",\"operation\":\"counter.add\",\"arguments\":2,\"timeout\":10000}\n{\"type\":\"result\",\"id\":\"1\",\"value\":3}\n{\"type\":\"error\",\"id\":\"1\",\"code\":\"permission_denied\",\"layer\":7,\"message\":\"Operation denied\"}\n{\"type\":\"event\",\"topic\":\"counter.changed\",\"value\":3}\n{\"type\":\"cancel\",\"id\":\"1\"}\n",
@@ -237,29 +237,29 @@
     {
       "id": "b000030",
       "kind": "blank",
-      "start_line": 101,
-      "end_line": 101,
+      "start_line": 105,
+      "end_line": 105,
       "raw": "\n"
     },
     {
       "id": "b000031",
       "kind": "paragraph",
-      "start_line": 102,
-      "end_line": 109,
+      "start_line": 106,
+      "end_line": 113,
       "raw": "IDs are decimal strings to preserve 64-bit values without JSON number rounding.\nCall IDs increase independently in each direction and never wrap. A duplicate\nor decreasing incoming call ID, repeated hello, unknown version/type, unsolicited\nfuture result, malformed schema/JSON or oversized frame fails the link. Late\nresults for settled/cancelled calls are ignored. Names are bounded ASCII operation\ntokens; JSON data remains UTF-8 Value data. Frame size is negotiated to the smaller\npeer bound for outgoing application messages. TLS/local credential evidence is\ncollected from the real transport, never supplied by the hello payload.\n"
     },
     {
       "id": "b000032",
       "kind": "blank",
-      "start_line": 110,
-      "end_line": 110,
+      "start_line": 114,
+      "end_line": 114,
       "raw": "\n"
     },
     {
       "id": "b000033",
       "kind": "paragraph",
-      "start_line": 111,
-      "end_line": 115,
+      "start_line": 115,
+      "end_line": 119,
       "raw": "Peer discovery, NAT traversal, relay discovery, distributed consensus, persistent\nremote object replication and automatic permission sharing are not implemented.\nThey are separate application/network mechanisms; none is inferred from equal\npeer status. The existing packet `NetworkStack` and session/encryption APIs remain\navailable independently of this stream-based peer protocol.\n"
     }
   ],
@@ -286,7 +286,7 @@
       "level": 2,
       "title": "Bounds and private wire format",
       "anchor": "bounds-and-private-wire-format",
-      "start_line": 77
+      "start_line": 81
     }
   ],
   "indexes": {
@@ -328,14 +328,14 @@
       },
       {
         "block_id": "b000031",
-        "line": 103,
+        "line": 107,
         "text": "Call IDs increase independently in each direction and never wrap. A duplicate",
         "basis": "lexical_match",
         "context": "paragraph"
       },
       {
         "block_id": "b000031",
-        "line": 109,
+        "line": 113,
         "text": "collected from the real transport, never supplied by the hello payload.",
         "basis": "lexical_match",
         "context": "paragraph"

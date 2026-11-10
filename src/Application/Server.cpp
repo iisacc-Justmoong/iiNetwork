@@ -25,7 +25,7 @@ std::string media_type(std::string_view value)
 { return wire::lower(trim_http(value.substr(0, value.find(';')))); }
 ServerResponse graphql_error(unsigned status, std::string message, std::string media = "application/graphql-response+json")
 {
-    auto body = ii::json::stringify(core::Value(core::Value::Object{
+    auto body = wire::json_codec::stringify(core::Value(core::Value::Object{
         {"errors", core::Value(core::Value::Array{core::Value(core::Value::Object{{"message", core::Value(std::move(message))}})})}}));
     return {status, {{"Content-Type", std::move(media)}}, body ? std::move(*body) : std::string{}};
 }
@@ -310,7 +310,7 @@ ServerResponse GraphQLService::operator()(const ServerRequest& request) const
     if (!type || media_type(*type) != "application/json") return graphql_error(415, "GraphQL request requires application/json");
     if (request.body.size() > limit_) return graphql_error(413, "GraphQL request too large");
     ii::json::Limits limits; limits.input_bytes = limits.output_bytes = limit_;
-    auto tree = ii::json::parse(request.body, limits);
+    auto tree = wire::json_codec::parse(request.body, limits);
     if (!tree || !tree->get<core::Value::Object>()) return graphql_error(400, "GraphQL request must be a JSON object");
     const auto& object = tree->get<core::Value::Object>()->get();
     auto query = object.find("query");
@@ -357,7 +357,7 @@ ServerResponse GraphQLService::operator()(const ServerRequest& request) const
         envelope.emplace("errors", core::Value(std::move(errors)));
     }
     if (!result.extensions.empty()) envelope.emplace("extensions", core::Value(std::move(result.extensions)));
-    auto body = ii::json::stringify(core::Value(std::move(envelope)), limits);
+    auto body = wire::json_codec::stringify(core::Value(std::move(envelope)), limits);
     if (!body) return graphql_error(500, "GraphQL response serialization failed");
     HttpResponse check; check.status = 200; check.body = *body;
     if (GraphQLClient::decode(std::move(check), limit_).error) return graphql_error(500, "Invalid GraphQL execution error metadata");

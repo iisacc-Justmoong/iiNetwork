@@ -88,6 +88,7 @@ Result<void> LocalServer::listen(LocalEndpoint endpoint, LocalServerOptions opti
     return p_->listener.listen_local(name->path, name->abstract_namespace, options.backlog, options.stream, options.permissions, options.remove_on_close);
 }
 void LocalServer::close() { p_->listener.close(); }
+void LocalServer::on_failure(std::function<void(std::string)> callback) { p_->listener.on_failure(std::move(callback)); }
 std::string LocalServer::path() const { return p_->listener.local_path(); }
 std::string LocalServer::error() const { return p_->listener.error(); }
 } // namespace ii::network

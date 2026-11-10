@@ -21,15 +21,29 @@
       "document_id": "urn:iisacc:document:4dd3884bb0f501483fa6a0980c72c1d7eda5f3fc850d7e730ee523653f7f37eb",
       "source": "README.md",
       "agent_json": "docs/entrypoints/README.agent.json",
-      "source_sha256": "439643396c0207b17218e56e13dafefb00ee65fb6dbe7cc464ca0fe8c3046f5a",
+      "source_sha256": "d0b3599fcccb46fb9b88e6fcaeed433755a939f44851aac8a87c76b47f438f80",
       "role": "overview"
     },
     {
       "document_id": "urn:iisacc:document:e818fe2ffd93f997e3f7cb14308c7a432fdd0b8206fb3ee166797ffb0f76decc",
       "source": "docs/Architecture.md",
       "agent_json": "docs/Architecture.agent.json",
-      "source_sha256": "51cfbbb8d6319d11231bca8f9377f4d72eb6d1d3d6943c472d73e06bddd659e2",
+      "source_sha256": "775f3fc54654b4ab7cd1e2fcefb3ee07332322f34e70aac206eeeef1d28c0226",
       "role": "reference"
+    },
+    {
+      "document_id": "urn:iisacc:document:97189164c9885c0ac44edb298f6ea81816cc50d4eafc84fcc04dc8288cb4f032",
+      "source": "docs/ComputeMigration.md",
+      "agent_json": "docs/ComputeMigration.agent.json",
+      "source_sha256": "90422761641c4df4ad6b019dfb4e6904e02a83b7a1b10d32580fe02b67a66ebd",
+      "role": "guide"
+    },
+    {
+      "document_id": "urn:iisacc:document:fdc3982fa875ce3c8776ee4473e2053618784ba0b23ffdc702aca85b30983a14",
+      "source": "docs/DynamicLinking.md",
+      "agent_json": "docs/DynamicLinking.agent.json",
+      "source_sha256": "929097484636d5bafa0f7a1f3da6bdc14589f7b52611659b436f4936639d336f",
+      "role": "guide"
     },
     {
       "document_id": "urn:iisacc:document:d413e8396e20f20ab2585f44679ef70e3075b465d79c672db25cfa771da27d07",
@@ -42,7 +56,7 @@
       "document_id": "urn:iisacc:document:95604664cde23e5a8fe5f9f37fd610a4943c49f9d133211b02860266a0313f66",
       "source": "docs/Interfaces.md",
       "agent_json": "docs/Interfaces.agent.json",
-      "source_sha256": "0baef484e819d8fb399d597ea2e5078e39a3e86f86d00aa5018a79359b85f354",
+      "source_sha256": "fd09268bf54c82a2501fc960a3d992cbac8fd9ac0164327a8aabfa4f71073534",
       "role": "guide"
     },
     {
@@ -56,21 +70,21 @@
       "document_id": "urn:iisacc:document:58cd253737c3ffa964484217015e341aa64e2ec10223fd0e6c30449f2849ea6f",
       "source": "docs/Peers.md",
       "agent_json": "docs/Peers.agent.json",
-      "source_sha256": "afb7e12d8923a0e6bb7262a25c5bf806fcc30d6674d826548453a6b9219ff1b9",
+      "source_sha256": "78fac584b082c6deb1ef70bd0898396c0b501f86e7f719678ae0f4ff692cbd7d",
       "role": "guide"
     },
     {
       "document_id": "urn:iisacc:document:51821e1ca430b6ebc248db0467bad97ad3f1c261dfd4400804b060ebd67bc86f",
       "source": "docs/README.md",
       "agent_json": "docs/README.agent.json",
-      "source_sha256": "ec63eaa90681799a6f767ce71ebbaf1fea0eb47d0949111e74c182b1e78b65cb",
+      "source_sha256": "71bcde5461e29816a8ce180c1fd13079c10784dd96773c3d1f5f5b282baea165",
       "role": "overview"
     },
     {
       "document_id": "urn:iisacc:document:75a459fc7a5164038d88dbaf909ea327bd337811bfc6a40a5f1a95a3dd2d68b0",
       "source": "docs/Realtime.md",
       "agent_json": "docs/Realtime.agent.json",
-      "source_sha256": "3eaf967480f5f471c5d5316297a08095f72901fdb4ba24d1eeeb1cdd1fd4fb95",
+      "source_sha256": "6f7c1e8fbad25284d2d0ba5b1a8d94cc53f7485d7e3ee60acb11fc6f0172d3b6",
       "role": "guide"
     },
     {

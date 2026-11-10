@@ -184,7 +184,7 @@ void application()
     auto graph = take(graphql.prepare(operation));
     require(graph.method == "POST" && graph.headers.at("Accept").find("application/graphql-response+json") != std::string::npos,
             "GraphQL headers");
-    require(wire::text(wire::field(take(ii::json::parse(graph.body)), "operationName")) == "Item", "GraphQL envelope");
+    require(wire::text(wire::field(take(wire::json_codec::parse(graph.body)), "operationName")) == "Item", "GraphQL envelope");
     HttpResponse raw; raw.status = 200;
     raw.body = R"({"data":{"item":null},"errors":[{"message":"missing","path":["item"],"extensions":{"code":"NOT_FOUND"}}]})";
     auto partial = GraphQLClient::decode(raw);

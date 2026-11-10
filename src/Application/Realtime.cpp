@@ -317,7 +317,8 @@ bool accept(Link& link, const Envelope& envelope, std::string_view body, bool se
 
 struct RealtimeServer::Impl : std::enable_shared_from_this<RealtimeServer::Impl>
 {
-    runtime::EventLoop& loop; Udp socket; runtime::TaskToken timer;
+    runtime::EventLoop& loop; Udp socket; runtime::TaskToken timer, wake_task;
+    std::optional<Clock::time_point> scheduled;
     RealtimeServer* owner; bool active = false; std::uint64_t generation = 0, next_peer = 0;
     RealtimeLimits limits; RealtimeStatistics totals;
     std::map<SessionId, std::shared_ptr<Link>> links;
@@ -355,7 +356,8 @@ struct RealtimeServer::Impl : std::enable_shared_from_this<RealtimeServer::Impl>
                 closed.push_back(link->info);
             }
         }
-        active = false; timer.cancel(); socket.received = {}; socket.failed = {}; socket.close(); links.clear(); identifiers.clear();
+        active = false; timer.cancel(); wake_task.cancel(); scheduled.reset();
+        socket.received = {}; socket.failed = {}; socket.close(); links.clear(); identifiers.clear();
         if (notify)
             for (auto& info : closed)
             {
@@ -464,6 +466,38 @@ struct RealtimeServer::Impl : std::enable_shared_from_this<RealtimeServer::Impl>
         }
         cursor = (start + std::max<std::size_t>(visited, 1)) % snapshot.size();
     }
+    bool schedule()
+    {
+        if(!active) return false;
+        const auto now=Clock::now(); auto next=Clock::time_point::max();
+        for(const auto& [id,link]:links) {
+            (void)id;
+            if(!link->ready) next=std::min(next,link->expires);
+            else {
+                next=std::min(next,link->last_receive+limits.idle_timeout);
+                const auto heartbeat=link->last_ping+limits.heartbeat_interval;
+                next=std::min(next,heartbeat<=now ? now+limits.tick_interval : heartbeat);
+                if(!link->pending.empty()) {
+                    auto batch=now+limits.tick_interval;
+                    if(scheduled && timer.pending()) batch=std::min(batch,*scheduled);
+                    next=std::min(next,batch);
+                }
+            }
+        }
+        if(scheduled && *scheduled==next && timer.pending()) return true;
+        timer.cancel(); timer={}; scheduled.reset();
+        if(next==Clock::time_point::max()) return true;
+        auto weak=weak_from_this();
+        auto admitted=loop.at(next,[weak] {
+            if(auto keep=weak.lock()) {
+                keep->timer={}; keep->scheduled.reset(); keep->tick();
+                if(keep->active && !keep->schedule()) keep->close(true);
+            }
+        });
+        if(!admitted) return false;
+        timer=admitted.token; scheduled=next; return true;
+    }
+    bool signal_work() { return active && loop.sender().signal(wake_task,Clock::now()); }
     Result<std::uint64_t> next(std::uint16_t channel)
     {
         if (!active) return fail(ErrorCode::closed, "Realtime server is closed");
@@ -478,6 +512,7 @@ struct RealtimeServer::Impl : std::enable_shared_from_this<RealtimeServer::Impl>
         for (auto& [id, link] : links)
             if (link->ready && link->info.room == room && link->info.peer != except)
                 if (enqueue(*link, stream, sequence, bytes, limits, totals, now)) ++count;
+        if(count && !signal_work()) return fail(ErrorCode::unavailable,"Core realtime dispatch unavailable");
         return count;
     }
 };
@@ -491,10 +526,14 @@ Result<void> RealtimeServer::listen(IpEndpoint endpoint, RealtimeLimits limits)
     UdpOptions options; options.maximum_datagram_bytes = datagram_limit;
     auto bound = p->socket.bind(endpoint, options); if (!bound) return bound;
     p->limits = limits; p->totals = {}; p->values.assign(limits.channels, 0); p->cursor = 0; ++p->generation; p->active = true;
-    p->socket.received = [weak = std::weak_ptr<Impl>(p)](Datagram packet) { if (auto keep = weak.lock()) keep->receive(std::move(packet)); };
+    p->socket.received = [weak = std::weak_ptr<Impl>(p)](Datagram packet) { if (auto keep = weak.lock()) {
+        keep->receive(std::move(packet)); if(keep->active && !keep->schedule()) keep->close(true);
+    } };
     p->socket.failed = [weak = std::weak_ptr<Impl>(p)](auto) { if (auto keep = weak.lock()) ++keep->totals.rejected_packets; };
-    p->timer = p->loop.every(limits.tick_interval, [weak = std::weak_ptr<Impl>(p)] { if (auto keep = weak.lock()) keep->tick(); }).token;
-    if (!p->timer.pending()) { p->close(false); return fail(ErrorCode::unavailable, "Core realtime dispatch admission failed"); }
+    p->wake_task=p->loop.on_signal([weak=std::weak_ptr<Impl>(p)] { if(auto keep=weak.lock()) {
+        keep->tick(); if(keep->active && !keep->schedule()) keep->close(true);
+    } }).token;
+    if (!p->wake_task.pending()) { p->close(false); return fail(ErrorCode::unavailable, "Core realtime dispatch admission failed"); }
     return {};
 }
 Result<RealtimeTicket> RealtimeServer::issue(std::string room, std::chrono::milliseconds lifetime)
@@ -509,7 +548,9 @@ Result<RealtimeTicket> RealtimeServer::issue(std::string room, std::chrono::mill
     RealtimeTicket ticket{*id, ++p->next_peer, std::move(room), *key};
     auto link = std::make_shared<Link>(); link->id = *id; link->info.peer = ticket.peer; link->info.room = ticket.room;
     link->cipher = std::make_shared<Aes256Gcm>(*key); link->expires = Clock::now() + lifetime;
-    p->links.emplace(*id, link); p->identifiers.emplace(ticket.peer, *id); return ticket;
+    p->links.emplace(*id, link); p->identifiers.emplace(ticket.peer, *id);
+    if(!p->schedule()) { p->identifiers.erase(ticket.peer); p->links.erase(*id); return fail(ErrorCode::unavailable,"Core realtime deadline admission failed"); }
+    return ticket;
 }
 Result<std::uint64_t> RealtimeServer::send(RealtimePeerId peer, std::uint16_t channel, std::string bytes)
 {
@@ -517,7 +558,9 @@ Result<std::uint64_t> RealtimeServer::send(RealtimePeerId peer, std::uint16_t ch
     if (!link || !link->ready) return fail(ErrorCode::not_found, "Realtime participant is not connected");
     auto sequence = p->next(channel); if (!sequence) return std::unexpected(sequence.error());
     auto queued = enqueue(*link, {0, channel}, *sequence, std::make_shared<const std::string>(std::move(bytes)), p->limits, p->totals, Clock::now());
-    if (!queued) return std::unexpected(queued.error()); return *sequence;
+    if (!queued) return std::unexpected(queued.error());
+    if(!p->signal_work()) return fail(ErrorCode::unavailable,"Core realtime dispatch unavailable");
+    return *sequence;
 }
 Result<std::size_t> RealtimeServer::broadcast(std::string_view room, std::uint16_t channel, std::string bytes, RealtimePeerId except)
 {
@@ -539,7 +582,9 @@ Result<std::size_t> RealtimeServer::relay(const RealtimeFrame& frame)
 bool RealtimeServer::revoke(RealtimePeerId peer)
 {
     auto p = p_; auto link = p->find(peer); if (!link) return false;
-    p->drop(link, make_error(ErrorCode::permission_denied, "Realtime membership was revoked"), Reason::revoked); return true;
+    p->drop(link, make_error(ErrorCode::permission_denied, "Realtime membership was revoked"), Reason::revoked);
+    if(p->active && !p->schedule()) p->close(true);
+    return true;
 }
 void RealtimeServer::close() { auto p = p_; p->close(true); }
 bool RealtimeServer::listening() const { return p_->active; }
@@ -568,7 +613,8 @@ RealtimeStatistics RealtimeServer::statistics() const
 
 struct RealtimeClient::Impl : std::enable_shared_from_this<RealtimeClient::Impl>
 {
-    runtime::EventLoop& loop; Udp socket; runtime::TaskToken timer; RealtimeClient* owner;
+    runtime::EventLoop& loop; Udp socket; runtime::TaskToken timer, wake_task; RealtimeClient* owner;
+    std::optional<Clock::time_point> scheduled;
     RealtimeState state = RealtimeState::closed; std::uint64_t generation = 0;
     std::shared_ptr<Link> link; RealtimeLimits limits; RealtimeStatistics totals;
     std::optional<Error> failure; Clock::time_point started{}; std::vector<std::uint64_t> values;
@@ -581,7 +627,7 @@ struct RealtimeClient::Impl : std::enable_shared_from_this<RealtimeClient::Impl>
         if (send_bye && link && link->ready)
             control(socket, *link, Kind::bye, false, std::string(1, char(Reason::closed)), limits, totals, Clock::now());
         state = reason ? RealtimeState::failed : RealtimeState::closed; failure = reason;
-        timer.cancel(); socket.received = {}; socket.failed = {}; socket.close();
+        timer.cancel(); wake_task.cancel(); scheduled.reset(); socket.received = {}; socket.failed = {}; socket.close();
         if (link) { link->pending.clear(); link->pending_index.clear(); link->pending_bytes = 0; link->pings.clear(); link->latest.clear(); link->cipher.reset(); }
         if (!notify || !owner) return;
         if (reason)
@@ -663,6 +709,35 @@ struct RealtimeClient::Impl : std::enable_shared_from_this<RealtimeClient::Impl>
         heartbeat(socket, *current, false, limits, totals, now);
         std::size_t budget = limits.packets_per_tick; flush(socket, *current, false, limits, totals, now, budget);
     }
+    bool schedule()
+    {
+        if(!link || (state!=RealtimeState::connecting && state!=RealtimeState::ready)) return false;
+        const auto now=Clock::now(); auto next=Clock::time_point::max();
+        if(state==RealtimeState::connecting) {
+            next=std::min(started+limits.handshake_timeout,link->last_join+limits.retry_interval);
+        } else {
+            const auto heartbeat=link->last_ping+limits.heartbeat_interval;
+            next=std::min(link->last_receive+limits.idle_timeout,heartbeat<=now ? now+limits.tick_interval : heartbeat);
+            if(!link->pending.empty()) {
+                auto batch=now+limits.tick_interval;
+                if(scheduled && timer.pending()) batch=std::min(batch,*scheduled);
+                next=std::min(next,batch);
+            }
+        }
+        if(scheduled && *scheduled==next && timer.pending()) return true;
+        timer.cancel(); timer={}; scheduled.reset();
+        auto weak=weak_from_this();
+        auto admitted=loop.at(next,[weak] {
+            if(auto keep=weak.lock()) {
+                keep->timer={}; keep->scheduled.reset(); keep->tick();
+                if((keep->state==RealtimeState::connecting || keep->state==RealtimeState::ready) && !keep->schedule())
+                    keep->stop(make_error(ErrorCode::unavailable,"Core realtime deadline admission failed"),true,false);
+            }
+        });
+        if(!admitted) return false;
+        timer=admitted.token; scheduled=next; return true;
+    }
+    bool signal_work() { return loop.sender().signal(wake_task,Clock::now()); }
 };
 
 RealtimeClient::RealtimeClient(runtime::EventLoop& loop) : p_(std::make_shared<Impl>(loop, this)) {}
@@ -688,10 +763,18 @@ Result<void> RealtimeClient::connect(IpEndpoint server, const RealtimeTicket& ti
     auto connected = p->socket.connect_peer(server); if (!connected) { p->socket.close(); return connected; }
     p->limits = limits; p->totals = {}; p->failure.reset(); p->link = link; p->values.assign(limits.channels, 0);
     p->started = now; ++p->generation; p->state = RealtimeState::connecting;
-    p->socket.received = [weak = std::weak_ptr<Impl>(p)](Datagram packet) { if (auto keep = weak.lock()) keep->receive(std::move(packet)); };
+    p->socket.received = [weak = std::weak_ptr<Impl>(p)](Datagram packet) { if (auto keep = weak.lock()) {
+        keep->receive(std::move(packet));
+        if((keep->state==RealtimeState::connecting || keep->state==RealtimeState::ready) && !keep->schedule())
+            keep->stop(make_error(ErrorCode::unavailable,"Core realtime deadline admission failed"),true,false);
+    } };
     p->socket.failed = [weak = std::weak_ptr<Impl>(p)](auto) { if (auto keep = weak.lock()) ++keep->totals.rejected_packets; };
-    p->timer = p->loop.every(limits.tick_interval, [weak = std::weak_ptr<Impl>(p)] { if (auto keep = weak.lock()) keep->tick(); }).token;
-    if (!p->timer.pending()) { p->stop({}, false, false); return fail(ErrorCode::unavailable, "Core realtime dispatch admission failed"); }
+    p->wake_task=p->loop.on_signal([weak=std::weak_ptr<Impl>(p)] { if(auto keep=weak.lock()) {
+        keep->tick();
+        if((keep->state==RealtimeState::connecting || keep->state==RealtimeState::ready) && !keep->schedule())
+            keep->stop(make_error(ErrorCode::unavailable,"Core realtime deadline admission failed"),true,false);
+    } }).token;
+    if (!p->wake_task.pending() || !p->schedule()) { p->stop({}, false, false); return fail(ErrorCode::unavailable, "Core realtime dispatch admission failed"); }
     transmit(p->socket, *link, link->join, true, limits, p->totals, now); return {};
 }
 Result<std::uint64_t> RealtimeClient::publish(std::uint16_t channel, std::string bytes)
@@ -702,7 +785,9 @@ Result<std::uint64_t> RealtimeClient::publish(std::uint16_t channel, std::string
     if (p->values[channel] == std::numeric_limits<std::uint64_t>::max()) return fail(ErrorCode::expired, "Realtime value sequence exhausted");
     const auto sequence = p->values[channel] + 1;
     auto queued = enqueue(*p->link, {0, channel}, sequence, std::make_shared<const std::string>(std::move(bytes)), p->limits, p->totals, Clock::now());
-    if (!queued) return std::unexpected(queued.error()); p->values[channel] = sequence; return sequence;
+    if (!queued) return std::unexpected(queued.error());
+    if(!p->signal_work()) return fail(ErrorCode::unavailable,"Core realtime dispatch unavailable");
+    p->values[channel] = sequence; return sequence;
 }
 void RealtimeClient::close() { auto p = p_; p->stop({}, true, true); }
 RealtimeState RealtimeClient::state() const { return p_->state; }

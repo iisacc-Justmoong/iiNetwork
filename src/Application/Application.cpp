@@ -110,7 +110,7 @@ Result<HttpRequest> RestClient::prepare(const RestRequest& input) const
     }
     if (input.json)
     {
-        auto serialized = ii::json::stringify(*input.json);
+        auto serialized = wire::json_codec::stringify(*input.json);
         if (!serialized) return fail(Layer::application, ErrorCode::malformed, serialized.error().message);
         request.body = std::move(*serialized); set_header(request, "Content-Type", "application/json");
     }
@@ -132,7 +132,7 @@ bool RestClient::request(RestRequest input, std::function<void(RestResponse)> ca
         if (parse_json && !response.http.body.empty())
         {
             ii::json::Limits limits; limits.input_bytes = limit;
-            auto parsed = ii::json::parse(response.http.body, limits);
+            auto parsed = wire::json_codec::parse(response.http.body, limits);
             if (parsed) response.json = std::move(*parsed);
             else if (!response.error) response.error = application_error(ErrorCode::malformed, parsed.error().message);
         }
@@ -151,7 +151,7 @@ Result<HttpRequest> GraphQLClient::prepare(const GraphQLRequest& operation) cons
     core::Value::Object envelope{{"query", core::Value(operation.query)}, {"variables", core::Value(operation.variables)}};
     if (!operation.operation_name.empty()) envelope.emplace("operationName", core::Value(operation.operation_name));
     if (!operation.extensions.empty()) envelope.emplace("extensions", core::Value(operation.extensions));
-    auto body = ii::json::stringify(core::Value(std::move(envelope)));
+    auto body = wire::json_codec::stringify(core::Value(std::move(envelope)));
     if (!body) return fail(Layer::application, ErrorCode::malformed, body.error().message);
     request.body = std::move(*body);
     set_header(request, "Content-Type", "application/json");
@@ -179,7 +179,7 @@ GraphQLResponse GraphQLClient::decode(HttpResponse http, std::size_t limit)
     if (response.http.body.size() > limit)
     { response.error = application_error(ErrorCode::too_large, "GraphQL response limit exceeded"); return response; }
     ii::json::Limits limits; limits.input_bytes = limit;
-    auto tree = ii::json::parse(response.http.body, limits);
+    auto tree = wire::json_codec::parse(response.http.body, limits);
     if (!tree || !tree->get<core::Value::Object>())
     { invalid("GraphQL response must be a JSON object"); return response; }
     const auto& object = tree->get<core::Value::Object>()->get();

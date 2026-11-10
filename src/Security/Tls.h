@@ -55,7 +55,7 @@ class TlsStream final : public ByteStream
     bool write(std::string_view) override;
     std::string read() override;
     std::string read_some(std::size_t) override;
-    std::string peek(std::size_t maximum = std::numeric_limits<std::size_t>::max()) const override;
+    std::string peek(std::size_t maximum = (std::numeric_limits<std::size_t>::max)()) const override;
     std::size_t available_bytes() const override;
     std::size_t pending_bytes() const override;
     void receive_limit(std::size_t) override;

@@ -52,7 +52,7 @@ class Tcp final : public ByteStream
     bool write(std::shared_ptr<const std::string>) override;
     std::string read() override;
     std::string read_some(std::size_t) override;
-    std::string peek(std::size_t maximum = std::numeric_limits<std::size_t>::max()) const override;
+    std::string peek(std::size_t maximum = (std::numeric_limits<std::size_t>::max)()) const override;
     std::size_t available_bytes() const override;
     void close(bool flush = false) override;
     Result<void> shutdown_write() override;
@@ -86,6 +86,8 @@ class Listener final
     bool listen(std::uint16_t port = 0);
     bool listen(std::string_view address, std::uint16_t port = 0);
     Result<void> listen(IpEndpoint, ListenerOptions = {});
+    // Called on the owning loop if the readiness monitor fails.
+    void on_failure(std::function<void(std::string)>);
     void close();
     std::uint16_t port() const;
     std::optional<IpEndpoint> local_endpoint() const;
