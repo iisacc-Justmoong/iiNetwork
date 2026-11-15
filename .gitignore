@@ -6,3 +6,4 @@ __pycache__/
 /resources/.recovery/
 .iisacc-temporary.lock
 .*.iisacc-preview
+resources/
