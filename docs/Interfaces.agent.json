@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "docs/Interfaces.md",
-    "sha256": "fd09268bf54c82a2501fc960a3d992cbac8fd9ac0164327a8aabfa4f71073534",
-    "bytes": 23842,
-    "line_count": 345,
+    "sha256": "28207c9aea759d73022d8fcc3bf0ad6f94d59a20d9c66d680f66486c589d5fd9",
+    "bytes": 24261,
+    "line_count": 347,
     "encoding": "utf-8",
     "language": "ko"
   },
@@ -977,6 +977,20 @@
       "start_line": 345,
       "end_line": 345,
       "raw": "설치 설정의 `iiNetwork_HTTP_SERVER_LIFECYCLE`은 이 계약과 `ServerLimits` 레이아웃을 함께 제공하는 패키지의 기능 표시이다. iiWebServer는 동일 버전의 오래된 설치본과 새 HTTP 라이브러리가 섞이지 않도록 이 표시를 확인한다. 정적 라이브러리와 공개 헤더는 같은 빌드에서 설치하고 소비자는 함께 재빌드한다.\n"
+    },
+    {
+      "kind": "blank",
+      "raw": "\n",
+      "id": "b000116",
+      "start_line": 346,
+      "end_line": 346
+    },
+    {
+      "kind": "paragraph",
+      "raw": "iiNetwork 0.6.1은 독립 값 트리와 오류·제한 구조를 가진 iiJson 0.1.2 이상으로 빌드한다. 이전 iiJson 값 레이아웃으로 컴파일된 iiNetwork 0.6.0 설치본은 같은 공개 API처럼 보여도 새 iiJson과 바이너리 호환을 가정할 수 없으므로, 두 라이브러리와 소비자를 함께 다시 빌드한다. 설치 CMake 패키지도 최소 iiJson 버전을 요구한다.\n",
+      "id": "b000117",
+      "start_line": 347,
+      "end_line": 347
     }
   ],
   "outline": [

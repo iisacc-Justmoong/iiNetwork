@@ -1,0 +1,24 @@
+#pragma once
+
+// C++ public entry for iiNetwork; the linked components select the API.
+#include <iiNetwork/Realtime.h>
+#include <iiNetwork/WebSocket.h>
+#include <iiNetwork/Address.h>
+#include <iiNetwork/Application.h>
+#include <iiNetwork/ByteStream.h>
+#include <iiNetwork/Error.h>
+#include <iiNetwork/Headers.h>
+#include <iiNetwork/Http.h>
+#include <iiNetwork/Layers.h>
+#include <iiNetwork/Local.h>
+#include <iiNetwork/Network.h>
+#include <iiNetwork/Peer.h>
+#include <iiNetwork/Presentation.h>
+#include <iiNetwork/Relay.h>
+#include <iiNetwork/Security.h>
+#include <iiNetwork/Server.h>
+#include <iiNetwork/Session.h>
+#include <iiNetwork/Stack.h>
+#include <iiNetwork/Tls.h>
+#include <iiNetwork/Transport.h>
+#include <iiNetwork/Wire.h>

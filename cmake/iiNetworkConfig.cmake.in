@@ -10,7 +10,7 @@ set(iiNetwork_REALTIME_LATEST TRUE)
 find_dependency(iiSDKCore 0.19 CONFIG COMPONENTS Runtime)
 # The Core/Network composition is supplied by iiNetworkLoadBalancer separately.
 set(iiNetwork_LOAD_BALANCER FALSE)
-find_dependency(iiJson 0.1 CONFIG)
+find_dependency(iiJson 0.1.2 CONFIG)
 find_dependency(CURL 7.62)
 find_dependency(OpenSSL 3 COMPONENTS Crypto SSL)
 if(APPLE)

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
-project(iiNetwork VERSION 0.6.0 LANGUAGES CXX)
+project(iiNetwork VERSION 0.6.1 LANGUAGES CXX)
+include(./cmake/ModuleImports.cmake)
 option(BUILD_SHARED_LIBS "Build iiNetwork shared libraries" ON)
 if(EMSCRIPTEN AND BUILD_SHARED_LIBS)
     set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
@@ -14,7 +15,7 @@ option(IINETWORK_BUILD_TESTS "Build iiNetwork contracts" ${PROJECT_IS_TOP_LEVEL}
 option(IINETWORK_BUILD_EXAMPLES "Build iiNetwork example" OFF)
 find_package(iiSDKCore 0.19 CONFIG REQUIRED GLOBAL COMPONENTS Runtime
     HINTS "$ENV{HOME}/.local/SDK/iiSDKCore")
-find_package(iiJson 0.1 CONFIG REQUIRED GLOBAL HINTS "$ENV{HOME}/.local/SDK/iiJson")
+find_package(iiJson 0.1.2 CONFIG REQUIRED GLOBAL HINTS "$ENV{HOME}/.local/SDK/iiJson")
 find_package(CURL 7.62 REQUIRED GLOBAL)
 find_package(OpenSSL 3 REQUIRED COMPONENTS Crypto SSL GLOBAL)
 if(APPLE)
@@ -96,6 +97,8 @@ if(IINETWORK_BUILD_TESTS)
         add_library(iiNetworkWindowsHeaderMacros OBJECT tests/windows_header_macros.cpp)
         target_link_libraries(iiNetworkWindowsHeaderMacros PRIVATE iiNetwork::iiNetwork)
     endif()
+    add_test(NAME iiNetwork.JsonPackageContract COMMAND ${CMAKE_COMMAND}
+        "-DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}" -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/json_package_contract.cmake")
     add_test(NAME iiNetwork.SourceLayout COMMAND ${CMAKE_COMMAND}
         "-DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}" -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/source_layout.cmake")
     add_executable(iiNetworkTransportAllocation tests/transport_allocation.cpp)

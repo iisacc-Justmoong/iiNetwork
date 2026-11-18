@@ -64,10 +64,12 @@ authentication, loss semantics and validation scope.
 ## Build and consume
 
 Dependencies are iiSDKCore >= 0.19 (Runtime) with the `EventLoop::Sender`
-`on_signal`/`signal` API, iiJson >= 0.1, libcurl >= 7.62 and
+`on_signal`/`signal` API, iiJson >= 0.1.2, libcurl >= 7.62 and
 OpenSSL >= 3 (Crypto and SSL). C++23 is required. Use the repository-local `build/`.
 An older installation with the same Core version number may lack the signal API;
 rebuild and select a Core package containing both the current headers and runtime.
+iiNetwork 0.6.1 must be rebuilt with iiJson 0.1.2 or later; older iiNetwork
+binaries were built against a different JSON value and error layout.
 The following installation is a workspace staging area, preserving installed SDKs.
 
 ```sh
