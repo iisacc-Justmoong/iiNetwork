@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 # iisdk:consumer-application
 project(iiNetworkLoadBalancer VERSION 0.6.0 LANGUAGES CXX)
+set(iiNetworkLoadBalancer_SPDX_LICENSE "Apache-2.0")
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CTest)
