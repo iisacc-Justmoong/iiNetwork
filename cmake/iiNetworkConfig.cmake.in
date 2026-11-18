@@ -1,4 +1,5 @@
 @PACKAGE_INIT@
+set(iiNetwork_SPDX_LICENSE "Apache-2.0")
 if(EMSCRIPTEN)
     # Emscripten supports side modules although its CMake toolchain defaults
     # the shared-library capability to false.

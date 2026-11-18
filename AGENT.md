@@ -14,6 +14,14 @@
 
 실시간 데이터 계약은 `docs/Realtime.md`, 기존 피어 제어 계약은 `docs/Peers.md`, 일반 통신 API는 `docs/Interfaces.md`를 먼저 읽는다. 기능 추가는 그 경계와 기존 공개 API를 보존하면서 수행한다.
 
+## 라이선스
+
+이 저장소의 iiNetwork 모듈은 Apache License 2.0이다. 자사 소스, 문서, 도구, 테스트가 포함된다. 저작권 표시는 `Copyright (c) 2026 iisacc`이고 고지는 루트 `NOTICE`에 있다. 사람용 한국어 설명은 [docs/License.md](docs/License.md)이다.
+
+`Product` 아래의 iisacc 제품은 GNU Affero General Public License(AGPL)이다.
+
+제3자와 벤더 코드는 원래 라이선스를 유지한다. 문서 재편 중에도 그 라이선스와 외부 원본은 보존한다.
+
 <!-- workspace-docs:agent:start -->
 ## 문서 구조와 에이전트 탐색
 

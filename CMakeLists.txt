@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 project(iiNetwork VERSION 0.6.0 LANGUAGES CXX)
+set(iiNetwork_SPDX_LICENSE "Apache-2.0")
 option(BUILD_SHARED_LIBS "Build iiNetwork shared libraries" ON)
 if(EMSCRIPTEN AND BUILD_SHARED_LIBS)
     set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
@@ -88,6 +89,9 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 if(IINETWORK_BUILD_TESTS)
+    add_test(NAME iiNetwork.license COMMAND "${CMAKE_COMMAND}"
+        "-DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/license.cmake")
     target_compile_definitions(iiNetwork PRIVATE IINETWORK_TESTING=1)
     add_executable(iiNetworkWireValues tests/wire_values.cpp)
     target_link_libraries(iiNetworkWireValues PRIVATE iiNetwork::iiNetwork)
@@ -234,7 +238,7 @@ write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/iiNetworkConfigVer
     VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/iiNetworkConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/iiNetworkConfigVersion.cmake" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iiNetwork)
-install(FILES README.md LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/iiNetwork)
+install(FILES README.md LICENSE NOTICE DESTINATION ${CMAKE_INSTALL_DATADIR}/iiNetwork)
 install(DIRECTORY docs/ DESTINATION ${CMAKE_INSTALL_DATADIR}/iiNetwork/docs)
 install(DIRECTORY example/ComputeMigration DESTINATION ${CMAKE_INSTALL_DATADIR}/iiNetwork/example
     PATTERN build EXCLUDE PATTERN "__pycache__" EXCLUDE)

@@ -217,6 +217,23 @@ and verify a staged installed consumer after changing source/header paths.
 
 Temporary TLS test certificates are created under `resources/.state/` and removed by the CTest fixture cleanup. Curl configure probes also remove their temporary build directory. Examples are opt-in.
 
+## License
+
+SPDX-License-Identifier: Apache-2.0
+
+iiNetwork is part of the iiSDK tree and is licensed under the
+[Apache License, Version 2.0](LICENSE) (SPDX `Apache-2.0`).
+The copyright notice is `Copyright (c) 2026 iisacc`. Attribution for this
+distribution is in [NOTICE](NOTICE). The Korean statement of the same policy
+is [docs/License.md](docs/License.md).
+
+iisacc products under Product are licensed under the GNU Affero General
+Public License (AGPL).
+
+Third-party libraries linked by this module keep their own licenses.
+OpenSSL is Apache-2.0 and libcurl uses the curl license. Neither library
+is vendored in this repository.
+
 <!-- workspace-docs:readme:start -->
 ## Documentation entry points
 

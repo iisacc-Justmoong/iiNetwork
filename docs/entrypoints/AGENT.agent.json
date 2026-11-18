@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "AGENT.md",
-    "sha256": "45bac187762f9725feda7ef407bdf853dcb5ecb9cb28f4a0f086a4c5a6a1b7b4",
-    "bytes": 4104,
-    "line_count": 33,
+    "sha256": "398f3f10af7ebf189fd4e6f093a3851245fc5e5d95aeaf42becd9b92d4b39791",
+    "bytes": 4632,
+    "line_count": 41,
     "encoding": "utf-8",
     "language": "ko"
   },
@@ -129,32 +129,90 @@
     },
     {
       "id": "b000009",
-      "kind": "html",
+      "kind": "heading",
       "start_line": 17,
       "end_line": 17,
-      "raw": "<!-- workspace-docs:agent:start -->\n"
+      "raw": "## 라이선스\n",
+      "level": 2,
+      "title": "라이선스"
     },
     {
       "id": "b000010",
-      "kind": "heading",
+      "kind": "blank",
       "start_line": 18,
       "end_line": 18,
+      "raw": "\n"
+    },
+    {
+      "id": "b000011",
+      "kind": "paragraph",
+      "start_line": 19,
+      "end_line": 19,
+      "raw": "이 저장소의 iiNetwork 모듈은 Apache License 2.0이다. 자사 소스, 문서, 도구, 테스트가 포함된다. 저작권 표시는 `Copyright (c) 2026 iisacc`이고 고지는 루트 `NOTICE`에 있다. 사람용 한국어 설명은 [docs/License.md](docs/License.md)이다.\n"
+    },
+    {
+      "id": "b000012",
+      "kind": "blank",
+      "start_line": 20,
+      "end_line": 20,
+      "raw": "\n"
+    },
+    {
+      "id": "b000013",
+      "kind": "paragraph",
+      "start_line": 21,
+      "end_line": 21,
+      "raw": "`Product` 아래의 iisacc 제품은 GNU Affero General Public License(AGPL)이다.\n"
+    },
+    {
+      "id": "b000014",
+      "kind": "blank",
+      "start_line": 22,
+      "end_line": 22,
+      "raw": "\n"
+    },
+    {
+      "id": "b000015",
+      "kind": "paragraph",
+      "start_line": 23,
+      "end_line": 23,
+      "raw": "제3자와 벤더 코드는 원래 라이선스를 유지한다. 문서 재편 중에도 그 라이선스와 외부 원본은 보존한다.\n"
+    },
+    {
+      "id": "b000016",
+      "kind": "blank",
+      "start_line": 24,
+      "end_line": 24,
+      "raw": "\n"
+    },
+    {
+      "id": "b000017",
+      "kind": "html",
+      "start_line": 25,
+      "end_line": 25,
+      "raw": "<!-- workspace-docs:agent:start -->\n"
+    },
+    {
+      "id": "b000018",
+      "kind": "heading",
+      "start_line": 26,
+      "end_line": 26,
       "raw": "## 문서 구조와 에이전트 탐색\n",
       "level": 2,
       "title": "문서 구조와 에이전트 탐색"
     },
     {
-      "id": "b000011",
+      "id": "b000019",
       "kind": "blank",
-      "start_line": 19,
-      "end_line": 19,
+      "start_line": 27,
+      "end_line": 27,
       "raw": "\n"
     },
     {
-      "id": "b000012",
+      "id": "b000020",
       "kind": "list",
-      "start_line": 20,
-      "end_line": 26,
+      "start_line": 28,
+      "end_line": 34,
       "raw": "- 프로젝트 루트의 `README.md`는 사람용 영문 진입 문서이며 `AGENT.md`는 에이전트 진입점이다.\n- 하위 인간용 Markdown과 구조화된 agent JSON을 함께 유지한다. Markdown이 원본이며 JSON은 원문 해시와 줄 범위를 가진 파생 문서이다.\n- 먼저 [docs/agent-index.json](docs/agent-index.json)에서 관련 문서와 JSON 투영을 찾는다. 원문 SHA-256이 다르면 현재 Markdown을 읽고 투영을 갱신한다.\n- JSON의 규칙 후보는 검색용 어휘 일치 결과이다. 과거 기록·예제·실패 상태를 현재 지시나 검증 완료로 자동 해석하지 않는다.\n- 기존 프로젝트별 규칙, 동결된 증거, 라이선스, 외부 원본, 사용자 데이터와 다른 작업의 변경을 보존한다.\n- 이 문서 재편 지침은 과거 작업의 기능 구현·배포를 자동 재개하라는 요청이 아니다. 현재 사용자의 작업 범위를 우선한다.\n- 문서를 수정하면 JSON 쌍·색인을 함께 갱신하고 검증한다. 기존 소스 변경에 대한 빌드·테스트 규칙은 계속 따른다.\n",
       "items": [
         {
@@ -195,41 +253,41 @@
       ]
     },
     {
-      "id": "b000013",
+      "id": "b000021",
       "kind": "blank",
-      "start_line": 27,
-      "end_line": 27,
+      "start_line": 35,
+      "end_line": 35,
       "raw": "\n"
     },
     {
-      "id": "b000014",
+      "id": "b000022",
       "kind": "paragraph",
-      "start_line": 28,
-      "end_line": 28,
+      "start_line": 36,
+      "end_line": 36,
       "raw": "Workspace에서 이 프로젝트의 문서를 갱신하는 명령은 다음과 같다.\n"
     },
     {
-      "id": "b000015",
+      "id": "b000023",
       "kind": "blank",
-      "start_line": 29,
-      "end_line": 29,
+      "start_line": 37,
+      "end_line": 37,
       "raw": "\n"
     },
     {
-      "id": "b000016",
+      "id": "b000024",
       "kind": "fenced_code",
-      "start_line": 30,
-      "end_line": 32,
+      "start_line": 38,
+      "end_line": 40,
       "raw": "```sh\npython3 ../../Engineering/WorkspaceDocumentation/App/workspace_docs.py --workspace ../.. sync --project SDK/iiNetwork\n```\n",
       "language": "sh",
       "code": "python3 ../../Engineering/WorkspaceDocumentation/App/workspace_docs.py --workspace ../.. sync --project SDK/iiNetwork\n",
       "closed": true
     },
     {
-      "id": "b000017",
+      "id": "b000025",
       "kind": "html",
-      "start_line": 33,
-      "end_line": 33,
+      "start_line": 41,
+      "end_line": 41,
       "raw": "<!-- workspace-docs:agent:end -->\n"
     }
   ],
@@ -243,12 +301,20 @@
       "start_line": 1
     },
     {
-      "block_id": "b000010",
+      "block_id": "b000009",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "라이선스",
+      "anchor": "라이선스",
+      "start_line": 17
+    },
+    {
+      "block_id": "b000018",
       "parent_id": "b000001",
       "level": 2,
       "title": "문서 구조와 에이전트 탐색",
       "anchor": "문서-구조와-에이전트-탐색",
-      "start_line": 18
+      "start_line": 26
     }
   ],
   "indexes": {
@@ -282,8 +348,8 @@
         "context": "list"
       },
       {
-        "block_id": "b000012",
-        "line": 23,
+        "block_id": "b000020",
+        "line": 31,
         "text": "- JSON의 규칙 후보는 검색용 어휘 일치 결과이다. 과거 기록·예제·실패 상태를 현재 지시나 검증 완료로 자동 해석하지 않는다.",
         "basis": "lexical_match",
         "context": "list"
@@ -291,18 +357,25 @@
     ],
     "commands": [
       {
-        "block_id": "b000016",
+        "block_id": "b000024",
         "language": "sh",
         "code": "python3 ../../Engineering/WorkspaceDocumentation/App/workspace_docs.py --workspace ../.. sync --project SDK/iiNetwork\n"
       }
     ],
     "links": [
       {
-        "block_id": "b000012",
+        "block_id": "b000011",
+        "label": "docs/License.md",
+        "target": "docs/License.md",
+        "kind": "relative",
+        "line": 19
+      },
+      {
+        "block_id": "b000020",
         "label": "docs/agent-index.json",
         "target": "docs/agent-index.json",
         "kind": "relative",
-        "line": 22
+        "line": 30
       }
     ],
     "tables": []

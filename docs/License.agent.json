@@ -1,0 +1,135 @@
+{
+  "format": "iisacc.agent-document",
+  "schema_version": 1,
+  "document_id": "urn:iisacc:document:be4abb37d67f008a03ac68237601f93cf2ada3eb7a5e4fedae2d9cc0d3c8d215",
+  "project": {
+    "id": "urn:iisacc:project:SDK%2FiiNetwork",
+    "name": "iiNetwork",
+    "root": "SDK/iiNetwork",
+    "kind": "sdk"
+  },
+  "source": {
+    "path": "docs/License.md",
+    "sha256": "3efed892b9318d92de283d72963c7763dd2a17fc457495a628e5b05fd3017211",
+    "bytes": 595,
+    "line_count": 9,
+    "encoding": "utf-8",
+    "language": "ko"
+  },
+  "document": {
+    "title": "라이선스",
+    "role": "guide",
+    "authority": "markdown_source"
+  },
+  "blocks": [
+    {
+      "id": "b000001",
+      "kind": "heading",
+      "start_line": 1,
+      "end_line": 1,
+      "raw": "# 라이선스\n",
+      "level": 1,
+      "title": "라이선스"
+    },
+    {
+      "id": "b000002",
+      "kind": "blank",
+      "start_line": 2,
+      "end_line": 2,
+      "raw": "\n"
+    },
+    {
+      "id": "b000003",
+      "kind": "paragraph",
+      "start_line": 3,
+      "end_line": 3,
+      "raw": "SPDX-License-Identifier: Apache-2.0\n"
+    },
+    {
+      "id": "b000004",
+      "kind": "blank",
+      "start_line": 4,
+      "end_line": 4,
+      "raw": "\n"
+    },
+    {
+      "id": "b000005",
+      "kind": "paragraph",
+      "start_line": 5,
+      "end_line": 5,
+      "raw": "이 저장소의 iiNetwork 모듈은 Apache License 2.0으로 배포한다. 대상은 저장소에 포함된 자사 소스, 문서, 도구, 테스트이다. 저작권 표시는 `Copyright (c) 2026 iisacc`이고, 고지 파일은 루트 [NOTICE](../NOTICE)이다. 영문 정책은 [README.md](../README.md)의 License 절과 같다. 전문은 [LICENSE](../LICENSE)이다.\n"
+    },
+    {
+      "id": "b000006",
+      "kind": "blank",
+      "start_line": 6,
+      "end_line": 6,
+      "raw": "\n"
+    },
+    {
+      "id": "b000007",
+      "kind": "paragraph",
+      "start_line": 7,
+      "end_line": 7,
+      "raw": "`Product`에 있는 iisacc 제품은 GNU Affero General Public License(AGPL)로 배포한다.\n"
+    },
+    {
+      "id": "b000008",
+      "kind": "blank",
+      "start_line": 8,
+      "end_line": 8,
+      "raw": "\n"
+    },
+    {
+      "id": "b000009",
+      "kind": "paragraph",
+      "start_line": 9,
+      "end_line": 9,
+      "raw": "제3자와 벤더 코드는 각자의 원래 라이선스를 유지한다.\n"
+    }
+  ],
+  "outline": [
+    {
+      "block_id": "b000001",
+      "parent_id": null,
+      "level": 1,
+      "title": "라이선스",
+      "anchor": "라이선스",
+      "start_line": 1
+    }
+  ],
+  "indexes": {
+    "directive_candidates": [],
+    "commands": [],
+    "links": [
+      {
+        "block_id": "b000005",
+        "label": "NOTICE",
+        "target": "../NOTICE",
+        "kind": "relative",
+        "line": 5
+      },
+      {
+        "block_id": "b000005",
+        "label": "README.md",
+        "target": "../README.md",
+        "kind": "relative",
+        "line": 5
+      },
+      {
+        "block_id": "b000005",
+        "label": "LICENSE",
+        "target": "../LICENSE",
+        "kind": "relative",
+        "line": 5
+      }
+    ],
+    "tables": []
+  },
+  "provenance": {
+    "generator": "workspace-docs",
+    "version": "1.0.0",
+    "profile": "lossless-blocks-v1",
+    "derived": true
+  }
+}

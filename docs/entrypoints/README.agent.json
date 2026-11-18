@@ -10,9 +10,9 @@
   },
   "source": {
     "path": "README.md",
-    "sha256": "d0b3599fcccb46fb9b88e6fcaeed433755a939f44851aac8a87c76b47f438f80",
-    "bytes": 14216,
-    "line_count": 227,
+    "sha256": "644f971485be129d4d8dd83db0a96c6ff0cd98f365df6a63becd2bb2506f3209",
+    "bytes": 14849,
+    "line_count": 244,
     "encoding": "utf-8",
     "language": "en"
   },
@@ -724,32 +724,104 @@
     },
     {
       "id": "b000081",
-      "kind": "html",
+      "kind": "heading",
       "start_line": 220,
       "end_line": 220,
-      "raw": "<!-- workspace-docs:readme:start -->\n"
+      "raw": "## License\n",
+      "level": 2,
+      "title": "License"
     },
     {
       "id": "b000082",
-      "kind": "heading",
+      "kind": "blank",
       "start_line": 221,
       "end_line": 221,
+      "raw": "\n"
+    },
+    {
+      "id": "b000083",
+      "kind": "paragraph",
+      "start_line": 222,
+      "end_line": 222,
+      "raw": "SPDX-License-Identifier: Apache-2.0\n"
+    },
+    {
+      "id": "b000084",
+      "kind": "blank",
+      "start_line": 223,
+      "end_line": 223,
+      "raw": "\n"
+    },
+    {
+      "id": "b000085",
+      "kind": "paragraph",
+      "start_line": 224,
+      "end_line": 228,
+      "raw": "iiNetwork is part of the iiSDK tree and is licensed under the\n[Apache License, Version 2.0](LICENSE) (SPDX `Apache-2.0`).\nThe copyright notice is `Copyright (c) 2026 iisacc`. Attribution for this\ndistribution is in [NOTICE](NOTICE). The Korean statement of the same policy\nis [docs/License.md](docs/License.md).\n"
+    },
+    {
+      "id": "b000086",
+      "kind": "blank",
+      "start_line": 229,
+      "end_line": 229,
+      "raw": "\n"
+    },
+    {
+      "id": "b000087",
+      "kind": "paragraph",
+      "start_line": 230,
+      "end_line": 231,
+      "raw": "iisacc products under Product are licensed under the GNU Affero General\nPublic License (AGPL).\n"
+    },
+    {
+      "id": "b000088",
+      "kind": "blank",
+      "start_line": 232,
+      "end_line": 232,
+      "raw": "\n"
+    },
+    {
+      "id": "b000089",
+      "kind": "paragraph",
+      "start_line": 233,
+      "end_line": 235,
+      "raw": "Third-party libraries linked by this module keep their own licenses.\nOpenSSL is Apache-2.0 and libcurl uses the curl license. Neither library\nis vendored in this repository.\n"
+    },
+    {
+      "id": "b000090",
+      "kind": "blank",
+      "start_line": 236,
+      "end_line": 236,
+      "raw": "\n"
+    },
+    {
+      "id": "b000091",
+      "kind": "html",
+      "start_line": 237,
+      "end_line": 237,
+      "raw": "<!-- workspace-docs:readme:start -->\n"
+    },
+    {
+      "id": "b000092",
+      "kind": "heading",
+      "start_line": 238,
+      "end_line": 238,
       "raw": "## Documentation entry points\n",
       "level": 2,
       "title": "Documentation entry points"
     },
     {
-      "id": "b000083",
+      "id": "b000093",
       "kind": "blank",
-      "start_line": 222,
-      "end_line": 222,
+      "start_line": 239,
+      "end_line": 239,
       "raw": "\n"
     },
     {
-      "id": "b000084",
+      "id": "b000094",
       "kind": "list",
-      "start_line": 223,
-      "end_line": 226,
+      "start_line": 240,
+      "end_line": 243,
       "raw": "- Human overview: this English `README.md`.\n- Agent instructions: [AGENT.md](AGENT.md).\n- Human documentation: [documentation index](docs/README.md).\n- Structured agent documentation: [agent index](docs/agent-index.json).\n",
       "items": [
         {
@@ -775,10 +847,10 @@
       ]
     },
     {
-      "id": "b000085",
+      "id": "b000095",
       "kind": "html",
-      "start_line": 227,
-      "end_line": 227,
+      "start_line": 244,
+      "end_line": 244,
       "raw": "<!-- workspace-docs:readme:end -->\n"
     }
   ],
@@ -856,12 +928,20 @@
       "start_line": 206
     },
     {
-      "block_id": "b000082",
+      "block_id": "b000081",
+      "parent_id": "b000001",
+      "level": 2,
+      "title": "License",
+      "anchor": "license",
+      "start_line": 220
+    },
+    {
+      "block_id": "b000092",
       "parent_id": "b000001",
       "level": 2,
       "title": "Documentation entry points",
       "anchor": "documentation-entry-points",
-      "start_line": 221
+      "start_line": 238
     }
   ],
   "indexes": {
@@ -1009,25 +1089,46 @@
         "line": 208
       },
       {
-        "block_id": "b000084",
-        "label": "AGENT.md",
-        "target": "AGENT.md",
-        "kind": "relative",
-        "line": 224
-      },
-      {
-        "block_id": "b000084",
-        "label": "documentation index",
-        "target": "docs/README.md",
+        "block_id": "b000085",
+        "label": "Apache License, Version 2.0",
+        "target": "LICENSE",
         "kind": "relative",
         "line": 225
       },
       {
-        "block_id": "b000084",
+        "block_id": "b000085",
+        "label": "NOTICE",
+        "target": "NOTICE",
+        "kind": "relative",
+        "line": 227
+      },
+      {
+        "block_id": "b000085",
+        "label": "docs/License.md",
+        "target": "docs/License.md",
+        "kind": "relative",
+        "line": 228
+      },
+      {
+        "block_id": "b000094",
+        "label": "AGENT.md",
+        "target": "AGENT.md",
+        "kind": "relative",
+        "line": 241
+      },
+      {
+        "block_id": "b000094",
+        "label": "documentation index",
+        "target": "docs/README.md",
+        "kind": "relative",
+        "line": 242
+      },
+      {
+        "block_id": "b000094",
         "label": "agent index",
         "target": "docs/agent-index.json",
         "kind": "relative",
-        "line": 226
+        "line": 243
       }
     ],
     "tables": [
